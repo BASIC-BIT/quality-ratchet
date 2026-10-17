@@ -45,3 +45,9 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+Task 5 extracts generic complexity and physical-line measurements and their
+regression tests under the owner authorization recorded in docs/provenance.md.
+The extracted files have no separate upstream file notices. LICENSE remains
+unchanged; no private product source, business data or allowance registry is
+included.

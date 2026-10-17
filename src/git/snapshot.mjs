@@ -15,7 +15,12 @@ import {
   treeEntries,
   matchesSourceScope,
 } from "./paths.mjs";
-import { effectiveCheck, resolvePolicy } from "../config/resolve.mjs";
+import {
+  effectiveCheck,
+  resolvePolicy,
+  matchesGlobalScope,
+  isJsTsPath,
+} from "../config/resolve.mjs";
 const gates = ["duplication", "complexity", "file-size"];
 function selected(policy, path, repo, tree = null) {
   return gates.some(
@@ -31,11 +36,22 @@ function copyTree(comparison, tree, destination, policy) {
         treeEntries(comparison.repo, tree).map((entry) => [entry.path, entry]),
       )
     : null;
+  const renamedDestinations = new Map(
+    [...comparison.renames].map(([next, old]) => [old, next]),
+  );
   const paths = [];
   for (const path of candidates) {
     if (!tree && inspectPath(comparison.repo, path))
       throw new SetupError("Source changed while preparing snapshot");
-    if (!selected(policy, path, comparison.repo, tree)) continue;
+    const renamedDestination =
+      tree === comparison.baselineSha ? renamedDestinations.get(path) : null;
+    const renamedBaseline =
+      renamedDestination &&
+      isJsTsPath(path) &&
+      matchesGlobalScope(policy, path) &&
+      selected(policy, renamedDestination, comparison.repo, comparison.treeSha);
+    if (!selected(policy, path, comparison.repo, tree) && !renamedBaseline)
+      continue;
     const bytes = tree
       ? git(comparison.repo, ["cat-file", "blob", entries.get(path).hash], {
           encoding: null,

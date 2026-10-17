@@ -122,7 +122,15 @@ test("static path exclusions and gate modes precede shebang reads without changi
     }
     let root;
     await withSourceSnapshot(
-      { comparison: { repo, baselineSha: head, treeSha: null }, policy },
+      {
+        comparison: {
+          repo,
+          baselineSha: head,
+          treeSha: null,
+          renames: new Map(),
+        },
+        policy,
+      },
       (snapshot) => {
         root = snapshot.root;
         assert.deepEqual(snapshot.paths.base, ["src/base.ts", "src/known.js"]);

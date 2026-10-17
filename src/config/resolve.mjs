@@ -93,6 +93,11 @@ export function effectiveCheck(policy, gate, path) {
   };
 }
 
+/** The eight supported complexity/file-size source extensions, without scope or mode. */
+export function isJsTsPath(path) {
+  return /\.(?:[cm]?[jt]s|[jt]sx)$/u.test(repositoryPath(path));
+}
+
 // Discovery must reject symlinks and verify actual enabled coverage before scanning.
 export function matchesScope(
   policy,
@@ -106,26 +111,28 @@ export function matchesScope(
   const check = policy.checks[checkKey(gate)];
   return gate === "duplication"
     ? check.formats.includes(detectedFormat)
-    : /\.(?:[cm]?[jt]s|[jt]sx)$/u.test(repositoryPath(path));
+    : isJsTsPath(path);
 }
 
+/** Authored repository scope, independent of per-check modes and scopes. */
+export function matchesGlobalScope(policy, path) {
+  const normalized = repositoryPath(path);
+  return (
+    !matchesAny(normalized, [...HARD_EXCLUDES, ...GENERATED_EXCLUDES]) &&
+    matchesAny(normalized, policy.scope.include) &&
+    !matchesAny(normalized, policy.scope.exclude)
+  );
+}
 /** Static scope only: no mode or source-format decision. */
 export function matchesPathScope(policy, gate, path) {
   const normalized = repositoryPath(path);
   const check = policy.checks[checkKey(gate)];
-  if (matchesAny(normalized, [...HARD_EXCLUDES, ...GENERATED_EXCLUDES]))
-    return false;
-  if (
-    !matchesAny(normalized, policy.scope.include) ||
-    matchesAny(normalized, policy.scope.exclude)
-  )
-    return false;
   return (
+    matchesGlobalScope(policy, normalized) &&
     matchesAny(normalized, check.include) &&
     !matchesAny(normalized, check.exclude)
   );
 }
-
 /** Differences contain resolved values, so deleting a config shows its return to defaults. */
 export function diffPolicies(before, after) {
   const differences = [];

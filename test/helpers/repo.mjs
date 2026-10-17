@@ -2,6 +2,17 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { resolveComparison } from "../../src/git/comparison.mjs";
+import { resolvePolicy } from "../../src/config/resolve.mjs";
+export const toolRoot = dirname(
+  dirname(dirname(fileURLToPath(import.meta.url))),
+);
+export const scanContext = (repo, input = {}, base = "HEAD") => ({
+  comparison: resolveComparison({ repo, base }),
+  policy: resolvePolicy({ schemaVersion: 1, ...input }),
+  toolRoot,
+});
 export function git(repo, ...args) {
   return execFileSync("git", args, {
     cwd: repo,
