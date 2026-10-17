@@ -1,6 +1,22 @@
 {
   "schemaVersion": 1,
   "scope": {
-    "exclude": ["test/fixtures/**"]
+    "include": [
+      "src/**"
+    ]
+  },
+  "checks": {
+    "duplication": {
+      "formats": [
+        "javascript",
+        "typescript"
+      ]
+    }
+  },
+  "reports": {
+    "testDebt": false,
+    "testSize": {
+      "enabled": false
+    }
   }
 }

@@ -1,0 +1,34 @@
+name: Hosted quality qualification
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, edited, labeled, unlabeled]
+permissions:
+  contents: read
+  pull-requests: read
+concurrency:
+  group: probe-quality-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    name: Code quality ratchet probe
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - id: quality
+        uses: BASIC-BIT/quality-ratchet@93982d93fe3d2a8a3890d464e4f61199cc8ffafe
+        with:
+          github-token: ${{ github.token }}
+          repository-path: ${{ github.workspace }}
+      - name: Record downstream action outputs
+        if: ${{ !cancelled() }}
+        env:
+          QR_OUTCOME: ${{ steps.quality.outputs.outcome }}
+          QR_STRICT_EXIT: ${{ steps.quality.outputs.strict-exit-code }}
+          QR_REPORT_DIRECTORY: ${{ steps.quality.outputs.report-directory }}
+        run: >-
+          node -e 'console.log(JSON.stringify({outcome:process.env.QR_OUTCOME,strictExitCode:process.env.QR_STRICT_EXIT,reportDirectoryAvailable:Boolean(process.env.QR_REPORT_DIRECTORY)})))'
