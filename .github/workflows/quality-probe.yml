@@ -31,4 +31,4 @@ jobs:
           QR_STRICT_EXIT: ${{ steps.quality.outputs.strict-exit-code }}
           QR_REPORT_DIRECTORY: ${{ steps.quality.outputs.report-directory }}
         run: >-
-          node -e 'console.log(JSON.stringify({outcome:process.env.QR_OUTCOME,strictExitCode:process.env.QR_STRICT_EXIT,reportDirectoryAvailable:Boolean(process.env.QR_REPORT_DIRECTORY)})))'
+          node -e 'console.log(JSON.stringify({outcome:process.env.QR_OUTCOME,strictExitCode:process.env.QR_STRICT_EXIT,reportDirectoryAvailable:Boolean(process.env.QR_REPORT_DIRECTORY)}))'
