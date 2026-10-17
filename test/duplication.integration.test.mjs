@@ -193,9 +193,7 @@ maybe(
 maybe(
   "rewriting both sides in place creates a new clone identity",
   withRepo(async (dir) => {
-    write(dir, "a.js", body("alpha"));
-    write(dir, "b.js", body("beta"));
-    commit(dir, "base with existing duplication");
+    seedExistingClone(dir);
     write(dir, "a.js", replacementBody("alpha"));
     write(dir, "b.js", replacementBody("beta"));
     commit(dir, "replace both implementations with a new duplicate");
@@ -206,9 +204,7 @@ maybe(
 maybe(
   "shortening a pre-existing clone does not create duplication",
   withRepo(async (dir) => {
-    write(dir, "a.js", body("alpha"));
-    write(dir, "b.js", body("beta"));
-    commit(dir, "base with existing duplication");
+    seedExistingClone(dir);
     write(
       dir,
       "b.js",
@@ -236,9 +232,7 @@ maybe(
 maybe(
   "pre-existing duplication is NOT reported when the diff does not touch it",
   withRepo(async (dir) => {
-    write(dir, "a.js", body("alpha"));
-    write(dir, "b.js", body("beta"));
-    commit(dir, "base with existing duplication");
+    seedExistingClone(dir);
     write(dir, "unrelated.js", "export const x = 1;\n");
     commit(dir, "unrelated change");
     await assertClean(dir);
@@ -277,9 +271,7 @@ maybe(
 maybe(
   "whitespace-only edits to a pre-existing clone do not fail the ratchet",
   withRepo(async (dir) => {
-    write(dir, "a.js", body("alpha"));
-    write(dir, "b.js", body("beta"));
-    commit(dir, "base with existing duplication");
+    seedExistingClone(dir);
     write(
       dir,
       "b.js",
@@ -450,3 +442,9 @@ maybe(
     await assertClean(dir);
   }),
 );
+
+function seedExistingClone(dir) {
+  write(dir, "a.js", body("alpha"));
+  write(dir, "b.js", body("beta"));
+  commit(dir, "base with existing duplication");
+}

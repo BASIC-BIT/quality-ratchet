@@ -8,6 +8,17 @@ const options = {
   noext: true,
 };
 
+function balancedDelimiters(pattern) {
+  const stack = [];
+  for (const character of pattern) {
+    if (character === "{" || character === "[") stack.push(character);
+    else if (character === "}" || character === "]") {
+      if (stack.pop() !== (character === "}" ? "{" : "[")) return false;
+    }
+  }
+  return stack.length === 0;
+}
+
 export function validGlob(pattern) {
   if (
     !pattern ||
@@ -19,14 +30,7 @@ export function validGlob(pattern) {
     return false;
   if (pattern.split("/").some((segment) => segment === ".." || segment === "."))
     return false;
-  const stack = [];
-  for (const character of pattern) {
-    if (character === "{" || character === "[") stack.push(character);
-    else if (character === "}" || character === "]") {
-      if (stack.pop() !== (character === "}" ? "{" : "[")) return false;
-    }
-  }
-  if (stack.length) return false;
+  if (!balancedDelimiters(pattern)) return false;
   try {
     return minimatch.makeRe(pattern, options) !== false;
   } catch {

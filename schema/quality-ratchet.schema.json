@@ -44,8 +44,7 @@
             "$ref": "#/definitions/globs"
           },
           "reason": {
-            "type": "string",
-            "pattern": "\\S"
+            "$ref": "#/definitions/reason"
           },
           "checks": {
             "type": "object",
@@ -56,19 +55,16 @@
                 "additionalProperties": false,
                 "properties": {
                   "mode": {
-                    "enum": ["ratchet", "advisory", "off"]
+                    "$ref": "#/definitions/checkMode"
                   },
                   "reason": {
-                    "type": "string",
-                    "pattern": "\\S"
+                    "$ref": "#/definitions/reason"
                   },
                   "cyclomatic": {
-                    "type": "integer",
-                    "minimum": 1
+                    "$ref": "#/definitions/positiveInteger"
                   },
                   "cognitive": {
-                    "type": "integer",
-                    "minimum": 1
+                    "$ref": "#/definitions/positiveInteger"
                   }
                 }
               },
@@ -77,15 +73,13 @@
                 "additionalProperties": false,
                 "properties": {
                   "mode": {
-                    "enum": ["ratchet", "advisory", "off"]
+                    "$ref": "#/definitions/checkMode"
                   },
                   "reason": {
-                    "type": "string",
-                    "pattern": "\\S"
+                    "$ref": "#/definitions/reason"
                   },
                   "maxLines": {
-                    "type": "integer",
-                    "minimum": 1
+                    "$ref": "#/definitions/positiveInteger"
                   }
                 }
               }
@@ -111,8 +105,7 @@
               "type": "boolean"
             },
             "oversizedLines": {
-              "type": "integer",
-              "minimum": 1
+              "$ref": "#/definitions/positiveInteger"
             }
           }
         }
@@ -142,19 +135,16 @@
       "additionalProperties": false,
       "properties": {
         "mode": {
-          "enum": ["ratchet", "advisory", "off"]
+          "$ref": "#/definitions/checkMode"
         },
         "reason": {
-          "type": "string",
-          "pattern": "\\S"
+          "$ref": "#/definitions/reason"
         },
         "cyclomatic": {
-          "type": "integer",
-          "minimum": 1
+          "$ref": "#/definitions/positiveInteger"
         },
         "cognitive": {
-          "type": "integer",
-          "minimum": 1
+          "$ref": "#/definitions/positiveInteger"
         },
         "include": {
           "$ref": "#/definitions/globs"
@@ -163,38 +153,24 @@
           "$ref": "#/definitions/excludes"
         }
       },
-      "if": {
-        "required": ["mode"],
-        "properties": {
-          "mode": {
-            "enum": ["advisory", "off"]
-          }
+      "allOf": [
+        {
+          "$ref": "#/definitions/globalModeReason"
         }
-      },
-      "then": {
-        "required": ["reason"],
-        "properties": {
-          "reason": {
-            "type": "string",
-            "pattern": "\\S"
-          }
-        }
-      }
+      ]
     },
     "fileSize": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "mode": {
-          "enum": ["ratchet", "advisory", "off"]
+          "$ref": "#/definitions/checkMode"
         },
         "reason": {
-          "type": "string",
-          "pattern": "\\S"
+          "$ref": "#/definitions/reason"
         },
         "maxLines": {
-          "type": "integer",
-          "minimum": 1
+          "$ref": "#/definitions/positiveInteger"
         },
         "include": {
           "$ref": "#/definitions/globs"
@@ -203,42 +179,27 @@
           "$ref": "#/definitions/excludes"
         }
       },
-      "if": {
-        "required": ["mode"],
-        "properties": {
-          "mode": {
-            "enum": ["advisory", "off"]
-          }
+      "allOf": [
+        {
+          "$ref": "#/definitions/globalModeReason"
         }
-      },
-      "then": {
-        "required": ["reason"],
-        "properties": {
-          "reason": {
-            "type": "string",
-            "pattern": "\\S"
-          }
-        }
-      }
+      ]
     },
     "duplication": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "mode": {
-          "enum": ["ratchet", "advisory", "off"]
+          "$ref": "#/definitions/checkMode"
         },
         "reason": {
-          "type": "string",
-          "pattern": "\\S"
+          "$ref": "#/definitions/reason"
         },
         "minLines": {
-          "type": "integer",
-          "minimum": 1
+          "$ref": "#/definitions/positiveInteger"
         },
         "minTokens": {
-          "type": "integer",
-          "minimum": 1
+          "$ref": "#/definitions/positiveInteger"
         },
         "formats": {
           "type": "array",
@@ -255,23 +216,11 @@
           "$ref": "#/definitions/excludes"
         }
       },
-      "if": {
-        "required": ["mode"],
-        "properties": {
-          "mode": {
-            "enum": ["advisory", "off"]
-          }
+      "allOf": [
+        {
+          "$ref": "#/definitions/globalModeReason"
         }
-      },
-      "then": {
-        "required": ["reason"],
-        "properties": {
-          "reason": {
-            "type": "string",
-            "pattern": "\\S"
-          }
-        }
-      }
+      ]
     },
     "supportedFormat": {
       "enum": [
@@ -408,6 +357,36 @@
         "yaml",
         "zig"
       ]
+    },
+    "positiveInteger": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "checkMode": {
+      "enum": ["ratchet", "advisory", "off"]
+    },
+    "reason": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "globalModeReason": {
+      "type": "object",
+      "if": {
+        "required": ["mode"],
+        "properties": {
+          "mode": {
+            "enum": ["advisory", "off"]
+          }
+        }
+      },
+      "then": {
+        "required": ["reason"],
+        "properties": {
+          "reason": {
+            "$ref": "#/definitions/reason"
+          }
+        }
+      }
     }
   }
 }

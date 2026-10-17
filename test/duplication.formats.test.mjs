@@ -23,33 +23,7 @@ const lexical =
 test("configured formats cannot silently disappear from native detection", async () => {
   const root = mkdtempSync(join(tmpdir(), "quality-formats-"));
   try {
-    const expected = new Map();
-    for (const format of supportedFormats) {
-      const files = [
-        ...(formatNames[format] ?? []),
-        ...formatExtensions[format].map((ext) => `source.${ext}`),
-      ];
-      for (const [index, file] of files.entries()) {
-        const route = `${format}/${index}`;
-        expected.set(route, { format, file });
-        for (const side of ["a", "b"]) {
-          const dir = join(root, route, side);
-          mkdirSync(dir, { recursive: true });
-          const sample = lexical.replaceAll(
-            "value",
-            format.replaceAll("-", "_") + index + "Value",
-          );
-          writeFileSync(
-            join(dir, file),
-            format === "markdown"
-              ? "```javascript\n" + sample + "```\n"
-              : ["astro", "svelte", "vue"].includes(format)
-                ? "<script>\n" + sample + "</script>\n"
-                : sample,
-          );
-        }
-      }
-    }
+    const expected = writeNativeFormatPairs(root);
     const rows = await runJscpd(root, { minLines: 8, minTokens: 50 });
     for (const [route, { format, file }] of expected) {
       assert.equal(formatForPath(file), format);
@@ -214,3 +188,34 @@ test("VB ownership matches the raw pinned native CLI without shared mappings", a
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+function writeNativeFormatPairs(root) {
+  const expected = new Map();
+  for (const format of supportedFormats) {
+    const files = [
+      ...(formatNames[format] ?? []),
+      ...formatExtensions[format].map((ext) => `source.${ext}`),
+    ];
+    for (const [index, file] of files.entries()) {
+      const route = `${format}/${index}`;
+      expected.set(route, { format, file });
+      for (const side of ["a", "b"]) {
+        const dir = join(root, route, side);
+        mkdirSync(dir, { recursive: true });
+        const sample = lexical.replaceAll(
+          "value",
+          format.replaceAll("-", "_") + index + "Value",
+        );
+        writeFileSync(
+          join(dir, file),
+          format === "markdown"
+            ? "```javascript\n" + sample + "```\n"
+            : ["astro", "svelte", "vue"].includes(format)
+              ? "<script>\n" + sample + "</script>\n"
+              : sample,
+        );
+      }
+    }
+  }
+  return expected;
+}

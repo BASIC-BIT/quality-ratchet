@@ -9,6 +9,8 @@ import {
   existsSync,
   rmSync,
   readdirSync,
+  realpathSync,
+  symlinkSync,
 } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
@@ -186,7 +188,10 @@ test(
     );
     Object.assign(process.env, hostile);
     try {
-      assert.equal(repositoryPath(f.workspace, f.consumer), f.consumer);
+      assert.equal(
+        repositoryPath(f.workspace, f.consumer),
+        realpathSync.native(f.consumer),
+      );
       assert.throws(() => repositoryPath(f.workspace, f.source));
       assert.throws(() => repositoryPath(f.workspace, f.workspace));
       await withInstalledTool(
@@ -409,3 +414,31 @@ test(
     }
   },
 );
+
+test("action canonicalizes repository aliases while rejecting external symlink targets", () => {
+  const f = fixture();
+  try {
+    const alias = join(f.workspace, "consumer alias");
+    symlinkSync(f.consumer, alias, "junction");
+    assert.equal(
+      repositoryPath(f.workspace, alias),
+      realpathSync.native(f.consumer),
+    );
+    const requested =
+      process.platform === "win32" ? f.consumer.toLowerCase() : f.consumer;
+    assert.equal(
+      repositoryPath(f.workspace, requested),
+      realpathSync.native(f.consumer),
+    );
+    git(f.source, "init", "-q");
+    const outside = join(f.workspace, "outside alias");
+    symlinkSync(f.source, outside, "junction");
+    assert.throws(
+      () => repositoryPath(f.workspace, outside),
+      /inside the workspace/,
+    );
+    assert.throws(() => repositoryPath(f.workspace, join(f.consumer, "src")));
+  } finally {
+    rmSync(f.root, { recursive: true, force: true });
+  }
+});

@@ -1,3 +1,4 @@
+import { realpathSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 export class SetupError extends Error {
   constructor(message, options) {
@@ -105,4 +106,12 @@ export function gitBlobPrefix(repo, object, limit) {
       return cause.stdout.subarray(0, limit);
     throw error;
   }
+}
+
+export function assertRepository(repo) {
+  const actual = git(repo, ["rev-parse", "--show-toplevel"]).trim();
+  const root = realpathSync.native(actual);
+  if (root !== realpathSync.native(repo))
+    throw new SetupError("repo must identify the repository root");
+  return root;
 }

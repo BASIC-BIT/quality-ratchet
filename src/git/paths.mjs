@@ -1,5 +1,5 @@
 import { lstatSync, existsSync, openSync, readSync, closeSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { git, gitBlobPrefix, SetupError, verifyTree } from "./commands.mjs";
 import {
   effectiveCheck,
@@ -66,34 +66,33 @@ export function inspectPath(repo, path) {
   }
   return null;
 }
+function treeSources(repo, tree) {
+  const entries = treeEntries(repo, tree);
+  const nested = entries
+    .filter((entry) => entry.mode === "160000")
+    .map((entry) => entry.path);
+  return entries.map((entry) => {
+    if (entry.mode === "120000") return { path: entry.path, reason: "symlink" };
+    const isNested =
+      entry.type !== "blob" ||
+      nested.some(
+        (path) => entry.path === path || entry.path.startsWith(`${path}/`),
+      );
+    return { path: entry.path, reason: isNested ? "nested-checkout" : null };
+  });
+}
 export function enumerateSources(comparison, tree = comparison.treeSha) {
+  const entries = tree
+    ? treeSources(comparison.repo, tree)
+    : workingPaths(comparison.repo).map((path) => ({
+        path,
+        reason: inspectPath(comparison.repo, path),
+      }));
   const paths = [],
     excluded = [];
-  if (tree) {
-    const entries = treeEntries(comparison.repo, tree);
-    const nested = entries
-      .filter((entry) => entry.mode === "160000")
-      .map((entry) => entry.path);
-    for (const entry of entries) {
-      const reason =
-        entry.mode === "120000"
-          ? "symlink"
-          : entry.type !== "blob" ||
-              nested.some(
-                (path) =>
-                  entry.path === path || entry.path.startsWith(`${path}/`),
-              )
-            ? "nested-checkout"
-            : null;
-      if (reason) excluded.push({ path: entry.path, reason });
-      else paths.push(entry.path);
-    }
-  } else {
-    for (const path of workingPaths(comparison.repo)) {
-      const reason = inspectPath(comparison.repo, path);
-      if (reason) excluded.push({ path, reason });
-      else paths.push(path);
-    }
+  for (const entry of entries) {
+    if (entry.reason) excluded.push(entry);
+    else paths.push(entry.path);
   }
   Object.defineProperty(paths, "excluded", { value: excluded });
   return paths.sort();
@@ -115,12 +114,7 @@ export function listEligiblePaths(context, gate) {
   Object.defineProperty(eligible, "excluded", { value: paths.excluded });
   return eligible;
 }
-export function assertRepository(repo) {
-  const actual = git(repo, ["rev-parse", "--show-toplevel"]).trim();
-  if (resolve(actual) !== resolve(repo))
-    throw new SetupError("repo must identify the repository root");
-  return resolve(actual);
-}
+export { assertRepository } from "./commands.mjs";
 
 const SHEBANG_PREFIX_BYTES = 4096;
 /** Unknown routes inspect a bounded prefix; recognized paths never read source here. */

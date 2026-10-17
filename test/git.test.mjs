@@ -2,7 +2,7 @@ import test from "node:test";
 
 import assert from "node:assert/strict";
 
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, realpathSync } from "node:fs";
 
 import { join } from "node:path";
 
@@ -13,7 +13,7 @@ import {
   loadPolicySelection,
 } from "../src/git/comparison.mjs";
 
-import { listEligiblePaths } from "../src/git/paths.mjs";
+import { listEligiblePaths, assertRepository } from "../src/git/paths.mjs";
 
 import { withSourceSnapshot } from "../src/git/snapshot.mjs";
 
@@ -168,13 +168,7 @@ test("explicit local base uses merge-base even when the target advanced", () =>
   withRepo((repo) => {
     const common = git(repo, "rev-parse", "HEAD");
 
-    git(repo, "checkout", "-qb", "feature");
-    write(repo, "src/feature.ts", "export const feature = 1;\n");
-    commit(repo);
-
-    git(repo, "checkout", "main");
-    write(repo, "src/target.ts", "export const target = 1;\n");
-    const target = commit(repo);
+    const target = advanceTargetAndFeature(repo);
 
     git(repo, "checkout", "feature");
 
@@ -185,13 +179,7 @@ test("explicit local base uses merge-base even when the target advanced", () =>
 
 test("prepared merges compare against the actual passed target parent", () =>
   withRepo((repo) => {
-    git(repo, "checkout", "-qb", "feature");
-    write(repo, "src/feature.ts", "export const feature = 1;\n");
-    commit(repo);
-
-    git(repo, "checkout", "main");
-    write(repo, "src/target.ts", "export const target = 1;\n");
-    const target = commit(repo);
+    const target = advanceTargetAndFeature(repo);
 
     git(
       repo,
@@ -817,11 +805,42 @@ test("scan transport rejects malformed map metadata and escaping paths", () =>
           ],
         ]),
       (value) => (value.comparison.newPaths = {}),
+      (value) => (value.comparison.baseRef = "branch\0suffix"),
+      (value) => (value.comparison.baseRef = "-option"),
+      (value) => (value.comparison.baseRef = ""),
       (value) => (value.comparison.workingTreeHash = "bad"),
       (value) => (value.comparison.renames = [["src/a.ts", "../old.ts"]]),
     ]) {
       const value = JSON.parse(encoded);
       mutate(value);
       assert.throws(() => decodeScanContext(JSON.stringify(value)));
+    }
+  }));
+
+function advanceTargetAndFeature(repo) {
+  git(repo, "checkout", "-qb", "feature");
+  write(repo, "src/feature.ts", "export const feature = 1;\n");
+  commit(repo);
+
+  git(repo, "checkout", "main");
+  write(repo, "src/target.ts", "export const target = 1;\n");
+  return commit(repo);
+}
+
+test("repository roots canonicalize real filesystem aliases and reject subdirectories", () =>
+  withRepo((repo) => {
+    const alias = repo + "-alias";
+    try {
+      symlinkSync(repo, alias, "junction");
+      assert.equal(assertRepository(alias), realpathSync.native(repo));
+      assert.throws(
+        () => assertRepository(join(repo, "src")),
+        /repository root/,
+      );
+      const requested =
+        process.platform === "win32" ? repo.toLowerCase() : repo;
+      assert.equal(assertRepository(requested), realpathSync.native(repo));
+    } finally {
+      rmSync(alias, { recursive: true, force: true });
     }
   }));

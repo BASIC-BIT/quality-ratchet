@@ -80,6 +80,41 @@ function bashCommentRangesForContext(context, format) {
   return context.bashCommentRangesPromise;
 }
 
+async function normalizeEndpointRange(
+  context,
+  file,
+  format,
+  range,
+  fragment,
+  bashCommentRanges,
+) {
+  if (
+    context.containerFormat === "markdown" &&
+    (JS_LIKE_FORMATS.has(format) || format === "bash")
+  )
+    return (
+      (await normalizeMarkdownScannerRange(context, file, format)) ??
+      normalizeCloneSource(fragment, format)
+    );
+  if (format === "bash")
+    return normalizeCloneSourceRange(
+      context.source,
+      format,
+      ...range,
+      [],
+      bashCommentRanges,
+    );
+  if (context.fullFileRegexRanges === null)
+    return normalizeCloneSource(fragment, format);
+  return normalizeCloneSourceRange(
+    context.source,
+    format,
+    ...range,
+    context.fullFileRegexRanges,
+    bashCommentRanges,
+  );
+}
+
 export async function fingerprintScannerEndpoint(
   repo,
   file,
@@ -94,7 +129,7 @@ export async function fingerprintScannerEndpoint(
     const path = scannerFilePath(repo, file.name, format);
     if (path && Number.isInteger(file.start) && Number.isInteger(file.end)) {
       const context = sourceIdentityContext(path, format, sourceCache);
-      const { source, fullFileRegexRanges } = context;
+      const { source } = context;
       const bashCommentRanges = await bashCommentRangesForContext(
         context,
         format,
@@ -106,28 +141,14 @@ export async function fingerprintScannerEndpoint(
           format === "markdown" &&
           context.containerFormat === "markdown" &&
           isMarkdownTableLayout(source, file);
-        normalized =
-          context.containerFormat === "markdown" &&
-          (JS_LIKE_FORMATS.has(format) || format === "bash")
-            ? ((await normalizeMarkdownScannerRange(context, file, format)) ??
-              normalizeCloneSource(fragment, format))
-            : format === "bash"
-              ? normalizeCloneSourceRange(
-                  source,
-                  format,
-                  ...range,
-                  [],
-                  bashCommentRanges,
-                )
-              : fullFileRegexRanges === null
-                ? normalizeCloneSource(fragment, format)
-                : normalizeCloneSourceRange(
-                    source,
-                    format,
-                    ...range,
-                    fullFileRegexRanges,
-                    bashCommentRanges,
-                  );
+        normalized = await normalizeEndpointRange(
+          context,
+          file,
+          format,
+          range,
+          fragment,
+          bashCommentRanges,
+        );
       }
     }
   } catch {

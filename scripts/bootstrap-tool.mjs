@@ -10,16 +10,15 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
 import { assetFiles, toolManifest, inside } from "../src/tool-manifest.mjs";
-import { git } from "../src/git/commands.mjs";
+import { git, assertRepository } from "../src/git/commands.mjs";
 import { output, publish, saveFailure } from "./run-action.mjs";
 
 export function repositoryPath(workspace, requested) {
-  const base = realpathSync(workspace),
-    repo = realpathSync(resolve(base, requested));
+  const base = realpathSync.native(workspace),
+    repo = assertRepository(resolve(base, requested));
   if (
     !inside(base, repo) ||
-    git(repo, ["rev-parse", "--is-inside-work-tree"]).trim() !== "true" ||
-    realpathSync(git(repo, ["rev-parse", "--show-toplevel"]).trim()) !== repo
+    git(repo, ["rev-parse", "--is-inside-work-tree"]).trim() !== "true"
   )
     throw new Error(
       "repository-path must identify a Git checkout inside the workspace",

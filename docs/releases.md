@@ -24,6 +24,8 @@ The manual `Release check` workflow accepts a candidate ref and prints its resol
 
 ## Pins and maintenance
 
+The manifest hashes raw runtime asset bytes and verifies the isolated copy against its source on the same machine. Checkout line-ending conversion can change that hash for one Git commit. This repository declares LF text checkout to keep its assets consistent; retain the observed platform manifest with each qualification record. Use the full Git SHA as the portable release identity, not a universal raw-byte hash.
+
 The final adoption template must pin the selected full release SHA with a `# v1.0.0` comment. A convenience major tag may exist; consumers should use immutable pins. Restore the previous reviewed pin to roll back. Keep old enforcement until migration acceptance makes rollback practical.
 
 Current reviewed nested pins:

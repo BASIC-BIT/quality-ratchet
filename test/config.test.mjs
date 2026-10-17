@@ -18,22 +18,14 @@ const resolve = (input = {}) => resolvePolicy({ schemaVersion: 1, ...input });
 
 test("defaults preserve the approved independent thresholds", () => {
   const p = resolvePolicy({ schemaVersion: 1 });
-  assert.deepEqual(effectiveCheck(p, "complexity", "src/a.ts").thresholds, {
-    cyclomatic: 15,
-    cognitive: 15,
-  });
-  assert.equal(
-    effectiveCheck(p, "file-size", "test/a.test.ts").thresholds.maxLines,
-    1000,
+  const thresholds = ["complexity", "file-size", "duplication"].map(
+    (gate) => effectiveCheck(p, gate, "test/a.test.ts").thresholds,
   );
-  assert.equal(
-    effectiveCheck(p, "duplication", "src/a.ts").thresholds.minTokens,
-    50,
-  );
-  assert.equal(
-    effectiveCheck(p, "duplication", "src/a.ts").thresholds.minLines,
-    8,
-  );
+  assert.deepEqual(thresholds, [
+    { cyclomatic: 15, cognitive: 15 },
+    { maxLines: 1000 },
+    { minLines: 8, minTokens: 50 },
+  ]);
   assert.equal(p.reports.testDebt, true);
   assert.deepEqual(p.reports.testSize, { enabled: true, oversizedLines: 1000 });
   assert.equal(resolvePolicy().hash, p.hash);

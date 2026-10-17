@@ -98,13 +98,16 @@ export function encodeScanContext(context) {
   decodeScanContext(json);
   return json;
 }
-export function decodeScanContext(json) {
-  let context;
-  try {
-    context = JSON.parse(json);
-  } catch {
-    invalidContext();
-  }
+function validBaseRef(ref) {
+  return (
+    ref === null ||
+    (typeof ref === "string" &&
+      ref.length > 0 &&
+      !ref.startsWith("-") &&
+      !ref.includes("\0"))
+  );
+}
+function validateComparisonIdentity(context) {
   const comparison = context?.comparison;
   if (
     !comparison ||
@@ -115,11 +118,7 @@ export function decodeScanContext(json) {
     !shaPattern.test(comparison.baselineSha) ||
     !shaPattern.test(comparison.headSha) ||
     (comparison.treeSha !== null && !shaPattern.test(comparison.treeSha)) ||
-    (comparison.baseRef !== null &&
-      (typeof comparison.baseRef !== "string" ||
-        !comparison.baseRef ||
-        comparison.baseRef.startsWith("-") ||
-        comparison.baseRef.includes("\0")))
+    !validBaseRef(comparison.baseRef)
   )
     invalidContext();
   if (
@@ -127,6 +126,16 @@ export function decodeScanContext(json) {
     !/^[a-f0-9]{64}$/u.test(comparison.workingTreeHash)
   )
     invalidContext();
+  return comparison;
+}
+export function decodeScanContext(json) {
+  let context;
+  try {
+    context = JSON.parse(json);
+  } catch {
+    invalidContext();
+  }
+  const comparison = validateComparisonIdentity(context);
   const ranges = entries(
     comparison.ranges,
     (items) =>

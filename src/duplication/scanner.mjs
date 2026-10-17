@@ -28,6 +28,41 @@ import { classify, filterPreExisting } from "./baseline.mjs";
 import { assertNoNativeSuppression } from "./suppression.mjs";
 const installedRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const positive = (value) => Number.isSafeInteger(value) && value > 0;
+function validateEndpointLocation(file, key, lines) {
+  if (
+    file[key] !== undefined &&
+    (!positive(file[key].line) ||
+      !Number.isSafeInteger(file[key].column) ||
+      file[key].column < 0 ||
+      file[key].line !== (key === "startLoc" ? file.start : file.end) ||
+      file[key].column >
+        Buffer.byteLength(lines[file[key].line - 1] ?? "", "utf8"))
+  )
+    throw new SetupError("Invalid jscpd endpoint location");
+}
+function validateEndpoint(repo, file, format, sourceLines) {
+  if (
+    !file ||
+    typeof file.name !== "string" ||
+    !positive(file.start) ||
+    !positive(file.end) ||
+    file.end < file.start
+  )
+    throw new SetupError("Invalid jscpd endpoint");
+  const path = sourcePath(scannerRepoPath(repo, file.name, format));
+  if (!existsSync(join(repo, path)))
+    throw new SetupError("jscpd endpoint is outside eligible source");
+  if (!sourceLines.has(path))
+    sourceLines.set(
+      path,
+      readFileSync(join(repo, path), "utf8").split(/\r?\n/u),
+    );
+  const lines = sourceLines.get(path);
+  if (file.end > lines.length)
+    throw new SetupError("jscpd endpoint exceeds eligible source");
+  for (const key of ["startLoc", "endLoc"])
+    validateEndpointLocation(file, key, lines);
+}
 /** Validate before reading endpoint source; reports never get to select arbitrary files. */
 export function validateNativeReport(report, repo) {
   if (!report || !Array.isArray(report.duplicates))
@@ -50,38 +85,8 @@ export function validateNativeReport(report, repo) {
       !positive(row.tokens)
     )
       throw new SetupError("Invalid jscpd clone measurements");
-    for (const file of [row.firstFile, row.secondFile]) {
-      if (
-        !file ||
-        typeof file.name !== "string" ||
-        !positive(file.start) ||
-        !positive(file.end) ||
-        file.end < file.start
-      )
-        throw new SetupError("Invalid jscpd endpoint");
-      const path = sourcePath(scannerRepoPath(repo, file.name, row.format));
-      if (!existsSync(join(repo, path)))
-        throw new SetupError("jscpd endpoint is outside eligible source");
-      if (!sourceLines.has(path))
-        sourceLines.set(
-          path,
-          readFileSync(join(repo, path), "utf8").split(/\r?\n/u),
-        );
-      const lines = sourceLines.get(path);
-      if (file.end > lines.length)
-        throw new SetupError("jscpd endpoint exceeds eligible source");
-      for (const key of ["startLoc", "endLoc"])
-        if (
-          file[key] !== undefined &&
-          (!positive(file[key].line) ||
-            !Number.isSafeInteger(file[key].column) ||
-            file[key].column < 0 ||
-            file[key].line !== (key === "startLoc" ? file.start : file.end) ||
-            file[key].column >
-              Buffer.byteLength(lines[file[key].line - 1] ?? "", "utf8"))
-        )
-          throw new SetupError("Invalid jscpd endpoint location");
-    }
+    for (const file of [row.firstFile, row.secondFile])
+      validateEndpoint(repo, file, row.format, sourceLines);
   }
   return report;
 }
