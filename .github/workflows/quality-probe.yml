@@ -19,6 +19,11 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Capture caller checkout state
+        run: |
+          git status --porcelain=v1 --untracked-files=all > "$RUNNER_TEMP/quality-probe-status-before"
+          git ls-files -z | xargs -0 sha256sum -- > "$RUNNER_TEMP/quality-probe-files-before"
+          sha256sum -- .git/index .git/config > "$RUNNER_TEMP/quality-probe-git-before"
       - id: quality
         uses: BASIC-BIT/quality-ratchet@93982d93fe3d2a8a3890d464e4f61199cc8ffafe
         with:
@@ -32,3 +37,11 @@ jobs:
           QR_REPORT_DIRECTORY: ${{ steps.quality.outputs.report-directory }}
         run: >-
           node -e 'console.log(JSON.stringify({outcome:process.env.QR_OUTCOME,strictExitCode:process.env.QR_STRICT_EXIT,reportDirectoryAvailable:Boolean(process.env.QR_REPORT_DIRECTORY)}))'
+      - name: Verify caller checkout state
+        if: ${{ !cancelled() }}
+        run: |
+          git status --porcelain=v1 --untracked-files=all > "$RUNNER_TEMP/quality-probe-status-after"
+          diff -u "$RUNNER_TEMP/quality-probe-status-before" "$RUNNER_TEMP/quality-probe-status-after"
+          sha256sum --check --status "$RUNNER_TEMP/quality-probe-files-before"
+          sha256sum --check --status "$RUNNER_TEMP/quality-probe-git-before"
+          echo 'checkoutUnchanged=true'
