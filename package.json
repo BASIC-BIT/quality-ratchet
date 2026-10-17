@@ -1,0 +1,34 @@
+{
+  "name": "quality-ratchet",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Git-relative code quality checks with repository-owned policy",
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BASIC-BIT/quality-ratchet.git"
+  },
+  "engines": {
+    "node": ">=24.15.0 <25"
+  },
+  "scripts": {
+    "format:check": "prettier --check .",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "@jscpd/tokenizer": "4.2.5",
+    "ajv": "8.20.0",
+    "eslint": "10.12.0",
+    "eslint-plugin-sonarjs": "4.2.0",
+    "jscpd": "5.0.12",
+    "mdast-util-from-markdown": "2.0.3",
+    "minimatch": "10.2.6",
+    "sh-syntax": "0.6.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.1"
+  },
+  "devDependencies": {
+    "prettier": "3.9.10"
+  }
+}

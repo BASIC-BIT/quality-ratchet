@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "scope": {
+    "exclude": ["test/fixtures/**"]
+  }
+}
