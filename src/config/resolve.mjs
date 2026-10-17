@@ -8,7 +8,7 @@ import {
 } from "./defaults.mjs";
 import { matchesAny, repositoryPath } from "./glob.mjs";
 import { ConfigurationError, validateConfig } from "./validate.mjs";
-import { formatForPath } from "../duplication/formats.mjs";
+import { formatForPath, supportedFormats } from "../duplication/formats.mjs";
 
 function merge(base, patch) {
   for (const [key, value] of Object.entries(patch)) {
@@ -94,7 +94,14 @@ export function effectiveCheck(policy, gate, path) {
 }
 
 // Discovery must reject symlinks and verify actual enabled coverage before scanning.
-export function matchesScope(policy, gate, path) {
+export function matchesScope(
+  policy,
+  gate,
+  path,
+  detectedFormat = formatForPath(path),
+) {
+  if (detectedFormat !== null && !supportedFormats.includes(detectedFormat))
+    throw new ConfigurationError("Unsupported detected format");
   const key = checkKey(gate);
   const normalized = repositoryPath(path);
   const check = policy.checks[key];
@@ -107,7 +114,7 @@ export function matchesScope(policy, gate, path) {
     return false;
   const supported =
     gate === "duplication"
-      ? check.formats.includes(formatForPath(normalized))
+      ? check.formats.includes(detectedFormat)
       : /\.(?:[cm]?[jt]s|[jt]sx)$/u.test(normalized);
   return (
     supported &&

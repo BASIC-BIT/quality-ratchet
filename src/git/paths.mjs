@@ -1,7 +1,8 @@
-import { lstatSync, existsSync } from "node:fs";
+import { lstatSync, existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { git, SetupError, verifyTree } from "./commands.mjs";
 import { effectiveCheck, matchesScope } from "../config/resolve.mjs";
+import { formatForPath } from "../duplication/formats.mjs";
 export function sourcePath(path) {
   if (
     typeof path !== "string" ||
@@ -98,8 +99,21 @@ export function listEligiblePaths(context, gate) {
   const paths = enumerateSources(context.comparison);
   const eligible = paths.filter(
     (path) =>
-      matchesScope(context.policy, gate, path) &&
-      effectiveCheck(context.policy, gate, path).mode !== "off",
+      matchesScope(
+        context.policy,
+        gate,
+        path,
+        formatForPath(
+          path,
+          context.comparison.treeSha
+            ? git(context.comparison.repo, [
+                "cat-file",
+                "blob",
+                `${context.comparison.treeSha}:${path}`,
+              ])
+            : readFileSync(join(context.comparison.repo, path), "utf8"),
+        ),
+      ) && effectiveCheck(context.policy, gate, path).mode !== "off",
   );
   Object.defineProperty(eligible, "excluded", { value: paths.excluded });
   return eligible;

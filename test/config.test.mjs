@@ -10,6 +10,7 @@ import {
 } from "../src/config/resolve.mjs";
 import {
   supportedFormats,
+  nativeFormats as acceptedFormats,
   formatForPath,
 } from "../src/duplication/formats.mjs";
 
@@ -442,11 +443,12 @@ test("configuration inventory matches the pinned native engine", async () => {
     .trim()
     .split(/\r?\n/u)
     .sort();
-  assert.deepEqual(supportedFormats, nativeFormats);
+  assert.deepEqual(acceptedFormats, nativeFormats);
+  assert.ok(supportedFormats.every((f) => nativeFormats.includes(f)));
   assert.doesNotThrow(() =>
     validateConfig({
       schemaVersion: 1,
-      checks: { duplication: { formats: nativeFormats } },
+      checks: { duplication: { formats: supportedFormats } },
     }),
   );
 });

@@ -15,11 +15,13 @@ import {
   matchesScope,
   resolvePolicy,
 } from "../config/resolve.mjs";
+import { formatForPath } from "../duplication/formats.mjs";
 const gates = ["duplication", "complexity", "file-size"];
-function selected(policy, path) {
+function selected(policy, path, bytes) {
+  const format = formatForPath(path, bytes.toString("utf8"));
   return gates.some(
     (gate) =>
-      matchesScope(policy, gate, path) &&
+      matchesScope(policy, gate, path, format) &&
       effectiveCheck(policy, gate, path).mode !== "off",
   );
 }
@@ -30,8 +32,8 @@ function copyTree(comparison, tree, destination, policy) {
         treeEntries(comparison.repo, tree).map((entry) => [entry.path, entry]),
       )
     : null;
-  const paths = candidates.filter((path) => selected(policy, path));
-  for (const path of paths) {
+  const paths = [];
+  for (const path of candidates) {
     if (!tree && inspectPath(comparison.repo, path))
       throw new SetupError("Source changed while preparing snapshot");
     const bytes = tree
@@ -39,6 +41,8 @@ function copyTree(comparison, tree, destination, policy) {
           encoding: null,
         })
       : readFileSync(join(comparison.repo, path));
+    if (!selected(policy, path, bytes)) continue;
+    paths.push(path);
     mkdirSync(dirname(join(destination, path)), { recursive: true });
     writeFileSync(join(destination, path), bytes);
   }
@@ -48,7 +52,7 @@ function copyTree(comparison, tree, destination, policy) {
 export function createSourceSnapshot(context) {
   if (context.comparison.workingTreeHash && !context.comparison.treeSha)
     assertWorkingIdentity(context.comparison);
-  const root = mkdtempSync(join(tmpdir(), "quality-source-"));
+  const root = mkdtempSync(join(tmpdir(), `quality-source-${process.pid}-`));
   try {
     const base = join(root, "base"),
       current = join(root, "current");
@@ -125,7 +129,9 @@ export function workingIdentity(
   const policy = resolvePolicy();
   const paths =
     capturedPaths ??
-    enumerateSources(comparison, null).filter((path) => selected(policy, path));
+    enumerateSources(comparison, null).filter((path) =>
+      selected(policy, path, readFileSync(join(comparison.repo, path))),
+    );
   const hash = createHash("sha256");
   function add(value) {
     const bytes = Buffer.from(value);

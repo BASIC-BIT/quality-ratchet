@@ -740,7 +740,7 @@ test("snapshot setup errors remove temporary directories and leave consumer unch
     const ctx = context(resolveComparison({ repo, base: "HEAD" }));
     ctx.comparison.treeSha = "a".repeat(40);
     const before = readdirSync(tmpdir()).filter((path) =>
-      path.startsWith("quality-source-"),
+      path.startsWith(`quality-source-${process.pid}-`),
     );
     const index = readFileSync(join(repo, ".git/index"));
     await assert.rejects(
@@ -748,7 +748,7 @@ test("snapshot setup errors remove temporary directories and leave consumer unch
     );
     assert.deepEqual(
       readdirSync(tmpdir()).filter((path) =>
-        path.startsWith("quality-source-"),
+        path.startsWith(`quality-source-${process.pid}-`),
       ),
       before,
     );
