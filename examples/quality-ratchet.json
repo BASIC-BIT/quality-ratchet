@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "checks": {
+    "complexity": { "cyclomatic": 15, "cognitive": 15 },
+    "fileSize": { "maxLines": 1000 },
+    "duplication": { "minLines": 8, "minTokens": 50 }
+  },
+  "overrides": [
+    {
+      "files": ["packages/legacy/**"],
+      "reason": "Measure legacy complexity while the package is split.",
+      "checks": {
+        "complexity": {
+          "mode": "advisory",
+          "reason": "Owned migration to smaller functions."
+        }
+      }
+    }
+  ]
+}

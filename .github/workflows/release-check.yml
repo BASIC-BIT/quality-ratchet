@@ -1,0 +1,16 @@
+name: Release check
+on:
+  workflow_dispatch:
+    inputs:
+      candidate:
+        description: Candidate full commit SHA or tag to qualify (does not publish)
+        required: true
+        type: string
+permissions:
+  contents: read
+  pull-requests: read
+jobs:
+  qualification:
+    uses: ./.github/workflows/ci.yml
+    with:
+      candidate: ${{ inputs.candidate }}
