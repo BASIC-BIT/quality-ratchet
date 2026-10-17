@@ -29,3 +29,131 @@
  * Gate findings retain scanner-specific fields and add mode and overrideIndices.
  */
 export {};
+
+import { isAbsolute } from "node:path";
+import { resolvePolicy } from "./config/resolve.mjs";
+import { sourcePath } from "./git/paths.mjs";
+import { SetupError } from "./git/commands.mjs";
+/**
+ * @typedef {{repo: string, baselineSha: string, headSha: string, baseRef: string | null, treeSha: string | null, workingTreeHash?: string, ranges: Map, renames: Map}} Comparison
+ * @typedef {{comparison: Comparison, policy: ResolvedPolicy, toolRoot: string}} ScanContext
+ * @typedef {{comparison: Comparison, selection: PolicySelection, toolRoot: string}} RunContext
+ */
+const shaPattern = /^[a-f0-9]{40}(?:[a-f0-9]{24})?$/u;
+function invalidContext() {
+  throw new SetupError("Invalid scan context or policy identity");
+}
+function entries(value, validate) {
+  if (!Array.isArray(value)) invalidContext();
+  const result = new Map();
+  for (const entry of value) {
+    if (!Array.isArray(entry) || entry.length !== 2) invalidContext();
+    const [path, item] = entry;
+    sourcePath(path);
+    if (result.has(path) || !validate(item)) invalidContext();
+    result.set(path, item);
+  }
+  return result;
+}
+function hunks(value) {
+  return entries(
+    value,
+    (items) =>
+      Array.isArray(items) &&
+      items.every(
+        (item) =>
+          item &&
+          ["oldStart", "oldCount", "newStart", "newCount"].every(
+            (key) => Number.isSafeInteger(item[key]) && item[key] >= 0,
+          ),
+      ),
+  );
+}
+function validatePolicy(policy) {
+  if (!policy || !/^[a-f0-9]{64}$/u.test(policy.hash)) invalidContext();
+  const input = structuredClone(policy);
+  delete input.hash;
+  for (const check of Object.values(input.checks ?? {}))
+    if (check.reason === null) delete check.reason;
+  const resolved = resolvePolicy(input);
+  if (resolved.hash !== policy.hash) invalidContext();
+  return resolved;
+}
+/** Maps and their hunk/new-path metadata cross scanner subprocesses explicitly. */
+export function encodeScanContext(context) {
+  const { comparison } = context;
+  const json = JSON.stringify({
+    ...context,
+    comparison: {
+      ...comparison,
+      ranges: [...comparison.ranges],
+      renames: [...comparison.renames],
+      rangeHunks: [...(comparison.ranges.hunks ?? new Map())],
+      renameHunks: [
+        ...(comparison.renames.hunks ?? comparison.ranges.hunks ?? new Map()),
+      ],
+      newPaths: [...(comparison.renames.newPaths ?? new Set())],
+    },
+  });
+  decodeScanContext(json);
+  return json;
+}
+export function decodeScanContext(json) {
+  let context;
+  try {
+    context = JSON.parse(json);
+  } catch {
+    invalidContext();
+  }
+  const comparison = context?.comparison;
+  if (
+    !comparison ||
+    typeof comparison.repo !== "string" ||
+    !isAbsolute(comparison.repo) ||
+    typeof context.toolRoot !== "string" ||
+    !isAbsolute(context.toolRoot) ||
+    !shaPattern.test(comparison.baselineSha) ||
+    !shaPattern.test(comparison.headSha) ||
+    (comparison.treeSha !== null && !shaPattern.test(comparison.treeSha)) ||
+    (comparison.baseRef !== null &&
+      (typeof comparison.baseRef !== "string" ||
+        !comparison.baseRef ||
+        comparison.baseRef.startsWith("-") ||
+        comparison.baseRef.includes("\0")))
+  )
+    invalidContext();
+  if (
+    comparison.workingTreeHash !== undefined &&
+    !/^[a-f0-9]{64}$/u.test(comparison.workingTreeHash)
+  )
+    invalidContext();
+  const ranges = entries(
+    comparison.ranges,
+    (items) =>
+      Array.isArray(items) &&
+      items.every(
+        (range) =>
+          Array.isArray(range) &&
+          range.length === 2 &&
+          Number.isSafeInteger(range[0]) &&
+          Number.isSafeInteger(range[1]) &&
+          range[0] >= 1 &&
+          range[1] >= range[0],
+      ),
+  );
+  const renames = entries(comparison.renames, (value) => {
+    sourcePath(value);
+    return true;
+  });
+  ranges.hunks = hunks(comparison.rangeHunks);
+  renames.hunks = hunks(comparison.renameHunks);
+  if (!Array.isArray(comparison.newPaths)) invalidContext();
+  renames.newPaths = new Set(comparison.newPaths.map(sourcePath));
+  ranges.renames = renames;
+  const { rangeHunks, renameHunks, newPaths, ...identity } = comparison;
+  return {
+    comparison: { ...identity, ranges, renames },
+    policy: validatePolicy(context.policy),
+    toolRoot: context.toolRoot,
+  };
+}

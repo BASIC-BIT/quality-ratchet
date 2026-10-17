@@ -40,7 +40,7 @@ export function repositoryPath(path) {
     !normalized ||
     normalized.startsWith("/") ||
     /^[A-Za-z]:/u.test(normalized) ||
-    /[\x00-\x1f\x7f]/u.test(normalized) ||
+    /\x00/u.test(normalized) ||
     normalized
       .split("/")
       .some((segment) => !segment || segment === "." || segment === "..")

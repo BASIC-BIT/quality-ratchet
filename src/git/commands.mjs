@@ -1,0 +1,88 @@
+import { execFileSync } from "node:child_process";
+export class SetupError extends Error {
+  constructor(message, options) {
+    super(message, options);
+    this.name = "SetupError";
+    this.exitCode = 2;
+  }
+}
+const nullFile = process.platform === "win32" ? "NUL" : "/dev/null";
+export function git(repo, args, options = {}) {
+  const env = Object.fromEntries(
+    Object.entries(process.env).filter(([key]) => !key.startsWith("GIT_")),
+  );
+  Object.assign(
+    env,
+    {
+      GIT_CONFIG_NOSYSTEM: "1",
+      GIT_CONFIG_GLOBAL: nullFile,
+      GIT_ATTR_NOSYSTEM: "1",
+      GIT_TERMINAL_PROMPT: "0",
+      GIT_OPTIONAL_LOCKS: "0",
+    },
+    options.env,
+  );
+  try {
+    return execFileSync(
+      "git",
+      [
+        "-c",
+        "core.fsmonitor=false",
+        "-c",
+        `core.hooksPath=${nullFile}`,
+        "-c",
+        `core.attributesFile=${nullFile}`,
+        "-c",
+        "core.quotePath=true",
+        ...args,
+      ],
+      {
+        cwd: repo,
+        encoding: "utf8",
+        maxBuffer: 64 * 1024 * 1024,
+        timeout: 180_000,
+        stdio: ["pipe", "pipe", "pipe"],
+        ...options,
+        env,
+        shell: false,
+      },
+    );
+  } catch (cause) {
+    throw new SetupError(`Git ${args[0]} failed`, { cause });
+  }
+}
+export function tryGit(repo, args) {
+  try {
+    return git(repo, args).trim();
+  } catch {
+    return null;
+  }
+}
+export function resolveCommit(repo, ref) {
+  if (
+    typeof ref !== "string" ||
+    !ref ||
+    ref.startsWith("-") ||
+    ref.includes("\0")
+  )
+    throw new SetupError("Expected a commit reference");
+  const sha = git(repo, [
+    "rev-parse",
+    "--verify",
+    "--end-of-options",
+    `${ref}^{commit}`,
+  ]).trim();
+  if (!/^[a-f0-9]{40}(?:[a-f0-9]{24})?$/u.test(sha))
+    throw new SetupError("Invalid commit identity");
+  return sha;
+}
+export function verifyTree(repo, sha) {
+  if (!/^[a-f0-9]{40}(?:[a-f0-9]{24})?$/u.test(sha))
+    throw new SetupError("currentTree must be a full Git object SHA");
+  return git(repo, [
+    "rev-parse",
+    "--verify",
+    "--end-of-options",
+    `${sha}^{tree}`,
+  ]).trim();
+}
