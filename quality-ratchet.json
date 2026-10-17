@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "scope": {
+    "include": [
+      "src/**"
+    ]
+  },
+  "checks": {
+    "duplication": {
+      "formats": [
+        "javascript",
+        "typescript"
+      ]
+    }
+  },
+  "reports": {
+    "testDebt": false,
+    "testSize": {
+      "enabled": false
+    }
+  }
+}
