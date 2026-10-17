@@ -28,7 +28,26 @@ export function saveFailure(directory, message) {
   writeFileSync(join(directory, "summary.md"), renderSummary(input));
   return input;
 }
-export function publish(saved, directory) {
+function escapeProperty(value) {
+  return value.replace(
+    /[%:,\u0000-\u001f\u007f-\u009f]/gu,
+    (char) =>
+      "%" + char.charCodeAt(0).toString(16).toUpperCase().padStart(2, "0"),
+  );
+}
+export async function publishWarnings(report) {
+  if (!report) return;
+  const { validatePolicyReport } = await import("../src/report.mjs");
+  validatePolicyReport(report);
+  const size = report.advisories.testSize;
+  if (size.state !== "reported") return;
+  for (const { path, lines } of size.data.oversizedFiles)
+    console.log(
+      `::warning file=${escapeProperty(path)},line=1::Test/support file has ${lines} physical lines (advisory threshold: ${report.policy.active.reports.testSize.oversizedLines}).`,
+    );
+}
+export async function publish(saved, directory) {
+  await publishWarnings(saved.report);
   output("report-directory", directory);
   output("outcome", saved.result.outcome);
   output("strict-exit-code", saved.report?.strictExitCode ?? 2);
@@ -83,7 +102,7 @@ export async function runAction() {
       "Installed tool verification or execution failed. Rerun the quality check.",
     );
   }
-  publish(saved, directory);
+  await publish(saved, directory);
 }
 if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url)
   await runAction();

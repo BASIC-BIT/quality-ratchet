@@ -9,7 +9,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { withInstalledTool } from "./bootstrap-tool.mjs";
 import { verifyInstalledTool } from "../src/tool-manifest.mjs";
@@ -24,7 +24,11 @@ try {
   mkdirSync(repo);
   git(repo, ["init", "-q"]);
   writeFileSync(join(repo, "base.ts"), "export const original = 1;\n");
-  git(repo, ["add", "base.ts"]);
+  writeFileSync(
+    join(repo, "large.test.ts"),
+    "// existing test source\n".repeat(1000),
+  );
+  git(repo, ["add", "base.ts", "large.test.ts"]);
   git(repo, [
     "-c",
     "user.name=Smoke",
@@ -56,6 +60,24 @@ try {
       ]);
       assert.equal(clean.status, 0, clean.stderr);
       assert.equal(JSON.parse(clean.stdout).strictExitCode, 0);
+      const warnings = spawnSync(
+        process.execPath,
+        [
+          "--input-type=module",
+          "-e",
+          `
+        import { publishWarnings } from ${JSON.stringify(pathToFileURL(join(root, "scripts/run-action.mjs")).href)};
+        import { readFileSync } from "node:fs";
+        await publishWarnings(JSON.parse(readFileSync(0, "utf8")));
+      `,
+        ],
+        { env, input: clean.stdout, encoding: "utf8", windowsHide: true },
+      );
+      assert.equal(warnings.status, 0, warnings.stderr);
+      assert.match(
+        warnings.stdout,
+        /^::warning file=large.test.ts,line=1::.*1000/,
+      );
       const block =
         Array.from(
           { length: 20 },

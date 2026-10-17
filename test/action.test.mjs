@@ -24,7 +24,11 @@ import {
   toolManifest,
   verifyInstalledTool,
 } from "../src/tool-manifest.mjs";
-import { git, commit, write, toolRoot } from "./helpers/repo.mjs";
+import { git, commit, write, toolRoot, withRepo } from "./helpers/repo.mjs";
+
+import { runContext } from "./helpers/process.mjs";
+import { runQuality } from "../src/runner.mjs";
+import { summarizeTestSources } from "../src/reports/test-size.mjs";
 
 const read = (name) => readFileSync(join(toolRoot, name), "utf8");
 const execute = (file, args = [], options = {}) =>
@@ -442,3 +446,165 @@ test("action canonicalizes repository aliases while rejecting external symlink t
     rmSync(f.root, { recursive: true, force: true });
   }
 });
+
+async function warningReport(callback, reports = {}) {
+  return withRepo(async (repo) => {
+    write(
+      repo,
+      "test/large.ts",
+      'const privateSource = "NEVER_PUBLISH_SOURCE";\n\n\n',
+    );
+    commit(repo);
+    const report = await runQuality(
+      runContext(repo, {
+        reports: {
+          testDebt: false,
+          testSize: { oversizedLines: 3 },
+          ...reports,
+        },
+      }),
+    );
+    return callback(report);
+  });
+}
+function published(f, report) {
+  const directory = join(f.root, "publication");
+  mkdirSync(directory, { recursive: true });
+  writeFileSync(join(directory, "summary.md"), "saved summary\n");
+  const saved = { report, result: { outcome: "clean", exitCode: 0 } };
+  const input = join(directory, "input.json");
+  writeFileSync(input, JSON.stringify(saved));
+  const script = `import { publish } from ${JSON.stringify(new URL("../scripts/run-action.mjs", import.meta.url).href)};
+    import { readFileSync } from "node:fs";
+    await publish(JSON.parse(readFileSync(process.argv[1])), process.argv[2]);`;
+  return execute("--input-type=module", ["-e", script, input, directory]);
+}
+test("publication warns for unchanged oversized tests without changing the clean verdict", async () => {
+  const f = fixture();
+  try {
+    await warningReport((report) => {
+      assert.equal(report.strictExitCode, 0);
+      const before = JSON.stringify(report);
+      const run = published(f, report);
+      assert.equal(run.status, 0, run.stderr);
+      assert.match(
+        run.stdout,
+        /^::warning file=test\/large.ts,line=1::.*3.*3/m,
+      );
+      assert.doesNotMatch(run.stdout, /NEVER_PUBLISH_SOURCE/);
+      assert.equal(JSON.stringify(report), before);
+    });
+    for (const reports of [
+      { testSize: { enabled: false } },
+      { testSize: { oversizedLines: 1000 } },
+    ])
+      await warningReport((report) => {
+        const run = published(f, report);
+        assert.equal(run.status, 0, run.stderr);
+        assert.equal(run.stdout, "");
+      }, reports);
+  } finally {
+    rmSync(f.root, { recursive: true, force: true });
+  }
+});
+test("warning properties escape command delimiters and controls and reject invalid inventory", async () => {
+  const f = fixture();
+  try {
+    await warningReport((report) => {
+      const inventory = report.advisories.testSize.data;
+      inventory.entries[0].path = "test/a%,:\r\n::error::injected\t\u001b.ts";
+      report.advisories.testSize.data = summarizeTestSources(
+        inventory.entries,
+        3,
+      );
+      const run = published(f, report);
+      assert.equal(run.status, 0, run.stderr);
+      assert.match(
+        run.stdout,
+        /^::warning file=test\/a%25%2C%3A%0D%0A%3A%3Aerror%3A%3Ainjected%09%1B.ts,line=1::/,
+      );
+      assert.equal(run.stdout.trimEnd().split("\n").length, 1);
+      report.advisories.testSize.data.oversizedFiles[0].lines++;
+      const invalid = published(f, report);
+      assert.notEqual(invalid.status, 0);
+      assert.equal(invalid.stdout, "");
+    });
+  } finally {
+    rmSync(f.root, { recursive: true, force: true });
+  }
+});
+test(
+  "full bootstrap publishes only validated warnings across captured child output",
+  { timeout: 240000 },
+  async () => {
+    const f = fixture(),
+      before = identity(f.consumer);
+    try {
+      await warningReport((report) => {
+        writeFileSync(
+          join(f.source, "src/github/cli.mjs"),
+          `
+        import { writeEvidence } from "./evidence.mjs";
+        import { renderSummary } from "./summary.mjs";
+        import { writeFileSync } from "node:fs";
+        import { join } from "node:path";
+        export async function runHosted({directory}) {
+          console.log("::error::UNTRUSTED_CHILD_OUTPUT");
+          const saved = {report:${JSON.stringify(report)}, scanned:null, current:null, tool:null,
+            result:{exitCode:0,outcome:"clean",rationale:null,message:"Clean"}};
+          writeEvidence({...saved,directory});
+          writeFileSync(join(directory,"summary.md"),renderSummary(saved));
+          return saved;
+        }
+      `,
+        );
+        const event = join(f.root, "event.json");
+        writeFileSync(event, JSON.stringify({ action: "opened" }));
+        const run = execute(join(f.source, "scripts/bootstrap-tool.mjs"), [], {
+          env: {
+            ...process.env,
+            RUNNER_TEMP: f.temp,
+            GITHUB_WORKSPACE: f.workspace,
+            QR_REPOSITORY_PATH: f.consumer,
+            QR_ACTION_PATH: f.source,
+            GITHUB_EVENT_PATH: event,
+            GITHUB_EVENT_NAME: "pull_request",
+            GITHUB_OUTPUT: join(f.root, "outputs"),
+            GITHUB_STEP_SUMMARY: join(f.root, "summary"),
+          },
+        });
+        assert.equal(run.status, 0, run.stderr);
+        assert.match(run.stdout, /^::warning file=test\/large.ts,line=1::/);
+        assert.doesNotMatch(
+          run.stdout + run.stderr,
+          /UNTRUSTED_CHILD_OUTPUT|NEVER_PUBLISH_SOURCE/,
+        );
+        const entries = readdirSync(f.temp);
+        assert.equal(entries.length, 1);
+        const directory = join(f.temp, entries[0]);
+        const saved = JSON.parse(
+          readFileSync(join(directory, "quality-results.json")),
+        );
+        assert.match(
+          readFileSync(join(f.root, "summary"), "utf8"),
+          /oversizedFiles.*test\/large.ts/,
+        );
+        assert.equal(saved.quality.strictExitCode, 0);
+        assert.equal(saved.result.exitCode, 0);
+        assert.equal(
+          saved.quality.advisories.testSize.data.oversizedFiles.length,
+          1,
+        );
+        assert.equal(
+          execute(join(f.source, "scripts/finish-action.mjs"), [], {
+            env: { ...process.env, QR_REPORT_DIRECTORY: directory },
+          }).status,
+          0,
+        );
+        assert.deepEqual(identity(f.consumer), before);
+      });
+    } finally {
+      rmSync(f.root, { recursive: true, force: true });
+    }
+  },
+);

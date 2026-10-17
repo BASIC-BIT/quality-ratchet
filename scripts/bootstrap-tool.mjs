@@ -3,6 +3,7 @@ import {
   mkdirSync,
   mkdtempSync,
   realpathSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -120,10 +121,19 @@ async function bootstrap() {
           stdio: "pipe",
           windowsHide: true,
         });
+        // Only validated saved inventory crosses the captured child-output boundary.
+        const { publishWarnings } = await import(
+          pathToFileURL(join(root, "scripts/run-action.mjs")).href
+        );
+        await publishWarnings(
+          JSON.parse(
+            readFileSync(join(directory, "quality-results.json"), "utf8"),
+          ).quality,
+        );
       },
     );
   } catch {
-    publish(
+    await publish(
       saveFailure(
         directory,
         "Tool installation, checkout validation or execution failed. Rerun the quality check.",
