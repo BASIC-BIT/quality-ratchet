@@ -31,6 +31,8 @@ Each `overrides` entry requires `files`, a reason and a `checks` object. Matchin
 
 `reports.testDebt` enables the informational test-involved duplication inventory. It defaults on with duplication and cannot explicitly be true when duplication is off. `reports.testSize` has `enabled` and `oversizedLines`, defaulting to true and 1000. Absolute reports do not decide merge eligibility.
 
+The hosted action emits safe, non-failing warnings for the oversized-test inventory. GitHub displays at most 10 warning annotations per step. A qualified cross-owner run emitted 15 warnings but retained 10 annotations; all 15 entries remained in JSON, the summary and logs. This [GitHub annotation limit](https://docs.github.com/en/rest/checks/runs#update-a-check-run) does not change blocking findings or report contents.
+
 Unknown keys, invalid thresholds/formats, missing reasons and malformed globs fail with exit 2. There are no workflow inputs, environment settings, strict-check CLI threshold flags, executable plugins, source-comment suppressions or fingerprint allowances that override policy.
 
 `explain-config` shows active/proposed policy and the config commit. A configuration edit must be separately reviewed and integrated before later PRs use it.

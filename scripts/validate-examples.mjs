@@ -11,14 +11,7 @@ assert.equal(pkg.version, lock.version);
 assert.equal(pkg.version, lock.packages[""].version);
 assert.equal(pkg.engines.node, ">=24.15.0 <25");
 const workflow = readFileSync("examples/code-quality.yml", "utf8");
-assert.match(
-  workflow,
-  /BASIC-BIT\/quality-ratchet@(?:[a-f0-9]{40}|REPLACE_WITH_FULL_RELEASE_SHA)/,
-);
-if (process.argv.includes("--release")) {
-  assert.doesNotMatch(workflow, /REPLACE_WITH_FULL_RELEASE_SHA/);
-  assert.match(workflow, /BASIC-BIT\/quality-ratchet@[a-f0-9]{40} # v1\.0\.0/);
-}
+assert.match(workflow, /BASIC-BIT\/quality-ratchet@[a-f0-9]{40} # v1\.0\.0/);
 console.log(
   "Schema, policy examples, package versions and adoption template valid.",
 );

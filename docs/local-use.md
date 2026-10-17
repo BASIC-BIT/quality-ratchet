@@ -43,11 +43,11 @@ The check script runs test, lint, format and schema/example validation. Test dis
 
 ## Installation and diagnostic details
 
-Clone a separate checkout, select the reviewed full release SHA, and leave optional dependencies enabled for jscpd's platform executable:
+The following setup pins the qualified v1.0.0 runtime. Publication is pending as recorded in [releases](releases.md); consumer activation remains a separate reviewed migration. Keep optional dependencies enabled for jscpd's platform executable:
 
 ```text
 git clone https://github.com/BASIC-BIT/quality-ratchet.git ../quality-ratchet-tool
-git -C ../quality-ratchet-tool checkout --detach <approved-full-release-sha>
+git -C ../quality-ratchet-tool checkout --detach ba9c9bec7c312a303e61b6779591610cd32509b8 # v1.0.0
 npm --prefix ../quality-ratchet-tool ci --ignore-scripts --include=optional
 ```
 

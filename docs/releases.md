@@ -1,8 +1,10 @@
-# Release 1.0.0 candidate
+# Release 1.0.0, qualified runtime
 
 Version 1.0.0 uses policy and report schema version 1. It introduces the shared CLI and ordinary pull-request action with baseline-owned policy, three configurable checks and informational test reports.
 
-This is an unpublished candidate. Hosted platform results, fresh whole-branch review, the final runtime commit and the adoption pin remain pending. Do not publish a tag or adopt the example while `REPLACE_WITH_FULL_RELEASE_SHA` remains.
+The selected runtime is `ba9c9bec7c312a303e61b6779591610cd32509b8`. Hosted qualification and the fresh whole-branch review are complete, including the sole annotation correction and its scoped review. The adoption example pins this runtime. Publication has not happened. Source must integrate through PR #1 with a normal merge that preserves this commit before the coordinator creates the v1.0.0 tag and release at this commit. The documentation follow-up is not the release target.
+
+See the [acceptance record](acceptance.md) for exact runs, versions and limits. Consumer configuration and activation remain separate work.
 
 ## Behavior to review
 
@@ -12,13 +14,15 @@ Compared with copied consumer scripts, policy now lives in one validated JSON fi
 
 ## Qualification and publication
 
-1. Run CI on the exact candidate head. Ubuntu and Windows each test exact minimum Node 24.15.0 and current Node 24. The Linux production-only package job verifies the installed assets and scanner entrypoints.
-2. Run the candidate root action against its own ordinary PR with the self-policy already present on its target. Read JSON evidence, summary, outputs and uploaded artifacts for clean, regression, advisory, configuration-edit and failure cases.
-3. Use disposable unmerged PRs for exception transitions. Obtain explicit human authorization for their exact identities before label writes. Exercise no-rationale failure, accepted regressions, persistence after push, rationale removal, label removal and scanner failure while exempt.
-4. Compare legacy and shared behavior under equivalent policies. Retain consumer gates until source scopes, unchanged debt, changed fixtures and reviewed boundaries are reconciled.
-5. Obtain a fresh whole-branch review of the fixed source head and resolve valid feedback. After the latest pushed commit is at least 30 minutes old, refresh every check, review, comment, thread, mutable review summary and mergeability state.
-6. Integrate through the authorized repository path. Select the last reviewed runtime-code commit after qualification. Record its full SHA and trusted asset hash. Update the adoption example and version notes in a docs/test-only follow-up without changing those runtime assets. Requalify if runtime assets change.
-7. Run `node scripts/validate-examples.mjs --release` on the finalized main-branch documentation. It rejects a pending pin. Confirm the example resolves to the selected release and publication rights are complete. Only then explicitly publish the version tag and release notes.
+For v1.0.0, Ubuntu and Windows each passed 217 tests with no failures or skips on Node 24.15.0 and 24.21.0. The Linux production-only package smoke passed. Own-PR and cross-owner execution, policy edits, advisory and operational-failure cases, freshness checks, annotations and all authorized exception transitions passed inspection of actual reports and outputs. Both disposable probes are closed without merging. Immutable source comparisons match; current consumer migration acceptance remains separate.
+
+The remaining publication steps are:
+
+1. Push the docs/test follow-up, inspect its CI and feedback, and complete the exact-head readiness refresh after the latest pushed commit is at least 30 minutes old.
+2. Integrate through PR #1 with a normal merge preserving runtime `ba9c9bec7c312a303e61b6779591610cd32509b8` in history. Do not squash away the selected release target.
+3. Confirm every trusted runtime asset is unchanged in the documentation follow-up and run `node scripts/validate-examples.mjs --release` on the final main-branch documentation.
+4. Explicitly publish the v1.0.0 tag and release at the selected runtime commit. A later runtime change requires renewed qualification and a new selection.
+5. Prepare and review each consumer's policy and cutover under its existing gates before enabling the shared action.
 
 The manual `Release check` workflow accepts a candidate ref and prints its resolved commit and tool manifest. Use a full SHA for reproducible qualification; a tag is resolved independently by each job and their recorded SHAs must agree. It runs checks and the package smoke only, has read-only permissions, and neither publishes nor substitutes for PR, exception or independent review evidence.
 
@@ -26,7 +30,7 @@ The manual `Release check` workflow accepts a candidate ref and prints its resol
 
 The manifest hashes raw runtime asset bytes and verifies the isolated copy against its source on the same machine. Checkout line-ending conversion can change that hash for one Git commit. This repository declares LF text checkout to keep its assets consistent; retain the observed platform manifest with each qualification record. Use the full Git SHA as the portable release identity, not a universal raw-byte hash.
 
-The final adoption template must pin the selected full release SHA with a `# v1.0.0` comment. A convenience major tag may exist; consumers should use immutable pins. Restore the previous reviewed pin to roll back. Keep old enforcement until migration acceptance makes rollback practical.
+The adoption template pins the selected full release SHA with a `# v1.0.0` comment. A convenience major tag may exist; consumers should use immutable pins. For future upgrades, restore the previous compatible reviewed pin to roll back. The initial release has no predecessor; preserve the consumer's old enforcement and follow the reviewed cutover-revert procedure in [adoption](adoption.md).
 
 Current reviewed nested pins:
 
@@ -39,3 +43,14 @@ Current reviewed nested pins:
 Dependabot checks this repository's GitHub Actions weekly. Consumers must configure their own update PRs where permitted; this repository does not schedule their upgrades.
 
 Changes to shared default thresholds/exclusions, existing configuration semantics, report schema or accepted inputs require a major version. Scanner updates and correctness fixes can change findings even in patch releases, so release notes must explain them. Repository-local policy edits do not require a shared release. Preserve provenance and notices on every release.
+
+## Runtime identity
+
+| Field              | Qualified value                                                    |
+| ------------------ | ------------------------------------------------------------------ |
+| Release target     | `ba9c9bec7c312a303e61b6779591610cd32509b8`                         |
+| Version / schema   | 1.0.0 / 1                                                          |
+| Runtime asset hash | `48a19355e78793cdc495987512c93b4cff580fd42142780b760e9e7a08c470dc` |
+| Lock hash          | `f7401eb223be14df24b406248c918248074476d6be0bb6372fe8bb6b496e9953` |
+
+The final correction publishes safe oversized-test warnings across bootstrap without changing scanner selection, fingerprints, policy, report validation or locked dependencies. GitHub displays at most 10 warning annotations per step; full inventories remain in JSON, summaries and logs. See [configuration](configuration.md#reports-and-errors) for that platform limit.

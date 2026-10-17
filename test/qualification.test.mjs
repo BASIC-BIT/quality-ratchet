@@ -75,12 +75,46 @@ test("release qualification is read-only, covers platforms and keeps action PR-o
     assert.ok(scripts.check.includes(command));
 });
 
-test("schema examples validate and unpublished template fails final release validation", () => {
-  const run = (...args) =>
-    spawnSync(process.execPath, ["scripts/validate-examples.mjs", ...args], {
-      cwd: toolRoot,
-      encoding: "utf8",
-    });
-  assert.equal(run().status, 0);
-  assert.equal(run("--release").status, 1);
+test("schema examples and the qualified release template validate", () => {
+  const result = spawnSync(
+    process.execPath,
+    ["scripts/validate-examples.mjs", "--release"],
+    { cwd: toolRoot, encoding: "utf8" },
+  );
+  assert.equal(result.status, 0, result.stdout + result.stderr);
 });
+
+test("release validation rejects placeholders, shortened pins and wrong versions", () =>
+  withRepo((repo) => {
+    for (const path of [
+      "quality-ratchet.json",
+      "package.json",
+      "package-lock.json",
+    ])
+      cpSync(join(toolRoot, path), join(repo, path));
+    const template = readFileSync(
+      join(toolRoot, "examples/code-quality.yml"),
+      "utf8",
+    );
+    for (const pin of [
+      "REPLACE_WITH_FULL_RELEASE_SHA",
+      "ba9c9be # v1.0.0",
+      "ba9c9bec7c312a303e61b6779591610cd32509b8 # v2.0.0",
+    ]) {
+      write(
+        repo,
+        "examples/code-quality.yml",
+        template.replace(
+          /quality-ratchet@[a-f0-9]{40} # v1\.0\.0/,
+          `quality-ratchet@${pin}`,
+        ),
+      );
+      const result = spawnSync(
+        process.execPath,
+        [join(toolRoot, "scripts/validate-examples.mjs"), "--release"],
+        { cwd: repo, encoding: "utf8" },
+      );
+      assert.equal(result.status, 1, result.stdout + result.stderr);
+      assert.match(result.stderr, /AssertionError/);
+    }
+  }));

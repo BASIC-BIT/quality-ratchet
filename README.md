@@ -2,7 +2,7 @@
 
 Check new or growing duplication, function complexity and file size against Git history. Each repository owns one JSON policy. Existing debt may remain or shrink.
 
-The CLI and composite action are implemented. Version 1.0.0 is a release candidate. Hosted qualification, fresh review and the immutable release pin are pending. The [workflow example](examples/code-quality.yml) is not ready for adoption until its explicit placeholder is replaced.
+Version 1.0.0 has a qualified, reviewed runtime commit. The [workflow example](examples/code-quality.yml) pins that exact commit. Publication is still pending source integration and the version tag/release. Neither consumer has migrated or staged policy. See the [acceptance record](docs/acceptance.md) before planning adoption.
 
 ## Start locally
 
