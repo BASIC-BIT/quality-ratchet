@@ -1,1 +1,1 @@
-export const identity = (value: number) => value;
+export const identity = (value: number) => value + 1;
