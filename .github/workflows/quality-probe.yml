@@ -28,7 +28,7 @@ jobs:
           git ls-files -z | xargs -0 sha256sum -- > "$RUNNER_TEMP/quality-probe-files-before"
           sha256sum -- .git/index .git/config > "$RUNNER_TEMP/quality-probe-git-before"
       - id: quality
-        uses: BASIC-BIT/quality-ratchet@3d009a995ac13adf75f53733bc34d6e7f378fcc0
+        uses: BASIC-BIT/quality-ratchet@ba9c9bec7c312a303e61b6779591610cd32509b8
         with:
           github-token: ${{ github.token }}
           repository-path: ${{ github.workspace }}
