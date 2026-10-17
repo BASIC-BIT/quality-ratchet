@@ -7,6 +7,7 @@ import { runQuality, runScanner, diagnosticRecord } from "./runner.mjs";
 import { coverageFor, scanContext } from "./report.mjs";
 import { collectTestSourceInventory } from "./reports/test-size.mjs";
 import { summarizeTestDebt } from "./reports/test-debt.mjs";
+import { toolManifest } from "./tool-manifest.mjs";
 const toolRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 export function parseArgs(argv) {
   const args = [...argv],
@@ -131,9 +132,23 @@ function diagnostic(command, context) {
     );
   }
 }
+function inspectTool(argv) {
+  if (argv.length === 1 && argv[0] === "--version") {
+    console.log(toolManifest(toolRoot).version);
+    return true;
+  }
+  if (argv[0] === "tool-manifest") {
+    if (argv.length > 2 || (argv[1] && argv[1] !== "--json"))
+      throw new SetupError("Unsupported manifest option");
+    console.log(JSON.stringify(toolManifest(toolRoot), null, 2));
+    return true;
+  }
+  return false;
+}
 export async function main(argv = process.argv.slice(2)) {
   const json = argv.includes("--json");
   try {
+    if (inspectTool(argv)) return 0;
     const options = parseArgs(argv);
     const comparison = resolveComparison({
       repo: resolve(options.repo),
