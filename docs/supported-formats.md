@@ -2,9 +2,9 @@
 
 The shared checker accepts 132 formats with explicit file routes. Native jscpd 5.0.12 accepts 224 grammar names, but many have no default extension or filename route. Configuration rejects unreachable names instead of silently selecting no source. The separate native inventory remains available for embedded-language identities and version checks.
 
-The table preserves all 130 effective native extension formats. It includes 209 extensions, counting the added MDX route, plus Dockerfile, Makefile and GNUmakefile. Native jscpd itself has no default filename-only mappings. The shared scanner passes explicit extension and filename mappings through a tool-owned configuration. Native precedence assigns .vb to visual-basic, so vbnet cannot independently select a standalone file.
+The table preserves all 130 effective native extension formats. It includes 209 extensions, counting the added MDX route, plus Dockerfile, Makefile and GNUmakefile. Native jscpd itself has no default filename-only mappings. The shared scanner passes explicit extension and filename mappings through a tool-owned configuration. The pinned native registry assigns .vb to vbnet; visual-basic has no standalone extension route. An independent native CLI test verifies the emitted vbnet identity without shared mappings.
 
-Files without a recognized route can still match native first-line shebang rules. Interpreter text selects python, javascript, ruby, bash, perl or php, in that order. A recognized extension or filename takes precedence. Matching is case-sensitive, including native .R. Shebang selection affects duplication only. Complexity and file size retain their eight JS/TS extensions.
+Files without a recognized route can still match native first-line shebang rules. Interpreter text selects python, javascript, ruby, bash, perl or php, in that order. A recognized extension or filename takes precedence. Matching is case-sensitive, including native .R. Discovery reads at most a 4 KiB prefix for unknown paths. A source beginning with #! whose first line fills that prefix without a newline fails operationally with a path-only error, rather than silently losing native coverage. Shebang selection affects duplication only. Complexity and file size retain their eight JS/TS extensions.
 
 ## What the native tests prove
 

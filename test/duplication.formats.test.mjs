@@ -53,10 +53,16 @@ test("configured formats cannot silently disappear from native detection", async
     const rows = await runJscpd(root, { minLines: 8, minTokens: 50 });
     for (const [route, { format, file }] of expected) {
       assert.equal(formatForPath(file), format);
+      const emitted = ["markdown", "astro", "svelte", "vue"].includes(format)
+        ? "javascript"
+        : format;
       assert.ok(
         rows.some(
           (row) =>
-            row.a.startsWith(route + "/") && row.b.startsWith(route + "/"),
+            row.a.startsWith(route + "/") &&
+            row.b.startsWith(route + "/") &&
+            row.aFormat === emitted &&
+            row.bFormat === emitted,
         ),
         route + " " + file,
       );
@@ -144,3 +150,67 @@ test("shebang-selected content is bound to local freshness and remains duplicati
       /changed.*Rerun/,
     );
   }));
+
+import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+test("VB ownership matches the raw pinned native CLI without shared mappings", async () => {
+  const root = mkdtempSync(join(tmpdir(), "quality-vb-owner-"));
+  try {
+    const source = join(root, "source");
+    mkdirSync(source);
+    for (const name of ["a.vb", "b.vb"])
+      writeFileSync(join(source, name), lexical);
+    const config = join(root, "native.json");
+    writeFileSync(config, "{}");
+    execFileSync(
+      process.execPath,
+      [
+        join(toolRoot, "node_modules/jscpd/run-jscpd.js"),
+        ".",
+        "--config",
+        config,
+        "-k",
+        "50",
+        "-l",
+        "8",
+        "--no-gitignore",
+        "--silent",
+        "-r",
+        "json,silent",
+        "-o",
+        root,
+      ],
+      { cwd: source, stdio: "pipe" },
+    );
+    const native = JSON.parse(
+      readFileSync(join(root, "jscpd-report.json"), "utf8"),
+    );
+    assert.ok(native.duplicates.length);
+    assert.deepEqual(
+      [...new Set(native.duplicates.map((row) => row.format))],
+      ["vbnet"],
+    );
+    assert.equal(formatForPath("source.vb"), "vbnet");
+    assert.doesNotThrow(() =>
+      resolvePolicy({
+        schemaVersion: 1,
+        checks: { duplication: { formats: ["vbnet"] } },
+      }),
+    );
+    assert.throws(
+      () =>
+        resolvePolicy({
+          schemaVersion: 1,
+          checks: { duplication: { formats: ["visual-basic"] } },
+        }),
+      /format|enum/i,
+    );
+    const shared = await runJscpd(source, { minLines: 8, minTokens: 50 });
+    assert.ok(shared.length);
+    assert.ok(
+      shared.every((row) => row.aFormat === "vbnet" && row.bFormat === "vbnet"),
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

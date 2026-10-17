@@ -102,9 +102,17 @@ export function matchesScope(
 ) {
   if (detectedFormat !== null && !supportedFormats.includes(detectedFormat))
     throw new ConfigurationError("Unsupported detected format");
-  const key = checkKey(gate);
+  if (!matchesPathScope(policy, gate, path)) return false;
+  const check = policy.checks[checkKey(gate)];
+  return gate === "duplication"
+    ? check.formats.includes(detectedFormat)
+    : /\.(?:[cm]?[jt]s|[jt]sx)$/u.test(repositoryPath(path));
+}
+
+/** Static scope only: no mode or source-format decision. */
+export function matchesPathScope(policy, gate, path) {
   const normalized = repositoryPath(path);
-  const check = policy.checks[key];
+  const check = policy.checks[checkKey(gate)];
   if (matchesAny(normalized, [...HARD_EXCLUDES, ...GENERATED_EXCLUDES]))
     return false;
   if (
@@ -112,12 +120,7 @@ export function matchesScope(
     matchesAny(normalized, policy.scope.exclude)
   )
     return false;
-  const supported =
-    gate === "duplication"
-      ? check.formats.includes(detectedFormat)
-      : /\.(?:[cm]?[jt]s|[jt]sx)$/u.test(normalized);
   return (
-    supported &&
     matchesAny(normalized, check.include) &&
     !matchesAny(normalized, check.exclude)
   );

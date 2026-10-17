@@ -9,20 +9,19 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { git, SetupError, resolveCommit } from "./commands.mjs";
-import { enumerateSources, inspectPath, treeEntries } from "./paths.mjs";
 import {
-  effectiveCheck,
-  matchesScope,
-  resolvePolicy,
-} from "../config/resolve.mjs";
-import { formatForPath } from "../duplication/formats.mjs";
+  enumerateSources,
+  inspectPath,
+  treeEntries,
+  matchesSourceScope,
+} from "./paths.mjs";
+import { effectiveCheck, resolvePolicy } from "../config/resolve.mjs";
 const gates = ["duplication", "complexity", "file-size"];
-function selected(policy, path, bytes) {
-  const format = formatForPath(path, bytes.toString("utf8"));
+function selected(policy, path, repo, tree = null) {
   return gates.some(
     (gate) =>
-      matchesScope(policy, gate, path, format) &&
-      effectiveCheck(policy, gate, path).mode !== "off",
+      effectiveCheck(policy, gate, path).mode !== "off" &&
+      matchesSourceScope(policy, gate, path, repo, tree),
   );
 }
 function copyTree(comparison, tree, destination, policy) {
@@ -36,12 +35,12 @@ function copyTree(comparison, tree, destination, policy) {
   for (const path of candidates) {
     if (!tree && inspectPath(comparison.repo, path))
       throw new SetupError("Source changed while preparing snapshot");
+    if (!selected(policy, path, comparison.repo, tree)) continue;
     const bytes = tree
       ? git(comparison.repo, ["cat-file", "blob", entries.get(path).hash], {
           encoding: null,
         })
       : readFileSync(join(comparison.repo, path));
-    if (!selected(policy, path, bytes)) continue;
     paths.push(path);
     mkdirSync(dirname(join(destination, path)), { recursive: true });
     writeFileSync(join(destination, path), bytes);
@@ -130,7 +129,7 @@ export function workingIdentity(
   const paths =
     capturedPaths ??
     enumerateSources(comparison, null).filter((path) =>
-      selected(policy, path, readFileSync(join(comparison.repo, path))),
+      selected(policy, path, comparison.repo),
     );
   const hash = createHash("sha256");
   function add(value) {

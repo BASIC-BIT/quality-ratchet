@@ -86,3 +86,23 @@ export function verifyTree(repo, sha) {
     `${sha}^{tree}`,
   ]).trim();
 }
+
+/** Stop cat-file after bounded stdout; preserve every other Git failure. */
+export function gitBlobPrefix(repo, object, limit) {
+  try {
+    return git(repo, ["cat-file", "blob", object], {
+      encoding: null,
+      maxBuffer: limit,
+    }).subarray(0, limit);
+  } catch (error) {
+    const cause = error.cause;
+    if (
+      cause?.code === "ENOBUFS" &&
+      Buffer.isBuffer(cause.stdout) &&
+      cause.stdout.length >= limit &&
+      cause.stderr.length === 0
+    )
+      return cause.stdout.subarray(0, limit);
+    throw error;
+  }
+}

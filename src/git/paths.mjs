@@ -1,7 +1,11 @@
-import { lstatSync, existsSync, readFileSync } from "node:fs";
+import { lstatSync, existsSync, openSync, readSync, closeSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { git, SetupError, verifyTree } from "./commands.mjs";
-import { effectiveCheck, matchesScope } from "../config/resolve.mjs";
+import { git, gitBlobPrefix, SetupError, verifyTree } from "./commands.mjs";
+import {
+  effectiveCheck,
+  matchesScope,
+  matchesPathScope,
+} from "../config/resolve.mjs";
 import { formatForPath } from "../duplication/formats.mjs";
 export function sourcePath(path) {
   if (
@@ -99,21 +103,14 @@ export function listEligiblePaths(context, gate) {
   const paths = enumerateSources(context.comparison);
   const eligible = paths.filter(
     (path) =>
-      matchesScope(
+      effectiveCheck(context.policy, gate, path).mode !== "off" &&
+      matchesSourceScope(
         context.policy,
         gate,
         path,
-        formatForPath(
-          path,
-          context.comparison.treeSha
-            ? git(context.comparison.repo, [
-                "cat-file",
-                "blob",
-                `${context.comparison.treeSha}:${path}`,
-              ])
-            : readFileSync(join(context.comparison.repo, path), "utf8"),
-        ),
-      ) && effectiveCheck(context.policy, gate, path).mode !== "off",
+        context.comparison.repo,
+        context.comparison.treeSha,
+      ),
   );
   Object.defineProperty(eligible, "excluded", { value: paths.excluded });
   return eligible;
@@ -123,4 +120,45 @@ export function assertRepository(repo) {
   if (resolve(actual) !== resolve(repo))
     throw new SetupError("repo must identify the repository root");
   return resolve(actual);
+}
+
+const SHEBANG_PREFIX_BYTES = 4096;
+/** Unknown routes inspect a bounded prefix; recognized paths never read source here. */
+export function matchesSourceScope(policy, gate, path, repo, tree = null) {
+  if (!matchesPathScope(policy, gate, path)) return false;
+  const format = formatForPath(path);
+  if (gate !== "duplication" || format !== null)
+    return matchesScope(policy, gate, path, format);
+  let prefix;
+  if (tree)
+    prefix = gitBlobPrefix(
+      repo,
+      `${tree}:${sourcePath(path)}`,
+      SHEBANG_PREFIX_BYTES,
+    );
+  else {
+    const fd = openSync(join(repo, sourcePath(path)), "r");
+    try {
+      const bytes = Buffer.alloc(SHEBANG_PREFIX_BYTES);
+      const size = readSync(fd, bytes, 0, bytes.length, 0);
+      prefix = bytes.subarray(0, size);
+    } finally {
+      closeSync(fd);
+    }
+  }
+  if (
+    prefix[0] === 35 &&
+    prefix[1] === 33 &&
+    prefix.length === SHEBANG_PREFIX_BYTES &&
+    !prefix.includes(10)
+  )
+    throw new SetupError(
+      `Shebang exceeds bounded discovery prefix in ${JSON.stringify(path)}`,
+    );
+  return matchesScope(
+    policy,
+    gate,
+    path,
+    formatForPath(path, prefix.toString("utf8")),
+  );
 }
