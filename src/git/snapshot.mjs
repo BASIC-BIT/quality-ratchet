@@ -21,12 +21,16 @@ import {
   matchesGlobalScope,
   isJsTsPath,
 } from "../config/resolve.mjs";
+import { reportSourceSelected } from "../reports/scope.mjs";
 const gates = ["duplication", "complexity", "file-size"];
 function selected(policy, path, repo, tree = null) {
-  return gates.some(
-    (gate) =>
-      effectiveCheck(policy, gate, path).mode !== "off" &&
-      matchesSourceScope(policy, gate, path, repo, tree),
+  return (
+    reportSourceSelected(policy, path) ||
+    gates.some(
+      (gate) =>
+        effectiveCheck(policy, gate, path).mode !== "off" &&
+        matchesSourceScope(policy, gate, path, repo, tree),
+    )
   );
 }
 function copyTree(comparison, tree, destination, policy) {

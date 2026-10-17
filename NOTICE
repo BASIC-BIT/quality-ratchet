@@ -51,3 +51,8 @@ regression tests under the owner authorization recorded in docs/provenance.md.
 The extracted files have no separate upstream file notices. LICENSE remains
 unchanged; no private product source, business data or allowance registry is
 included.
+
+Task 6 adapts generic runner validation and test-debt reporting from the immutable
+Chronote and Perkcord inputs listed in docs/provenance.md. Those inspected files
+carry no separate file-level notices. The recorded extraction authorization and
+existing LICENSE remain the basis; no unrelated private material is relicensed.

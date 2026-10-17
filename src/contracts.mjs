@@ -157,3 +157,17 @@ export function decodeScanContext(json) {
     toolRoot: context.toolRoot,
   };
 }
+
+/**
+ * @typedef {{base: string, mergeBase: string, policyHash: string, changedFiles: number, scanned: number, coverage: object, findings: object[], preExisting?: number, currentClones?: object[]}} GateReport
+ * @typedef {{name: GateName, state: "scanned" | "disabled" | "error", exitCode: 0 | 1 | 2 | null, report: GateReport | null, error: string | null, coverage?: object}} ScannerResult
+ * @typedef {{state: "reported" | "disabled" | "error", data: object | null, error: string | null, coverage: {policyHash: string, sourceGate: GateName, inventory: string}}} DiagnosticReport
+ * @typedef {{schemaVersion: 1, policy: PolicySelection, scanners: ScannerResult[], strictExitCode: 0 | 1 | 2, advisories: {testSize: DiagnosticReport, testDebt: DiagnosticReport}, coverage: {enabledFiles: number, blockingFiles: number, gates: object, error: string | null}}} QualityReport
+ * @typedef {{files: number, lines: number, oversizedLines: number, oversizedFiles: {path: string, lines: number}[], entries: {path: string, lines: number}[]}} TestSourceInventory
+ *
+ * Disabled scanner records contain policy hash, zero eligible paths and off-by-policy reason.
+ * Diagnostic inventory returns separate nullable testSize/testDebt views. Each keeps its
+ * scanner's active source scope independent of check mode, and counts only JS/TS tests/support.
+ * Process exit 1 means measured regressions; strictExitCode considers validated ratchet modes.
+ * An enabled scanner/report error or empty total enabled coverage always produces exit 2.
+ */
