@@ -11,6 +11,10 @@
         "javascript",
         "typescript"
       ]
+    },
+    "complexity": {
+      "mode": "off",
+      "reason": "Disposable proposed policy must not weaken its own PR"
     }
   },
   "reports": {
