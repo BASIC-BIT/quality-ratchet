@@ -56,3 +56,8 @@ Task 6 adapts generic runner validation and test-debt reporting from the immutab
 Chronote and Perkcord inputs listed in docs/provenance.md. Those inspected files
 carry no separate file-level notices. The recorded extraction authorization and
 existing LICENSE remain the basis; no unrelated private material is relicensed.
+
+Task 7 adapts Chronote's rationale parser and policy assertions, and uses its
+code-quality workflow as a behavioral reference at the immutable snapshot above.
+Those inspected files contain no separate notices. Existing LICENSE and the
+recorded owner extraction authorization apply; no private product data is copied.

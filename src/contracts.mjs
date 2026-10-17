@@ -69,7 +69,7 @@ function hunks(value) {
       ),
   );
 }
-function validatePolicy(policy) {
+export function validatePolicy(policy) {
   if (!policy || !/^[a-f0-9]{64}$/u.test(policy.hash)) invalidContext();
   const input = structuredClone(policy);
   delete input.hash;
@@ -170,4 +170,21 @@ export function decodeScanContext(json) {
  * scanner's active source scope independent of check mode, and counts only JS/TS tests/support.
  * Process exit 1 means measured regressions; strictExitCode considers validated ratchet modes.
  * An enabled scanner/report error or empty total enabled coverage always produces exit 2.
+ */
+
+/**
+ * @typedef {{headSha: string, baseRef: string, baseSha: string, treeSha: string, configCommit: string, policyHash: string}} ScannedRevision
+ * @typedef {{headSha: string, baseRef: string, baseSha: string, labels: string[], body: string}} CurrentPr
+ * @typedef {{exitCode: 0 | 1 | 2, outcome: "clean" | "advisory" | "exception" | "regression" | "invalid-exception" | "stale" | "error", rationale: string | null, message: string}} PolicyResult
+ *
+ * Hosted evidence wraps the unchanged QualityReport as quality, with schemaVersion,
+ * tool {version,node,scanners,verified}, scanned, current revision/labels, result and
+ * explicit missing keys. Descriptions are not copied; active rationale is in result.
+ * toolVerified is release-qualified installed-tool evidence supplied by Task 8.
+ * It is never inferred from rerunning development tests in a consumer.
+ *
+ * Pure policy checks report consistency. Hosted orchestration must also run
+ * validateQualityReport(report, context) while immutable prepared source is
+ * available, and verifyPrepared before/after scanning and after live API reads.
+ * Pure validation alone cannot establish source bounds or scanner measurements.
  */

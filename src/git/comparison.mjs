@@ -65,53 +65,7 @@ export function resolveComparison({ repo, base }) {
       snapshot.current,
       snapshot.paths.current,
     );
-    const options = [
-      "--no-ext-diff",
-      "--no-textconv",
-      "--no-color",
-      "--text",
-      "--find-renames",
-      "--src-prefix=a/",
-      "--dst-prefix=b/",
-    ];
-    const ranges = parseUnifiedDiff(
-      git(isolated, [
-        "diff",
-        ...options,
-        "--unified=0",
-        "--diff-filter=d",
-        before,
-        after,
-        "--",
-      ]),
-    );
-    const status = git(isolated, [
-      "diff",
-      ...options,
-      "--name-status",
-      "-z",
-      before,
-      after,
-      "--",
-    ]);
-    const renames = new Map();
-    renames.hunks = ranges.hunks;
-    renames.newPaths = new Set();
-    for (const { oldPath, newPath } of parseRenameStatus(status)) {
-      renames.set(newPath, oldPath);
-      ranges.set(newPath, [[1, Number.MAX_SAFE_INTEGER]]);
-    }
-    const parts = status.split("\0");
-    for (let i = 0; i < parts.length;) {
-      const state = parts[i++];
-      if (!state) continue;
-      const path = parts[i++];
-      if (state.startsWith("R") || state.startsWith("C")) i++;
-      if (state === "A") renames.newPaths.add(path);
-    }
-    ranges.renames = renames;
-    comparison.ranges = ranges;
-    comparison.renames = renames;
+    Object.assign(comparison, comparisonDiff(isolated, before, after));
     comparison.workingTreeHash = workingIdentity(
       comparison,
       snapshot.current,
@@ -161,4 +115,74 @@ export function loadPolicySelection({ repo, baselineSha, currentTree = null }) {
     proposed = readPolicy(repo, currentTree);
   const diff = diffPolicies(active, proposed);
   return { active, proposed, configCommit, changed: diff.length !== 0, diff };
+}
+
+function comparisonDiff(isolated, before, after) {
+  const options = [
+    "--no-ext-diff",
+    "--no-textconv",
+    "--no-color",
+    "--text",
+    "--find-renames",
+    "--src-prefix=a/",
+    "--dst-prefix=b/",
+  ];
+  const ranges = parseUnifiedDiff(
+    git(isolated, [
+      "diff",
+      ...options,
+      "--unified=0",
+      "--diff-filter=d",
+      before,
+      after,
+      "--",
+    ]),
+  );
+  const status = git(isolated, [
+    "diff",
+    ...options,
+    "--name-status",
+    "-z",
+    before,
+    after,
+    "--",
+  ]);
+  const renames = new Map();
+  renames.hunks = ranges.hunks;
+  renames.newPaths = new Set();
+  for (const { oldPath, newPath } of parseRenameStatus(status)) {
+    renames.set(newPath, oldPath);
+    ranges.set(newPath, [[1, Number.MAX_SAFE_INTEGER]]);
+  }
+  const parts = status.split("\0");
+  for (let i = 0; i < parts.length;) {
+    const state = parts[i++];
+    if (!state) continue;
+    const path = parts[i++];
+    if (state.startsWith("R") || state.startsWith("C")) i++;
+    if (state === "A") renames.newPaths.add(path);
+  }
+  ranges.renames = renames;
+  return { ranges, renames };
+}
+
+/** Hosted comparison is against the exact fetched target, never a local merge-base. */
+export function treeComparison({
+  repo,
+  baselineSha,
+  headSha,
+  baseRef,
+  treeSha,
+}) {
+  resolveCommit(repo, baselineSha);
+  resolveCommit(repo, headSha);
+  verifyTree(repo, treeSha);
+  return {
+    repo,
+    baselineSha,
+    headSha,
+    baseRef,
+    treeSha,
+    ...comparisonDiff(repo, baselineSha, treeSha),
+  };
 }
