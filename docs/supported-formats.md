@@ -18,7 +18,7 @@ Markdown, MDX, Astro, Svelte and Vue can report clones under an embedded languag
 - Table layout alone is removed from findings. Prose and literal code remain eligible, subject to the Markdown limit above.
 - The pinned normalization tokenizer lacks Razor, excel-formula and native fallback text grammars. Unlabeled fences use that text fallback. Their identities retain exact raw span content. Unchanged copies and both-endpoint rewrites are tested. Comment or whitespace edits can conservatively produce findings, and shortened raw spans need not match prior identities.
 - Native source suppression markers are unsupported. A region the pinned JS/TS comment matcher would suppress causes an operational error. Its matcher recognizes comment-shaped text inside strings. Unpaired JS/TS markers do not suppress a region. Generic tokenizers suppress unpaired starts and drop orphan-end lines, so those inputs fail too. Markdown checks outer markers and fenced languages. Other container grammars reject marker text conservatively because they can delegate to generic tokenizers. Diagnostics contain paths, never source. The checker never rewrites source to bypass the engine.
-- Execution has been checked on Windows with Node 24.18.0. Linux and the declared minimum Node version remain release-qualification work.
+- Runtime qualification passed on Ubuntu and Windows at Node 24.15.0 and 24.21.0. See the [acceptance record](acceptance.md) for the exact runs and results.
 
 ## Routes
 
