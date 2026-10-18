@@ -2,6 +2,8 @@
 
 Check new or growing duplication, function complexity and file size against Git history. Each repository owns one JSON policy. Existing debt may remain or shrink.
 
+Current source is the unpublished 1.0.1 CRLF correctness patch candidate. See [release notes](docs/releases.md) for its scope and qualification limits.
+
 The [workflow example](examples/code-quality.yml) pins the reviewed v1.0.0 release commit, whose executable assets match the qualified source. Confirm publication on the [v1.0.0 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.0) before following [adoption](docs/adoption.md). The [acceptance record](docs/acceptance.md) is the October 18, 2026 qualification snapshot, including consumer preparation and remaining migration work.
 
 ## Start locally

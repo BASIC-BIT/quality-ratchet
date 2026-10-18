@@ -65,6 +65,7 @@ function sourceIdentityContext(path, format, cache) {
       // Embedded-language positions refer to their container, which is not a
       // valid JS/TS program. Those spans keep language-local parsing below.
       fullFileRegexRanges: nativeJsContext?.regexRanges ?? null,
+      fullFileLiteralRanges: nativeJsContext?.literalRanges ?? null,
       bashCommentRangesPromise: null,
       markdownCodeNodes,
       embeddedContexts: new Map(),
@@ -112,6 +113,7 @@ async function normalizeEndpointRange(
     ...range,
     context.fullFileRegexRanges,
     bashCommentRanges,
+    context.fullFileLiteralRanges,
   );
 }
 

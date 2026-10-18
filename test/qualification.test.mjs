@@ -75,10 +75,10 @@ test("release qualification is read-only, covers platforms and keeps action PR-o
     assert.ok(scripts.check.includes(command));
 });
 
-test("schema examples and the qualified release template validate", () => {
+test("schema examples and the retained published template validate", () => {
   const result = spawnSync(
     process.execPath,
-    ["scripts/validate-examples.mjs", "--release"],
+    ["scripts/validate-examples.mjs"],
     { cwd: toolRoot, encoding: "utf8" },
   );
   assert.equal(result.status, 0, result.stdout + result.stderr);
@@ -117,4 +117,19 @@ test("release validation rejects placeholders, shortened pins and wrong versions
       assert.equal(result.status, 1, result.stdout + result.stderr);
       assert.match(result.stderr, /AssertionError/);
     }
+
+    const version = JSON.parse(
+      readFileSync(join(repo, "package.json"), "utf8"),
+    ).version;
+    write(
+      repo,
+      "examples/code-quality.yml",
+      template.replace(/# v1\.0\.0/, `# v${version}`),
+    );
+    const ready = spawnSync(
+      process.execPath,
+      [join(toolRoot, "scripts/validate-examples.mjs"), "--release"],
+      { cwd: repo, encoding: "utf8" },
+    );
+    assert.equal(ready.status, 0, ready.stdout + ready.stderr);
   }));

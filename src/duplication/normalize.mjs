@@ -48,14 +48,17 @@ export function parseJsSource(source, format) {
     scriptKind,
   );
   const ranges = [];
+  const literalRanges = [];
   const visit = (node) => {
     if (node.kind === ts.SyntaxKind.RegularExpressionLiteral) {
       ranges.push([node.getStart(sourceFile), node.getEnd()]);
     }
+    if (ts.isStringLiteralLike(node))
+      literalRanges.push([node.getStart(sourceFile), node.getEnd()]);
     ts.forEachChild(node, visit);
   };
   visit(sourceFile);
-  return { regexRanges: ranges };
+  return { regexRanges: ranges, literalRanges };
 }
 
 export function findJsRegexRanges(source, format) {
@@ -95,6 +98,7 @@ export function normalizeCloneSource(
   format = "text",
   jsRegexRanges,
   bashCommentRanges,
+  jsLiteralRanges,
 ) {
   let tokens;
   try {
@@ -105,9 +109,13 @@ export function normalizeCloneSource(
   } catch {
     tokens = [{ type: "raw", value: source, range: [0, source.length] }];
   }
-  jsRegexRanges ??= JS_LIKE_FORMATS.has(format)
-    ? findJsRegexRanges(source, format)
-    : [];
+  const jsContext =
+    JS_LIKE_FORMATS.has(format) &&
+    (jsRegexRanges === undefined || jsLiteralRanges === undefined)
+      ? parseJsSource(source, format)
+      : null;
+  jsRegexRanges ??= jsContext?.regexRanges ?? [];
+  jsLiteralRanges ??= jsContext?.literalRanges ?? [];
   return (
     "\0" +
     tokens
@@ -123,7 +131,24 @@ export function normalizeCloneSource(
           bashCommentRanges,
         );
       })
-      .map((token) => JSON.stringify([token.type, token.value]))
+      // JSX attribute fragments can retain line endings in default tokens.
+      // Canonicalize only outside AST literals, including quoted JSX attributes.
+      .map((token) =>
+        JSON.stringify([
+          token.type,
+          JS_LIKE_FORMATS.has(format) && token.type === "default"
+            ? token.value.replaceAll("\r\n", (eol, offset) =>
+                jsLiteralRanges.some(
+                  ([start, end]) =>
+                    start <= token.range[0] + offset &&
+                    token.range[0] + offset < end,
+                )
+                  ? eol
+                  : "\n",
+              )
+            : token.value,
+        ]),
+      )
       .join("\0") +
     "\0"
   );
@@ -163,6 +188,7 @@ export function normalizeCloneSourceRange(
   endOffset,
   fullFileRegexRanges,
   fullFileBashCommentRanges = [],
+  fullFileLiteralRanges,
 ) {
   const fragment = source.slice(startOffset, endOffset);
   const jsRegexRanges = JS_LIKE_FORMATS.has(format)
@@ -176,11 +202,17 @@ export function normalizeCloneSourceRange(
           .filter(([start, end]) => start < endOffset && end > startOffset)
           .map(([start, end]) => [start - startOffset, end - startOffset])
       : [];
+  const jsLiteralRanges = JS_LIKE_FORMATS.has(format)
+    ? (fullFileLiteralRanges ?? parseJsSource(source, format).literalRanges)
+        .filter(([start, end]) => start < endOffset && end > startOffset)
+        .map(([start, end]) => [start - startOffset, end - startOffset])
+    : [];
   return normalizeCloneSource(
     fragment,
     format,
     jsRegexRanges,
     bashCommentRanges,
+    jsLiteralRanges,
   );
 }
 

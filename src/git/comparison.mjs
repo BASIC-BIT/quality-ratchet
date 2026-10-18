@@ -123,6 +123,7 @@ function comparisonDiff(isolated, before, after) {
     "--no-textconv",
     "--no-color",
     "--text",
+    "--ignore-cr-at-eol",
     "--find-renames",
     "--src-prefix=a/",
     "--dst-prefix=b/",

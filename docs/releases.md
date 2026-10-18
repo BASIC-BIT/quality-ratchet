@@ -1,12 +1,18 @@
-# Release 1.0.0, qualified runtime
+# Release 1.0.1, unpublished patch candidate
+
+Version 1.0.1 corrects local LF/CRLF comparison and JSX clone identity. EOL-only checkout conversion no longer touches every source line. JSX scanner fragments retain a stable identity across LF and CRLF while string, quoted JSX attribute, template and raw literal contents stay significant. Genuine changed or added duplicates still block.
+
+Policy defaults, scopes, thresholds, schema and scanner dependencies are unchanged. This candidate needs independent review and renewed platform qualification before publication. The adoption example continues to pin published v1.0.0 until a qualified patch commit is selected. Normal example validation permits that retained pin; --release validation requires its version to match the package before publication.
+
+## Release 1.0.0 history
 
 Version 1.0.0 uses policy and report schema version 1. It introduces the shared CLI and ordinary pull-request action with baseline-owned policy, three configurable checks and informational test reports.
 
-This guide records qualification and remaining publication work as of October 18, 2026. Check the [v1.0.0 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.0) for live publication status.
+This section retains the October 18, 2026 qualification record. Version 1.0.0 was published at R below. See the [v1.0.0 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.0) for the published release.
 
 The selected release commit R is `84f47115b726d962e73f6c3a06ba69b07cc38ccb`. Qualified source Q is `9d713408d8c12eb9ced26fe45b4a99e1df5505ff`. All 47 trusted runtime assets plus action.yml are byte-for-byte and Git-blob identical at R and Q. The earlier whole-branch review, subsequent scoped correction reviews and configured-provider review of exact Q are complete. Hosted behavior qualification belongs to Q and carries to R through this executable equivalence.
 
-Publication had not happened at this snapshot. Integrate PR #1 with a normal merge preserving R, then create the v1.0.0 tag and release at R. R already includes corrected documentation and a safe example pin to Q. The updated adoption example pins R. Tagging Q would instead include its older example pointing to the withdrawn candidate; the later pin follow-up is not the release target.
+The published v1.0.0 tag remains at R. Its publication and tag are unchanged by the 1.0.1 candidate. The adoption example pins R.
 
 See the [acceptance record](acceptance.md) for exact runs, versions and limits. Consumer configuration and activation remain separate work.
 
@@ -20,13 +26,7 @@ Compared with copied consumer scripts, policy now lives in one validated JSON fi
 
 For qualification source Q, Ubuntu and Windows each passed 223 tests with no failures or reported skips on Node 24.15.0 and 24.21.0. The Linux production-only package smoke passed. POSIX working-file backslash cases execute on Ubuntu; those fixture bodies return early on Windows. Own-PR and cross-owner execution, policy edits, advisory and operational-failure cases, freshness checks, annotations and every authorized exception transition passed actual-report inspection. Both disposable probes closed without merging, and all seven task-owned refs were removed. Immutable source comparison findings carry forward through verified unchanged measurement assets and normal-path comparisons. Current consumer migration acceptance remains separate.
 
-The remaining publication steps are:
-
-1. Push the docs/test follow-up, inspect its CI and feedback, and complete the exact-head readiness refresh after the latest pushed commit is at least 30 minutes old.
-2. Integrate through PR #1 with a normal merge preserving release commit R `84f47115b726d962e73f6c3a06ba69b07cc38ccb` in history. Do not squash away the selected release target.
-3. Confirm R's CI is acceptable and every trusted runtime asset plus action.yml matches Q and the pin follow-up. Run `node scripts/validate-examples.mjs --release` on the final main-branch documentation.
-4. Explicitly publish the v1.0.0 tag and release at R. A later runtime change requires renewed qualification and a new selection.
-5. Prepare and review each consumer's policy and cutover under its existing gates before enabling the shared action.
+Consumer policy preparation and cutover still need their own review and migration evidence. The published v1.0.0 qualification does not qualify the changed 1.0.1 runtime.
 
 The manual `Release check` workflow accepts a candidate ref and prints its resolved commit and tool manifest. Use a full SHA for reproducible qualification; a tag is resolved independently by each job and their recorded SHAs must agree. It runs checks and the package smoke only, has read-only permissions, and neither publishes nor substitutes for PR, exception or independent review evidence.
 

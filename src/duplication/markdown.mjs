@@ -1,7 +1,7 @@
 import { fromMarkdown } from "mdast-util-from-markdown";
 import { findBashCommentRanges } from "./shell.mjs";
 import {
-  findJsRegexRanges,
+  parseJsSource,
   scannerSourceRange,
   normalizeCloneSourceRange,
 } from "./normalize.mjs";
@@ -25,11 +25,12 @@ export async function normalizeMarkdownScannerRange(context, file, format) {
         ? findBashCommentRanges(node.value).then((bashCommentRanges) => ({
             source: node.value,
             regexRanges: [],
+            literalRanges: [],
             bashCommentRanges,
           }))
         : Promise.resolve({
             source: node.value,
-            regexRanges: findJsRegexRanges(node.value, format),
+            ...parseJsSource(node.value, format),
             bashCommentRanges: [],
           }),
     );
@@ -57,6 +58,7 @@ export async function normalizeMarkdownScannerRange(context, file, format) {
     ...range,
     embedded.regexRanges,
     embedded.bashCommentRanges,
+    embedded.literalRanges,
   );
 }
 

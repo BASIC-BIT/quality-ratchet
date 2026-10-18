@@ -1,6 +1,6 @@
 {
   "name": "quality-ratchet",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Git-relative code quality checks with repository-owned policy",
   "type": "module",
