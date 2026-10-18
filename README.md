@@ -4,7 +4,7 @@ Check new or growing duplication, function complexity and file size against Git 
 
 Current source is the unpublished 1.0.1 CRLF correctness patch candidate. See [release notes](docs/releases.md) for its scope and qualification limits.
 
-The [workflow example](examples/code-quality.yml) pins selected 1.0.1 publication target R2, `4ea131d30f161e07b4845fe64e55ae59fde31eab`. The scoped source review passed; hosted patch qualification and publication remain pending. Check the [v1.0.1 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) and [acceptance record](docs/acceptance.md) before [adoption](docs/adoption.md). Consumer policies have merged, but migrations remain unmerged and existing enforcement remains active.
+The [workflow example](examples/code-quality.yml) pins reviewed 1.0.1 source and corrected fixture Q3, `b256189fa96e1a460609917a8a56383f793b4216`. Scoped runtime and fixture reviews passed; final hosted patch qualification and publication remain pending. Check the [v1.0.1 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) and [acceptance record](docs/acceptance.md) before [adoption](docs/adoption.md). Consumer policies have merged, but migrations remain unmerged and existing enforcement remains active.
 
 ## Start locally
 
