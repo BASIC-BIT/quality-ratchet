@@ -1,6 +1,6 @@
 {
   "name": "quality-ratchet",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Git-relative code quality checks with repository-owned policy",
   "type": "module",
@@ -14,7 +14,11 @@
   },
   "scripts": {
     "format:check": "prettier --check .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test": "node scripts/run-tests.mjs",
+    "lint": "eslint .",
+    "validate:examples": "node scripts/validate-examples.mjs",
+    "check": "npm test && npm run lint && npm run format:check && npm run validate:examples"
   },
   "dependencies": {
     "@jscpd/tokenizer": "4.2.5",

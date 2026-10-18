@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "checks": {
+    "duplication": {
+      "minLines": 8,
+      "minTokens": 50
+    },
+    "complexity": {
+      "cyclomatic": 15,
+      "cognitive": 15
+    },
+    "fileSize": {
+      "maxLines": 1000
+    }
+  },
+  "reports": {
+    "testDebt": true,
+    "testSize": {
+      "enabled": true,
+      "oversizedLines": 1000
+    }
+  }
+}

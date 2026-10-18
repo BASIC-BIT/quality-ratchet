@@ -1,0 +1,12 @@
+{
+  "name": "hostile-consumer",
+  "private": true,
+  "scripts": {
+    "preinstall": "node lifecycle.cjs",
+    "postinstall": "node lifecycle.cjs"
+  },
+  "dependencies": {
+    "eslint": "1.0.0",
+    "typescript": "1.0.0"
+  }
+}

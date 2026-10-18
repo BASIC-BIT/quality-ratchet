@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "scope": {
+    "exclude": ["convex/**/_generated/**"]
+  },
+  "checks": {
+    "complexity": {
+      "cyclomatic": 15,
+      "cognitive": 15
+    },
+    "fileSize": {
+      "maxLines": 1000
+    },
+    "duplication": {
+      "minLines": 8,
+      "minTokens": 50
+    }
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "test/**"],
+      "reason": "Keep related test scenarios together while preventing further growth above the agreed limit.",
+      "checks": {
+        "fileSize": {
+          "maxLines": 1500
+        }
+      }
+    }
+  ],
+  "reports": {
+    "testDebt": true,
+    "testSize": {
+      "enabled": true,
+      "oversizedLines": 1000
+    }
+  }
+}
