@@ -1,6 +1,6 @@
 # Prepare adoption of 1.0.1
 
-The [workflow example](../examples/code-quality.yml) pins reviewed 1.0.1 source and corrected fixture Q3, `b256189fa96e1a460609917a8a56383f793b4216`. Hosted patch qualification and publication remain pending. Confirm both on the [v1.0.1 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) and [acceptance record](acceptance.md) before activation. Chronote policy PR #419 and Perkcord policy PR #1153 have merged; migrations remain unmerged and neither replacement is active.
+The [workflow example](../examples/code-quality.yml) pins selected 1.0.1 publication target R3, `0873869f6b8fd80150d24689849ec0aebd94e9dd`. Hosted patch qualification and publication remain pending. Confirm both on the [v1.0.1 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) and [acceptance record](acceptance.md) before activation. Chronote policy PR #419 and Perkcord policy PR #1153 have merged; migrations remain unmerged and neither replacement is active.
 
 ## Prepare the target branch
 

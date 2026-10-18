@@ -8,9 +8,9 @@ The scoped source review passed. Policy defaults, scopes, thresholds, schema, pa
 
 ## Patch source and publication selection
 
-Source and fixture Q3 is `b256189fa96e1a460609917a8a56383f793b4216`. Its runtime is identical to reviewed Q2, `bb24eb0e00420cc0691c69590f4f06f63dccc60e`. This intermediate documentation commit safely pins Q3 as 1.0.1 and is selected as future publication target R3. A later documentation head E3 will pin R3 without a self-referential commit. Preserve R3 through normal integration and complete required readiness and qualification before an immutable v1.0.1 tag.
+Source and fixture Q3 is `b256189fa96e1a460609917a8a56383f793b4216`. Its runtime is identical to reviewed Q2, `bb24eb0e00420cc0691c69590f4f06f63dccc60e`. Selected publication target R3 is `0873869f6b8fd80150d24689849ec0aebd94e9dd`; its archive safely pins Q3 as 1.0.1. This later documentation head E3 pins R3 in current adoption examples and local setup. E3 is not the tag target. Preserve R3 through normal integration and complete required readiness and qualification before an immutable v1.0.1 tag.
 
-The 48 manifest assets, action.yml and CI workflow must remain byte-for-byte and Git-blob identical across Q3/R3/E3. Recheck that identity before publication. Normal `node scripts/validate-examples.mjs --release` must pass. The release-check workflow delegates its candidate to CI, which invokes that command when the candidate is nonempty, after its existing locked install. Source wiring and local positive/negative validation pass. Intermediate hosted execution exposed a fixture setup failure; fresh final PR CI and the actual amended release-check run remain pending for this selection. Check the [v1.0.1 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) for publication status and the [acceptance record](acceptance.md) for actual results.
+The 48 manifest assets, action.yml and CI workflow are byte-for-byte and Git-blob identical across Q3/R3 and this documentation follow-up E3. Recheck that identity before publication. Normal `node scripts/validate-examples.mjs --release` must pass. The release-check workflow delegates its candidate to CI, which invokes that command when the candidate is nonempty, after its existing locked install. Source wiring and local positive/negative validation pass. Intermediate hosted execution exposed a fixture setup failure; fresh final PR CI and the actual amended release-check run remain pending for this selection. Check the [v1.0.1 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) for publication status and the [acceptance record](acceptance.md) for actual results.
 
 ## Behavior and limits
 
@@ -48,6 +48,7 @@ Changes to shared default thresholds/exclusions, existing configuration semantic
 | ----------------------- | ------------------------------------------------------------------ |
 | Reviewed source Q2      | `bb24eb0e00420cc0691c69590f4f06f63dccc60e`                         |
 | Source and fixture Q3   | `b256189fa96e1a460609917a8a56383f793b4216`                         |
+| Publication target R3   | `0873869f6b8fd80150d24689849ec0aebd94e9dd`                         |
 | Version / schema        | 1.0.1 / 1                                                          |
 | Observed / minimum Node | 24.18.0 / 24.15.0                                                  |
 | Runtime asset hash      | `37bbe42c83c9a3a2ea0fa2a61ec7d2812aa336c35046d3835654bdfe7547a2ca` |
