@@ -8,9 +8,9 @@ The scoped source review passed. Policy defaults, scopes, thresholds, schema, pa
 
 ## Patch source and publication selection
 
-Reviewed source Q2 is `bb24eb0e00420cc0691c69590f4f06f63dccc60e`. This intermediate documentation commit pins Q2 safely in the workflow example and local setup as 1.0.1. It is the selected future publication target R2. A later documentation head E2 will pin R2 without a self-referential commit. Preserve R2 through normal integration and complete required readiness and qualification before an immutable v1.0.1 tag.
+Reviewed source Q2 is `bb24eb0e00420cc0691c69590f4f06f63dccc60e`. Selected publication target R2 is `4ea131d30f161e07b4845fe64e55ae59fde31eab`; its archive safely pins Q2 as 1.0.1. This later documentation head E2 pins R2 in current adoption examples and local instructions. E2 is not the tag target. Preserve R2 through normal integration and complete required readiness and qualification before an immutable v1.0.1 tag.
 
-The 48 manifest assets, action.yml and CI workflow must remain byte-for-byte and Git-blob identical across Q2/R2/E2. Normal `node scripts/validate-examples.mjs --release` must pass. The release-check workflow delegates its candidate to CI, which invokes that command when the candidate is nonempty, after its existing locked install. Source wiring and local positive/negative validation pass; actual hosted execution remains pending. Check the [v1.0.1 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) for publication status and the [acceptance record](acceptance.md) for actual results.
+The 48 manifest assets, action.yml and CI workflow are byte-for-byte and Git-blob identical across Q2/R2 and this documentation follow-up E2. Recheck that identity before publication. Normal `node scripts/validate-examples.mjs --release` must pass. The release-check workflow delegates its candidate to CI, which invokes that command when the candidate is nonempty, after its existing locked install. Source wiring and local positive/negative validation pass; actual hosted execution remains pending. Check the [v1.0.1 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) for publication status and the [acceptance record](acceptance.md) for actual results.
 
 ## Behavior and limits
 
@@ -47,6 +47,7 @@ Changes to shared default thresholds/exclusions, existing configuration semantic
 | Field                   | Local candidate value                                              |
 | ----------------------- | ------------------------------------------------------------------ |
 | Reviewed source Q2      | `bb24eb0e00420cc0691c69590f4f06f63dccc60e`                         |
+| Publication target R2   | `4ea131d30f161e07b4845fe64e55ae59fde31eab`                         |
 | Version / schema        | 1.0.1 / 1                                                          |
 | Observed / minimum Node | 24.18.0 / 24.15.0                                                  |
 | Runtime asset hash      | `37bbe42c83c9a3a2ea0fa2a61ec7d2812aa336c35046d3835654bdfe7547a2ca` |
