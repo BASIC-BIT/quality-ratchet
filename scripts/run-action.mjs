@@ -47,7 +47,6 @@ export async function publishWarnings(report) {
     );
 }
 export async function publish(saved, directory) {
-  await publishWarnings(saved.report);
   output("report-directory", directory);
   output("outcome", saved.result.outcome);
   output("strict-exit-code", saved.report?.strictExitCode ?? 2);

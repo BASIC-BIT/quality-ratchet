@@ -38,23 +38,7 @@ export function validGlob(pattern) {
   }
 }
 
-export function repositoryPath(path) {
-  const normalized = path.replaceAll("\\", "/");
-  if (
-    !normalized ||
-    normalized.startsWith("/") ||
-    /^[A-Za-z]:/u.test(normalized) ||
-    /\x00/u.test(normalized) ||
-    normalized
-      .split("/")
-      .some((segment) => !segment || segment === "." || segment === "..")
-  ) {
-    throw new Error(
-      `Expected a repository-relative file path: ${JSON.stringify(path)}`,
-    );
-  }
-  return normalized;
-}
+export { sourcePath as repositoryPath } from "../git/commands.mjs";
 
 export function matchesAny(path, patterns) {
   return patterns.some((pattern) => minimatch(path, pattern, options));

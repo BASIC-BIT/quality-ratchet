@@ -25,6 +25,8 @@ Complexity and file size support .js, .jsx, .mjs, .cjs, .ts, .tsx, .mts and .cts
 
 Use case-sensitive repository-relative forward-slash globs. Supported patterns include `*`, `**`, `?`, character classes and brace alternatives. Absolute paths, parent traversal, backslashes, extglobs and leading negation are rejected.
 
+Git source identities also use forward slashes. A filename containing a literal backslash fails operationally on every platform before exclusions or overrides can reinterpret it as another path. Native Windows checkout-root paths remain supported; tab and newline characters in Git filenames retain their exact identities.
+
 Each `overrides` entry requires `files`, a reason and a `checks` object. Matching entries apply in array order; later explicitly supplied properties win. Complexity and file-size overrides may adjust mode or thresholds and re-enable a globally disabled check. Duplication remains repository-wide and has no per-path override. Recognized renames use destination policy for both measurements. Invalid or overlapping entries are not an escape from validation.
 
 ## Reports and errors

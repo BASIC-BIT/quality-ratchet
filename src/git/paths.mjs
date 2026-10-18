@@ -1,25 +1,19 @@
 import { lstatSync, existsSync, openSync, readSync, closeSync } from "node:fs";
 import { join } from "node:path";
-import { git, gitBlobPrefix, SetupError, verifyTree } from "./commands.mjs";
+import {
+  git,
+  gitBlobPrefix,
+  SetupError,
+  verifyTree,
+  sourcePath,
+} from "./commands.mjs";
 import {
   effectiveCheck,
   matchesScope,
   matchesPathScope,
 } from "../config/resolve.mjs";
 import { formatForPath } from "../duplication/formats.mjs";
-export function sourcePath(path) {
-  if (
-    typeof path !== "string" ||
-    !path ||
-    path.includes("\0") ||
-    path.startsWith("/") ||
-    /^[A-Za-z]:/u.test(path) ||
-    path.split("/").some((part) => !part || part === "." || part === "..") ||
-    (process.platform === "win32" && path.includes("\\"))
-  )
-    throw new SetupError("Invalid Git source path");
-  return path;
-}
+export { sourcePath };
 export function treeEntries(repo, tree) {
   const sha = verifyTree(repo, tree);
   return git(repo, ["ls-tree", "-rz", "--full-tree", sha])

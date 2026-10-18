@@ -296,7 +296,7 @@ test("scope uses case-sensitive dot-aware globs with literal comments", () => {
     assert.equal(matchesScope(p, "complexity", path), true, path);
   for (const path of ["Src/a.ts", "src/skip.ts", "src/a.py", "other/a.ts"])
     assert.equal(matchesScope(p, "complexity", path), false, path);
-  assert.equal(matchesScope(p, "complexity", "src\\a.ts"), true);
+  assert.throws(() => matchesScope(p, "complexity", "src\\a.ts"));
   for (const path of [
     "../src/a.ts",
     "src/../a.ts",

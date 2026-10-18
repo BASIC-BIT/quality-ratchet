@@ -7,6 +7,19 @@ export class SetupError extends Error {
     this.exitCode = 2;
   }
 }
+export function sourcePath(path) {
+  if (
+    typeof path !== "string" ||
+    !path ||
+    path.includes("\0") ||
+    path.startsWith("/") ||
+    /^[A-Za-z]:/u.test(path) ||
+    path.split("/").some((part) => !part || part === "." || part === "..") ||
+    path.includes("\\")
+  )
+    throw new SetupError(`Invalid Git source path: ${JSON.stringify(path)}`);
+  return path;
+}
 const nullFile = process.platform === "win32" ? "NUL" : "/dev/null";
 export function git(repo, args, options = {}) {
   const env = Object.fromEntries(
