@@ -8,9 +8,9 @@ Policy defaults, scopes, thresholds, schema, locked dependencies and exception s
 
 ## Patch source and publication selection
 
-Reviewed source Q is `f8b11ee78a488f43ea910b17bf87899ea862559c`. This intermediate documentation commit pins Q in the workflow example and local setup, both marked 1.0.1. Q contains the corrected runtime. Select this documentation commit as publication target R only after its required readiness checks. A later documentation head E can pin R without making a self-referential commit.
+Reviewed source Q is `f8b11ee78a488f43ea910b17bf87899ea862559c`. Selected publication target R is `d93644e0744064841a3a5d734db372443a6bd0ef`. R contains the corrected runtime and safe adoption examples that pin Q as 1.0.1. This later documentation head E pins R in current examples and local instructions; E is not the tag target. A normal merge must preserve R for an immutable v1.0.1 tag after required readiness and qualification checks. Publication remains pending.
 
-Before publishing, verify all 47 manifest assets plus action.yml remain byte-for-byte and Git-blob identical at Q, R and E. Normal `node scripts/validate-examples.mjs --release` must pass. A passing pin/version contract alone does not establish hosted qualification or publication. Use the [v1.0.1 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) for live publication status and the [acceptance record](acceptance.md) for actual qualification results.
+All 47 manifest assets plus action.yml are byte-for-byte and Git-blob identical at Q, R and this documentation follow-up. Recheck that identity before publication. Normal `node scripts/validate-examples.mjs --release` must pass. A passing pin/version contract alone does not establish hosted qualification or publication. Use the [v1.0.1 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) for live publication status and the [acceptance record](acceptance.md) for actual qualification results.
 
 ## Behavior and limits
 
@@ -45,6 +45,7 @@ Changes to shared default thresholds/exclusions, existing configuration semantic
 | Field                   | Local candidate value                                              |
 | ----------------------- | ------------------------------------------------------------------ |
 | Reviewed source Q       | `f8b11ee78a488f43ea910b17bf87899ea862559c`                         |
+| Publication target R    | `d93644e0744064841a3a5d734db372443a6bd0ef`                         |
 | Version / schema        | 1.0.1 / 1                                                          |
 | Observed / minimum Node | 24.18.0 / 24.15.0                                                  |
 | Runtime asset hash      | `be45b1c9ad11318dfb6ffe0ba03cac4723f87ff15c2b467de5ebfd89597c817b` |

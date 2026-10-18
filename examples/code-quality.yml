@@ -1,4 +1,4 @@
-# Reviewed 1.0.1 source. Hosted qualification, publication and activation remain pending.
+# Selected 1.0.1 publication target. Hosted qualification, publication and activation remain pending.
 # See docs/releases.md and docs/adoption.md before enabling enforcement.
 name: Code quality
 on:
@@ -30,7 +30,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - uses: BASIC-BIT/quality-ratchet@f8b11ee78a488f43ea910b17bf87899ea862559c # v1.0.1
+      - uses: BASIC-BIT/quality-ratchet@d93644e0744064841a3a5d734db372443a6bd0ef # v1.0.1
         with:
           github-token: ${{ github.token }}
           repository-path: ${{ github.workspace }}
