@@ -1,15 +1,18 @@
 {
   "schemaVersion": 1,
+  "scope": {
+    "include": [
+      "src/**"
+    ]
+  },
   "checks": {
     "duplication": {
-      "mode": "off",
-      "reason": "Disposable policy weakening probe"
+      "formats": [
+        "javascript",
+        "typescript"
+      ]
     },
     "complexity": {
-      "mode": "off",
-      "reason": "Disposable policy weakening probe"
-    },
-    "file-size": {
       "mode": "off",
       "reason": "Disposable policy weakening probe"
     }
