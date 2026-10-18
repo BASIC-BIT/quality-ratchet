@@ -1,14 +1,16 @@
 # Initial release qualification, October 18, 2026
 
-As of this snapshot, runtime `9d713408d8c12eb9ced26fe45b4a99e1df5505ff` is qualified and selected for v1.0.0, schema 1. Corrected hosted tests, action probes and scoped review are complete. Publication remains pending source integration and an explicit tag/release at this runtime commit. The documentation follow-up pins this commit and does not change trusted runtime assets. Check the [v1.0.0 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.0) for publication status.
+Qualified source Q is `9d713408d8c12eb9ced26fe45b4a99e1df5505ff`, version 1.0.0 and schema 1. Corrected hosted tests, action probes and scoped review are complete for Q. Selected release commit R is `84f47115b726d962e73f6c3a06ba69b07cc38ccb`. Its 47 trusted runtime assets plus action.yml are byte-for-byte and Git-blob identical to Q. Publication remains pending source integration and an explicit v1.0.0 tag/release at R. Check the [v1.0.0 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.0) for publication status.
 
-The earlier `ba9c9bec7c312a303e61b6779591610cd32509b8` candidate was withdrawn before publication after configured review found source-path and warning-transport defects. The runs below all qualify the corrected runtime, except deliberately faulty missing-scanner derivatives identified as such.
+The earlier `ba9c9bec7c312a303e61b6779591610cd32509b8` candidate was withdrawn before publication after configured review found source-path and warning-transport defects. The runs below qualify Q, except deliberately faulty missing-scanner derivatives identified as such. They are not relabeled as runs at R.
+
+R includes the corrected documentation and an example that safely pins Q. Tagging Q itself would include its older example pointing to the withdrawn candidate, so R is the release target. The updated example and local setup pin R. This follow-up changes no executable asset.
 
 Both consumers have explicit policy-preparation PRs under review, with existing gates retained. Neither policy has merged and neither consumer has activated the shared tool. Current-source duplication-boundary comparison is reconciled. Perkcord still needs resolution of, or explicit agreement to, one authored-declaration scope gap before migration or legacy duplication removal.
 
 ## Corrected runtime qualification
 
-[CI run 39164339027](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39164339027) passed all six jobs on the selected runtime. Each platform ran 223 tests with no failures or reported skips, followed by lint, formatting and schema/example validation.
+[CI run 39164339027](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39164339027) passed all six jobs on qualification source Q. Each platform ran 223 tests with no failures or reported skips, followed by lint, formatting and schema/example validation.
 
 | Platform | Node    | Test duration |
 | -------- | ------- | ------------: |
@@ -91,6 +93,6 @@ The immutable JS/TS suppression-marker path check performed during coordination 
 
 ## Remaining publication and migration work
 
-The coordinator must push the docs/test follow-up, inspect exact-head checks and feedback after the required 30-minute window, and integrate PR #1 with a normal merge preserving the selected runtime. The v1.0.0 tag and release must point to that runtime commit, not the documentation follow-up. The current example and local setup already use its full SHA; release validation must pass on the final main-branch documentation.
+The coordinator must push the docs/test follow-up, inspect exact-head checks and feedback after the required 30-minute window, and integrate PR #1 with a normal merge preserving R. The v1.0.0 tag and release must point to R, not Q or the later pin follow-up. Confirm R's CI and unchanged executable assets before publication. The current example and local setup use full R; release validation must pass on the final main-branch documentation.
 
 Local policy preparation, representative current-source fixture comparison and reviewed-boundary reconciliation are complete. Consumer acceptance still requires merged target policies, reviewed hooks and aggregate CI cutover, actual required-check settings, and main-push behavior after an accepted exception. Perkcord also needs its authored-declaration scope decision. Publication alone does not complete consumer migration. See [adoption](adoption.md) for preparation and rollback.

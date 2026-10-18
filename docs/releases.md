@@ -4,7 +4,9 @@ Version 1.0.0 uses policy and report schema version 1. It introduces the shared 
 
 This guide records qualification and remaining publication work as of October 18, 2026. Check the [v1.0.0 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.0) for live publication status.
 
-The selected runtime is `9d713408d8c12eb9ced26fe45b4a99e1df5505ff`. The earlier whole-branch review, subsequent scoped correction reviews and configured-provider review of this exact runtime are complete. Corrected-runtime hosted qualification is complete. The adoption example pins this runtime. Publication had not happened at this snapshot. Source must integrate through PR #1 with a normal merge that preserves this commit before the coordinator creates the v1.0.0 tag and release at this commit. The documentation follow-up is not the release target.
+The selected release commit R is `84f47115b726d962e73f6c3a06ba69b07cc38ccb`. Qualified source Q is `9d713408d8c12eb9ced26fe45b4a99e1df5505ff`. All 47 trusted runtime assets plus action.yml are byte-for-byte and Git-blob identical at R and Q. The earlier whole-branch review, subsequent scoped correction reviews and configured-provider review of exact Q are complete. Hosted behavior qualification belongs to Q and carries to R through this executable equivalence.
+
+Publication had not happened at this snapshot. Integrate PR #1 with a normal merge preserving R, then create the v1.0.0 tag and release at R. R already includes corrected documentation and a safe example pin to Q. The updated adoption example pins R. Tagging Q would instead include its older example pointing to the withdrawn candidate; the later pin follow-up is not the release target.
 
 See the [acceptance record](acceptance.md) for exact runs, versions and limits. Consumer configuration and activation remain separate work.
 
@@ -16,14 +18,14 @@ Compared with copied consumer scripts, policy now lives in one validated JSON fi
 
 ## Qualification and publication
 
-For the corrected candidate, Ubuntu and Windows each passed 223 tests with no failures or reported skips on Node 24.15.0 and 24.21.0. The Linux production-only package smoke passed. POSIX working-file backslash cases execute on Ubuntu; those fixture bodies return early on Windows. Own-PR and cross-owner execution, policy edits, advisory and operational-failure cases, freshness checks, annotations and every authorized exception transition passed actual-report inspection. Both disposable probes closed without merging, and all seven task-owned refs were removed. Immutable source comparison findings carry forward through verified unchanged measurement assets and normal-path comparisons. Current consumer migration acceptance remains separate.
+For qualification source Q, Ubuntu and Windows each passed 223 tests with no failures or reported skips on Node 24.15.0 and 24.21.0. The Linux production-only package smoke passed. POSIX working-file backslash cases execute on Ubuntu; those fixture bodies return early on Windows. Own-PR and cross-owner execution, policy edits, advisory and operational-failure cases, freshness checks, annotations and every authorized exception transition passed actual-report inspection. Both disposable probes closed without merging, and all seven task-owned refs were removed. Immutable source comparison findings carry forward through verified unchanged measurement assets and normal-path comparisons. Current consumer migration acceptance remains separate.
 
 The remaining publication steps are:
 
 1. Push the docs/test follow-up, inspect its CI and feedback, and complete the exact-head readiness refresh after the latest pushed commit is at least 30 minutes old.
-2. Integrate through PR #1 with a normal merge preserving runtime `9d713408d8c12eb9ced26fe45b4a99e1df5505ff` in history. Do not squash away the selected release target.
-3. Confirm every trusted runtime asset is unchanged in the documentation follow-up and run `node scripts/validate-examples.mjs --release` on the final main-branch documentation.
-4. Explicitly publish the v1.0.0 tag and release at the selected runtime commit. A later runtime change requires renewed qualification and a new selection.
+2. Integrate through PR #1 with a normal merge preserving release commit R `84f47115b726d962e73f6c3a06ba69b07cc38ccb` in history. Do not squash away the selected release target.
+3. Confirm R's CI is acceptable and every trusted runtime asset plus action.yml matches Q and the pin follow-up. Run `node scripts/validate-examples.mjs --release` on the final main-branch documentation.
+4. Explicitly publish the v1.0.0 tag and release at R. A later runtime change requires renewed qualification and a new selection.
 5. Prepare and review each consumer's policy and cutover under its existing gates before enabling the shared action.
 
 The manual `Release check` workflow accepts a candidate ref and prints its resolved commit and tool manifest. Use a full SHA for reproducible qualification; a tag is resolved independently by each job and their recorded SHAs must agree. It runs checks and the package smoke only, has read-only permissions, and neither publishes nor substitutes for PR, exception or independent review evidence.
@@ -50,7 +52,8 @@ Changes to shared default thresholds/exclusions, existing configuration semantic
 
 | Field              | Qualified value                                                    |
 | ------------------ | ------------------------------------------------------------------ |
-| Release target     | `9d713408d8c12eb9ced26fe45b4a99e1df5505ff`                         |
+| Release target R   | `84f47115b726d962e73f6c3a06ba69b07cc38ccb`                         |
+| Qualified source Q | `9d713408d8c12eb9ced26fe45b4a99e1df5505ff`                         |
 | Version / schema   | 1.0.0 / 1                                                          |
 | Runtime asset hash | `01aca099cfa27459b5a6c25d39f386aecd68a0e9dcbe21f0e93041c7da7a8168` |
 | Lock hash          | `f7401eb223be14df24b406248c918248074476d6be0bb6372fe8bb6b496e9953` |

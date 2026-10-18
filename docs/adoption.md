@@ -1,6 +1,6 @@
 # Adopt a qualified release
 
-The [workflow example](../examples/code-quality.yml) pins qualified runtime `9d713408d8c12eb9ced26fe45b4a99e1df5505ff` for v1.0.0. Confirm publication on the [v1.0.0 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.0) and complete the consumer preparation below before beginning enforcement. The October 18, 2026 [acceptance snapshot](acceptance.md) records Chronote and Perkcord policy-preparation PRs under review. At that snapshot, neither policy was merged and neither consumer had activated the shared tool.
+The [workflow example](../examples/code-quality.yml) pins release commit `84f47115b726d962e73f6c3a06ba69b07cc38ccb` for v1.0.0. Its 47 trusted runtime assets and action.yml match qualified source `9d713408d8c12eb9ced26fe45b4a99e1df5505ff` exactly. Confirm publication on the [v1.0.0 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.0) and complete the consumer preparation below before beginning enforcement. The October 18, 2026 [acceptance snapshot](acceptance.md) records Chronote and Perkcord policy-preparation PRs under review. At that snapshot, neither policy was merged and neither consumer had activated the shared tool.
 
 ## Prepare the target branch
 

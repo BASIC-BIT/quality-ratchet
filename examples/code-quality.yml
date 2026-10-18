@@ -1,4 +1,4 @@
-# Qualified v1.0.0 runtime. Publication and consumer activation are separate steps.
+# Reviewed v1.0.0 release commit. Publication and consumer activation are separate steps.
 # See docs/releases.md and docs/adoption.md before enabling enforcement.
 name: Code quality
 on:
@@ -30,7 +30,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - uses: BASIC-BIT/quality-ratchet@9d713408d8c12eb9ced26fe45b4a99e1df5505ff # v1.0.0
+      - uses: BASIC-BIT/quality-ratchet@84f47115b726d962e73f6c3a06ba69b07cc38ccb # v1.0.0
         with:
           github-token: ${{ github.token }}
           repository-path: ${{ github.workspace }}
