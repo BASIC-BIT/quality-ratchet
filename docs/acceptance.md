@@ -1,14 +1,32 @@
-# Initial release qualification, October 18, 2026
+# Acceptance record
 
-Qualified source Q is `9d713408d8c12eb9ced26fe45b4a99e1df5505ff`, version 1.0.0 and schema 1. Corrected hosted tests, action probes and scoped review are complete for Q. Selected release commit R is `84f47115b726d962e73f6c3a06ba69b07cc38ccb`. Its 47 trusted runtime assets plus action.yml are byte-for-byte and Git-blob identical to Q. Publication remains pending source integration and an explicit v1.0.0 tag/release at R. Check the [v1.0.0 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.0) for publication status.
+## Patch 1.0.1 local evidence
+
+Reviewed source Q is `f8b11ee78a488f43ea910b17bf87899ea862559c`, version 1.0.1 and schema 1. The bounded source review passed. On October 18, 2026, local Windows x64 on Node 24.18.0 passed 229 tests, lint, formatting and schema/example checks. Minimum Node 24.15.0 and renewed hosted/platform qualification remain pending. The v1.0.0 runs below do not qualify the patch.
+
+The actual unchanged LF pair and CRLF pair each returned strict exit 0 with no changed files or findings. A genuine new CRLF copy returned exit 1 with one changed file and one blocking finding. All three native clone rows matched between unchanged materializations. Caller source bytes, index and Git configuration remained intact. Structural EOL conversion, quoted/raw literal distinctions, real changed copies and nonzero scanner offsets have direct regression coverage. The [arbitrary-slice tokenizer limitation](releases.md) remains unchanged.
+
+The 47 manifest assets and action.yml define the executable identity. Local asset hash is `be45b1c9ad11318dfb6ffe0ba03cac4723f87ff15c2b467de5ebfd89597c817b`; lock hash is `b940d79a1aaf5f947e3e85516d3f05cd459be40fbc99fc67576a926913e1d804`. Policy, dependency and exception contracts are unchanged. This intermediate documentation commit pins Q safely; publication target selection and the later documentation follow-up are described in [releases](releases.md#patch-source-and-publication-selection).
+
+Hosted patch checks, final source readiness, publication and consumer adoption remain pending. Check the [v1.0.1 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) for live publication status. No hosted patch result is claimed here.
+
+## Consumer preparation and remaining work
+
+Chronote policy PR #419 merged at `8742782628e04e24e7cff84c056b1c6ff0129d0a`. Perkcord policy PR #1153 merged at `9f2c9e2917bf027f5ca1843682fec64ccfb22721`. These are merged policy references, not a claim about current branch tips. The actual policies were verified. Consumer migrations remain unmerged, neither replacement is active, and existing enforcement remains required.
+
+The human accepted Perkcord's shared declaration exclusions. One authored `.d.mts` file loses duplication coverage; all other parity and local metrics remain required. Current-source boundary reconciliation does not establish completed migration. Acceptance still requires reviewed hooks and aggregate CI cutover, actual required-check settings, representative current-source evidence, and main-push behavior after an accepted exception. See [adoption](adoption.md) for preparation and rollback.
+
+## Initial release qualification, October 18, 2026
+
+Qualified source Q is `9d713408d8c12eb9ced26fe45b4a99e1df5505ff`, version 1.0.0 and schema 1. Corrected hosted tests, action probes and scoped review are complete for Q. Selected release commit R is `84f47115b726d962e73f6c3a06ba69b07cc38ccb`. Its 47 trusted runtime assets plus action.yml are byte-for-byte and Git-blob identical to Q. Version 1.0.0 was published at R on October 18, 2026 at 21:44:38 UTC, release ID 416730393. Its tag and release are unchanged. See the [v1.0.0 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.0).
 
 The earlier `ba9c9bec7c312a303e61b6779591610cd32509b8` candidate was withdrawn before publication after configured review found source-path and warning-transport defects. The runs below qualify Q, except deliberately faulty missing-scanner derivatives identified as such. They are not relabeled as runs at R.
 
-R includes the corrected documentation and an example that safely pins Q. Tagging Q itself would include its older example pointing to the withdrawn candidate, so R is the release target. The updated example and local setup pin R. This follow-up changes no executable asset.
+The v1.0.0 release archive at R contains an example that safely pins its corrected source Q. Current adoption examples now select the 1.0.1 candidate described above. The Q and R identifiers in this historical section refer only to v1.0.0.
 
-Both consumers have explicit policy-preparation PRs under review, with existing gates retained. Neither policy has merged and neither consumer has activated the shared tool. Current-source duplication-boundary comparison is reconciled. Perkcord still needs resolution of, or explicit agreement to, one authored-declaration scope gap before migration or legacy duplication removal.
+At the initial qualification snapshot, both consumers retained their existing gates and policy preparation was under review. The current policy and migration status is recorded above.
 
-## Corrected runtime qualification
+### Corrected runtime qualification
 
 [CI run 39164339027](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39164339027) passed all six jobs on qualification source Q. Each platform ran 223 tests with no failures or reported skips, followed by lint, formatting and schema/example validation.
 
@@ -25,7 +43,7 @@ The Linux production-only package smoke passed in 5.136 seconds; the serial loca
 
 An earlier whole-branch review and annotation correction remain part of the review history. Both later configured-provider findings received a clear scoped implementation review. Configured Codex review of this exact runtime completed with no findings, and its two earlier threads were handled and resolved. Neither correction changes the schema, defaults, locked dependencies or consumer policy.
 
-## Hosted action evidence
+### Hosted action evidence
 
 Actual JSON, outputs and artifacts were inspected for these cases. Reports identify the installed runtime, source and target identities, active policy and strict/final verdicts. Controlled missing-scanner cases use a deliberately faulty derivative and are never release targets. Caller audits verified authored tracked bytes, complete working-tree status, index and Git configuration remained unchanged; downstream action outputs and report directories were available.
 
@@ -48,7 +66,7 @@ Cross-owner execution used shared defaults on a disposable target without a decl
 
 The safe-warning fixture retained the exact `src/oversized,%warning.test.ts` path in its line-1 warning annotation. Cross-owner attempt 1 contained 15 oversized-test entries and emitted 15 safe warnings. GitHub retained 10 warning annotations, its [per-step display limit](https://docs.github.com/en/rest/checks/runs#update-a-check-run). All 15 entries remained in JSON, the summary and logs. This limit does not alter blocking findings or reports.
 
-## Authorized exception transitions
+### Authorized exception transitions
 
 The human authorized label and rationale changes only on the disposable shared probe, including reuse for this corrected qualification. The approved rationale was "Intentional regression in a disposable qualification fixture; this PR will be closed without merging."
 
@@ -64,7 +82,7 @@ The human authorized label and rationale changes only on the disposable shared p
 
 Findings and strict measurements remained in the reports. Shared PR #2 closed without merging at 2026-10-18T21:01:11Z, with no labels. Cross-owner PR #418 closed without merging at 2026-10-18T20:52:52Z. All seven task-owned probe refs were deleted after exact-tip revalidation, and provider reads confirmed their absence. No consumer policy, deployment or migration was activated.
 
-## Compatibility evidence
+### Compatibility evidence
 
 Earlier extraction checks compared legacy and shared native duplication under equal thresholds. Prose-only Markdown produced zero rows on both; adding qualifying fenced code produced two rows on both, including one prose row. This limitation remains explicit in coverage.
 
@@ -90,9 +108,3 @@ The correction canonicalizes both repository identities through the filesystem, 
 The corrected local suite passed 214/214 with no skips in 77.392 seconds, followed by lint, formatting and schema/example validation. The actual self-policy against the main target reported zero findings in all three scanners. Immutable source and changed-fixture comparisons were repeated after the runtime refactors. This was an intermediate result, followed by the earlier candidate's annotation correction and matrix. Reuse of the immutable comparison for the corrected runtime rests on fresh evidence: 40 measurement-related assets are unchanged, 1,368 normal-path policy comparisons match, and neither exact immutable Git inventory contains a literal backslash. The warning-transport change does not alter measurements. The private comparison was not rerun after these bounded corrections.
 
 The immutable JS/TS suppression-marker path check performed during coordination found no marker-bearing files in either source snapshot. This does not prove current-source acceptance. The documented suppression behavior, native container coverage and conservative identities remain covered by the existing real scanner suites. Current-source migration and hosted checks remain separate acceptance work.
-
-## Remaining publication and migration work
-
-The coordinator must push the docs/test follow-up, inspect exact-head checks and feedback after the required 30-minute window, and integrate PR #1 with a normal merge preserving R. The v1.0.0 tag and release must point to R, not Q or the later pin follow-up. Confirm R's CI and unchanged executable assets before publication. The current example and local setup use full R; release validation must pass on the final main-branch documentation.
-
-Local policy preparation, representative current-source fixture comparison and reviewed-boundary reconciliation are complete. Consumer acceptance still requires merged target policies, reviewed hooks and aggregate CI cutover, actual required-check settings, and main-push behavior after an accepted exception. Perkcord also needs its authored-declaration scope decision. Publication alone does not complete consumer migration. See [adoption](adoption.md) for preparation and rollback.

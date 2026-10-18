@@ -108,7 +108,9 @@ test("consumer template has seven read-only events and exact-head checkout", () 
   assert.match(flow, /persist-credentials: false/);
   assert.match(
     flow,
-    /BASIC-BIT\/quality-ratchet@84f47115b726d962e73f6c3a06ba69b07cc38ccb # v1\.0\.0/,
+    new RegExp(
+      `BASIC-BIT/quality-ratchet@[a-f0-9]{40} # v${JSON.parse(read("package.json")).version.replaceAll(".", "\\.")}(?=\\s|$)`,
+    ),
   );
   assert.match(flow, /github-token: \$\{\{ github.token \}\}/);
   assert.doesNotMatch(

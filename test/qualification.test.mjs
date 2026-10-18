@@ -75,7 +75,7 @@ test("release qualification is read-only, covers platforms and keeps action PR-o
     assert.ok(scripts.check.includes(command));
 });
 
-test("schema examples and the retained published template validate", () => {
+test("schema examples and the adoption template validate", () => {
   const result = spawnSync(
     process.execPath,
     ["scripts/validate-examples.mjs"],
@@ -105,7 +105,7 @@ test("release validation rejects placeholders, shortened pins and wrong versions
         repo,
         "examples/code-quality.yml",
         template.replace(
-          /quality-ratchet@[a-f0-9]{40} # v1\.0\.0/,
+          /quality-ratchet@[a-f0-9]{40} # v\d+\.\d+\.\d+/,
           `quality-ratchet@${pin}`,
         ),
       );
@@ -124,7 +124,7 @@ test("release validation rejects placeholders, shortened pins and wrong versions
     write(
       repo,
       "examples/code-quality.yml",
-      template.replace(/# v1\.0\.0/, `# v${version}`),
+      template.replace(/# v\d+\.\d+\.\d+/, `# v${version}`),
     );
     const ready = spawnSync(
       process.execPath,

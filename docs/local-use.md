@@ -43,11 +43,11 @@ The check script runs test, lint, format and schema/example validation. Test dis
 
 ## Installation and diagnostic details
 
-The following setup pins the reviewed v1.0.0 release commit. Confirm publication on the [release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.0) before installing it. Consumer activation remains a separate reviewed migration. Keep optional dependencies enabled for jscpd's platform executable:
+The following setup pins reviewed 1.0.1 source. Hosted patch qualification and publication remain pending. Check the [release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) and [acceptance record](acceptance.md) before activation. Keep optional dependencies enabled for jscpd's platform executable:
 
 ```text
 git clone https://github.com/BASIC-BIT/quality-ratchet.git ../quality-ratchet-tool
-git -C ../quality-ratchet-tool checkout --detach 84f47115b726d962e73f6c3a06ba69b07cc38ccb # v1.0.0
+git -C ../quality-ratchet-tool checkout --detach f8b11ee78a488f43ea910b17bf87899ea862559c # v1.0.1
 npm --prefix ../quality-ratchet-tool ci --ignore-scripts --include=optional
 ```
 

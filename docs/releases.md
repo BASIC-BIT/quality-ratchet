@@ -1,40 +1,32 @@
 # Release 1.0.1, unpublished patch candidate
 
-Version 1.0.1 corrects local LF/CRLF comparison and JSX clone identity. EOL-only checkout conversion no longer touches every source line. JSX scanner fragments retain a stable identity across LF and CRLF while string, quoted JSX attribute, template and raw literal contents stay significant. Genuine changed or added duplicates still block.
+Version 1.0.1 corrects local LF/CRLF comparison and JSX clone identity. EOL-only checkout conversion no longer touches every source line, and structural LF/CRLF differences retain stable JSX endpoint identities. Genuine changed or added duplicates still block.
 
-Policy defaults, scopes, thresholds, schema and scanner dependencies are unchanged. This candidate needs independent review and renewed platform qualification before publication. The adoption example continues to pin published v1.0.0 until a qualified patch commit is selected. Normal example validation permits that retained pin; --release validation requires its version to match the package before publication.
+The correction protects string, template and raw tokens and quoted JSX attributes whose quote context is retained. An existing tokenizer limitation remains: an arbitrary scanner slice that starts and ends inside a quoted attribute can lose its surrounding quote context and treat literal EOL differences as insignificant. This patch does not claim literal preservation for every arbitrary slice.
 
-## Release 1.0.0 history
+Policy defaults, scopes, thresholds, schema, locked dependencies and exception semantics are unchanged. The source review approved the bounded correction. [Local regression proof](acceptance.md#patch-101-local-evidence) covers the unchanged LF/CRLF pair and genuine new duplication. Hosted/platform qualification, final source readiness, publication and consumer adoption remain separate pending work. Published v1.0.0 runs do not qualify this changed runtime.
 
-Version 1.0.0 uses policy and report schema version 1. It introduces the shared CLI and ordinary pull-request action with baseline-owned policy, three configurable checks and informational test reports.
+## Patch source and publication selection
 
-This section retains the October 18, 2026 qualification record. Version 1.0.0 was published at R below. See the [v1.0.0 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.0) for the published release.
+Reviewed source Q is `f8b11ee78a488f43ea910b17bf87899ea862559c`. This intermediate documentation commit pins Q in the workflow example and local setup, both marked 1.0.1. Q contains the corrected runtime. Select this documentation commit as publication target R only after its required readiness checks. A later documentation head E can pin R without making a self-referential commit.
 
-The selected release commit R is `84f47115b726d962e73f6c3a06ba69b07cc38ccb`. Qualified source Q is `9d713408d8c12eb9ced26fe45b4a99e1df5505ff`. All 47 trusted runtime assets plus action.yml are byte-for-byte and Git-blob identical at R and Q. The earlier whole-branch review, subsequent scoped correction reviews and configured-provider review of exact Q are complete. Hosted behavior qualification belongs to Q and carries to R through this executable equivalence.
+Before publishing, verify all 47 manifest assets plus action.yml remain byte-for-byte and Git-blob identical at Q, R and E. Normal `node scripts/validate-examples.mjs --release` must pass. A passing pin/version contract alone does not establish hosted qualification or publication. Use the [v1.0.1 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) for live publication status and the [acceptance record](acceptance.md) for actual qualification results.
 
-The published v1.0.0 tag remains at R. Its publication and tag are unchanged by the 1.0.1 candidate. The adoption example pins R.
-
-See the [acceptance record](acceptance.md) for exact runs, versions and limits. Consumer configuration and activation remain separate work.
-
-## Behavior to review
+## Behavior and limits
 
 The shared tool retains Git-relative growth rules, tests in enforced scope, lexical complexity identities and 132 routeable duplication formats. It preserves embedded-language detections and reports prose-only Markdown omissions. Source suppression markers fail operationally. Unsupported normalization grammars use conservative raw identities, which can produce additional findings after whitespace or comment changes.
 
-Compared with copied consumer scripts, policy now lives in one validated JSON file. Strict exits are 0, 1 and 2. Advisory findings remain visible; operational errors still block. Proposed policy cannot relax its own PR. There is no source allowance registry or warning-only strict flag. Consumer-specific scopes, hook wiring and already-reviewed boundaries need separate migration evidence.
+Policy lives in one validated JSON file. Strict exits are 0, 1 and 2. Advisory findings remain visible; operational errors still block. Proposed policy cannot relax its own PR. There is no source allowance registry or warning-only strict flag. Consumer-specific scopes, hook wiring and already-reviewed boundaries need separate migration evidence.
 
 ## Qualification and publication
 
-For qualification source Q, Ubuntu and Windows each passed 223 tests with no failures or reported skips on Node 24.15.0 and 24.21.0. The Linux production-only package smoke passed. POSIX working-file backslash cases execute on Ubuntu; those fixture bodies return early on Windows. Own-PR and cross-owner execution, policy edits, advisory and operational-failure cases, freshness checks, annotations and every authorized exception transition passed actual-report inspection. Both disposable probes closed without merging, and all seven task-owned refs were removed. Immutable source comparison findings carry forward through verified unchanged measurement assets and normal-path comparisons. Current consumer migration acceptance remains separate.
-
-Consumer policy preparation and cutover still need their own review and migration evidence. The published v1.0.0 qualification does not qualify the changed 1.0.1 runtime.
-
-The manual `Release check` workflow accepts a candidate ref and prints its resolved commit and tool manifest. Use a full SHA for reproducible qualification; a tag is resolved independently by each job and their recorded SHAs must agree. It runs checks and the package smoke only, has read-only permissions, and neither publishes nor substitutes for PR, exception or independent review evidence.
+The manual `Release check` workflow accepts a candidate ref and prints its resolved commit and tool manifest. Use a full SHA for reproducible qualification; a tag is resolved independently by each job and their recorded SHAs must agree. It runs checks and the package smoke with read-only permissions. It neither publishes nor substitutes for PR, exception or source review evidence.
 
 ## Pins and maintenance
 
-The manifest hashes raw runtime asset bytes and verifies the isolated copy against its source on the same machine. Checkout line-ending conversion can change that hash for one Git commit. This repository declares LF text checkout to keep its assets consistent; retain the observed platform manifest with each qualification record. Use the full Git SHA as the portable release identity, not a universal raw-byte hash.
+The manifest hashes raw runtime asset bytes and verifies the isolated copy against its source on the same machine. Checkout line-ending conversion can change that hash for one Git commit. This repository declares LF text checkout to keep its assets consistent; retain the observed platform manifest with each qualification record. Use the full Git SHA as the portable release identity.
 
-The adoption template pins the selected full release SHA with a `# v1.0.0` comment. No mutable major-version tag is planned; consumers use immutable pins. For future upgrades, restore the previous compatible reviewed pin to roll back. The initial release has no predecessor; preserve the consumer's old enforcement and follow the reviewed cutover-revert procedure in [adoption](adoption.md).
+The adoption template uses a full immutable SHA and a `# v1.0.1` comment. No mutable major-version tag is planned. Rollback requires a compatible reviewed pin or a reviewed cutover revert. See [adoption](adoption.md) for the v1.0.0 CRLF caveat.
 
 Current reviewed nested pins:
 
@@ -48,14 +40,20 @@ Dependabot checks this repository's GitHub Actions weekly. Consumers must config
 
 Changes to shared default thresholds/exclusions, existing configuration semantics, report schema or accepted inputs require a major version. Scanner updates and correctness fixes can change findings even in patch releases, so release notes must explain them. Repository-local policy edits do not require a shared release. Preserve provenance and notices on every release.
 
-## Runtime identity
+## Patch runtime identity
 
-| Field              | Qualified value                                                    |
-| ------------------ | ------------------------------------------------------------------ |
-| Release target R   | `84f47115b726d962e73f6c3a06ba69b07cc38ccb`                         |
-| Qualified source Q | `9d713408d8c12eb9ced26fe45b4a99e1df5505ff`                         |
-| Version / schema   | 1.0.0 / 1                                                          |
-| Runtime asset hash | `01aca099cfa27459b5a6c25d39f386aecd68a0e9dcbe21f0e93041c7da7a8168` |
-| Lock hash          | `f7401eb223be14df24b406248c918248074476d6be0bb6372fe8bb6b496e9953` |
+| Field                   | Local candidate value                                              |
+| ----------------------- | ------------------------------------------------------------------ |
+| Reviewed source Q       | `f8b11ee78a488f43ea910b17bf87899ea862559c`                         |
+| Version / schema        | 1.0.1 / 1                                                          |
+| Observed / minimum Node | 24.18.0 / 24.15.0                                                  |
+| Runtime asset hash      | `be45b1c9ad11318dfb6ffe0ba03cac4723f87ff15c2b467de5ebfd89597c817b` |
+| Lock hash               | `b940d79a1aaf5f947e3e85516d3f05cd459be40fbc99fc67576a926913e1d804` |
 
-The corrected runtime rejects literal backslashes in Git source names before policy matching and publishes validated oversized-test warnings only from the bootstrap parent. The 23,000-warning bootstrap regression passes on all four matrix platforms without overflowing the child's captured output. Scanner selection, fingerprints, policy, report validation and locked dependencies are unchanged. GitHub displays at most 10 warning annotations per step; full inventories remain in JSON, summaries and logs. See [configuration](configuration.md#reports-and-errors) for that platform limit.
+## Release 1.0.0 history
+
+Version 1.0.0 introduced schema 1, the shared CLI and ordinary pull-request action. It was published on October 18, 2026 at 21:44:38 UTC, release ID 416730393, tag target `84f47115b726d962e73f6c3a06ba69b07cc38ccb`. Its tag and release remain unchanged. See the [v1.0.0 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.0).
+
+Its qualified source was `9d713408d8c12eb9ced26fe45b4a99e1df5505ff`. All 47 trusted assets plus action.yml matched that release target. Ubuntu and Windows passed 223 tests on Node 24.15.0 and 24.21.0; production-only Linux smoke, own-PR/cross-owner action checks and authorized exception transitions passed. Exact [historical runs](acceptance.md#initial-release-qualification-october-18-2026) remain attributed to that source. They are not patch qualification.
+
+The v1.0.0 runtime asset hash was `01aca099cfa27459b5a6c25d39f386aecd68a0e9dcbe21f0e93041c7da7a8168` and lock hash was `f7401eb223be14df24b406248c918248074476d6be0bb6372fe8bb6b496e9953`. It included literal-backslash path rejection and bounded parent warning publication, but retained the local LF/CRLF defect corrected in 1.0.1.
