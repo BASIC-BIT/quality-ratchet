@@ -30,6 +30,10 @@ Absolute diagnostics use committed HEAD policy and display pending configuration
 
 The local strict command does not accept PR labels. The hosted adapter applies exception policy after preserving strict findings in its JSON evidence.
 
+## Git EOL conversion
+
+For selected local paths, fixed read-only Git metadata operations establish effective text/eol attributes, autocrlf and index provenance. One byte canonicalizer removes CR only before LF where Git conversion applies. Local comparison hashing and in-memory duplication identity share that projection. Raw scanner input, caller source/index/config and immutable hosted blobs stay exact. Authored EOL-only literal edits that Git preserves still have hunks and can block. See [release limits](releases.md#behavior-and-limits) for the unchanged split-literal tokenizer limitation.
+
 ## Tool development
 
 ```sh
@@ -43,11 +47,11 @@ The check script runs test, lint, format and schema/example validation. Test dis
 
 ## Installation and diagnostic details
 
-The following setup pins the selected 1.0.1 publication target R. Hosted patch qualification and publication remain pending. Check the [release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) and [acceptance record](acceptance.md) before activation. Keep optional dependencies enabled for jscpd's platform executable:
+The following setup pins reviewed 1.0.1 source Q2. Hosted patch qualification and publication remain pending. Check the [release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) and [acceptance record](acceptance.md) before activation. Keep optional dependencies enabled for jscpd's platform executable:
 
 ```text
 git clone https://github.com/BASIC-BIT/quality-ratchet.git ../quality-ratchet-tool
-git -C ../quality-ratchet-tool checkout --detach d93644e0744064841a3a5d734db372443a6bd0ef # v1.0.1
+git -C ../quality-ratchet-tool checkout --detach bb24eb0e00420cc0691c69590f4f06f63dccc60e # v1.0.1
 npm --prefix ../quality-ratchet-tool ci --ignore-scripts --include=optional
 ```
 

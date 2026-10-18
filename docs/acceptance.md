@@ -2,15 +2,25 @@
 
 ## Patch 1.0.1 local evidence
 
-The source selection below is historical. Configured review required follow-up corrections for Git-generated EOL bytes inside touched multiline JSX clones and for the release workflow to execute release-mode validation. The superseded target must not be published or adopted. The follow-up runtime needs fresh local and hosted qualification and a new source/publication selection.
+Reviewed source Q2 is `bb24eb0e00420cc0691c69590f4f06f63dccc60e`, version 1.0.1 and schema 1. The scoped source review passed with no open findings. On October 18, 2026, local Windows x64 on Node 24.18.0 passed 255 tests with zero failures or skips, followed by lint, formatting and schema/examples. The final focused contracts passed 36 tests, and the own strict scan reported zero findings. Minimum Node 24.15.0 and renewed hosted/platform qualification remain pending. Historical v1.0.0 runs below do not qualify this patch.
 
-Prior reviewed source Q was `f8b11ee78a488f43ea910b17bf87899ea862559c`, version 1.0.1 and schema 1. The bounded source review passed. On October 18, 2026, local Windows x64 on Node 24.18.0 passed 229 tests, lint, formatting and schema/example checks. Minimum Node 24.15.0 and renewed hosted/platform qualification remain pending. The v1.0.0 runs below do not qualify the patch.
+Seven real CLI cases use actual Git and native scanners and preserve caller source bytes, index and configuration:
 
-The actual unchanged LF pair and CRLF pair each returned strict exit 0 with no changed files or findings. A genuine new CRLF copy returned exit 1 with one changed file and one blocking finding. All three native clone rows matched between unchanged materializations. Caller source bytes, index and Git configuration remained intact. Structural EOL conversion, quoted/raw literal distinctions, real changed copies and nonzero scanner offsets have direct regression coverage. The [arbitrary-slice tokenizer limitation](releases.md) remains unchanged.
+| Case                                                       | Strict exit | Findings |
+| ---------------------------------------------------------- | ----------: | -------: |
+| Unchanged LF                                               |           0 |        0 |
+| Unchanged CRLF checkout                                    |           0 |        0 |
+| Harmless comment touches in CRLF clones                    |           0 |        0 |
+| Literal-content change                                     |           1 |        1 |
+| Genuine new copy                                           |           1 |        1 |
+| Authored EOL-only literal edit with conversion disabled    |           1 |        1 |
+| Authored EOL-only literal edit with a preserved CRLF index |           1 |        1 |
 
-The 47 manifest assets and action.yml define the executable identity. Local asset hash is `be45b1c9ad11318dfb6ffe0ba03cac4723f87ff15c2b467de5ebfd89597c817b`; lock hash is `b940d79a1aaf5f947e3e85516d3f05cd459be40fbc99fc67576a926913e1d804`. Policy, dependency and exception contracts are unchanged. The superseded publication target R was `d93644e0744064841a3a5d734db372443a6bd0ef`. Its archive pins Q safely. This later documentation head E pins R; all 47 manifest assets plus action.yml remain byte-for-byte and Git-blob identical across Q, R and E. See [releases](releases.md#patch-source-and-publication-selection) for the immutable publication sequence.
+Read-only Git metadata establishes effective text/eol/autocrlf and index provenance. Comparison hashes and in-memory duplication identity share a byte projection that removes CR only before LF where Git conversion applies. Raw scanner input and immutable hosted blobs retain exact bytes. Authored EOL-only edits that Git preserves retain hunks and block. The [arbitrary split-literal tokenizer limitation](releases.md#behavior-and-limits) remains unchanged.
 
-Hosted patch checks, final source readiness, publication and consumer adoption remain pending. Check the [v1.0.1 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) for live publication status. No hosted patch result is claimed here.
+The executable identity includes 48 manifest assets, plus action.yml and the CI workflow as separately recorded control-plane files. Asset hash is `37bbe42c83c9a3a2ea0fa2a61ec7d2812aa336c35046d3835654bdfe7547a2ca`; lock hash is `b940d79a1aaf5f947e3e85516d3f05cd459be40fbc99fc67576a926913e1d804`. Package/dependency mappings, policy and exception contracts are unchanged. This intermediate documentation commit pins Q2 safely and is selected as future publication target R2. The later documentation follow-up E2 will pin R2. See [releases](releases.md#patch-source-and-publication-selection) for the publication sequence.
+
+Release-check delegates its candidate to reusable CI, whose nonempty-candidate route invokes `node scripts/validate-examples.mjs --release`. The source route and real positive/negative local validator checks pass. Actual hosted execution, final source readiness, publication and consumer adoption remain pending. Check the [v1.0.1 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) for publication status.
 
 ## Consumer preparation and remaining work
 

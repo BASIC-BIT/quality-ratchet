@@ -1,18 +1,20 @@
 # Release 1.0.1, unpublished patch candidate
 
-Version 1.0.1 corrects local LF/CRLF comparison and JSX clone identity. EOL-only checkout conversion no longer touches every source line, and structural LF/CRLF differences retain stable JSX endpoint identities. Genuine changed or added duplicates still block.
+Version 1.0.1 corrects local LF/CRLF comparison and JSX clone identity. Fixed read-only Git metadata operations establish effective text/eol attributes, autocrlf and index provenance for selected paths. One byte canonicalizer removes CR only before LF where Git conversion applies. Local comparison hashing and in-memory duplication identity share that projection.
 
-Local endpoint identity now accounts for Git EOL conversion using read-only effective text/eol metadata and core.autocrlf. One byte-preserving canonicalizer projects only paths Git would normalize, for local comparison hash input and in-memory endpoint identity. Source snapshots, scanner inputs and working-source mutation hashes keep exact bytes. Authored EOL changes have real hunks when Git preserves them; hosted comparisons retain immutable Git blob bytes. Committed/hosted blobs and context-free normalization retain authored literal distinctions. The correction protects string, template and raw tokens and quoted JSX attributes whose quote context is retained. An existing tokenizer limitation remains: an arbitrary scanner slice that starts and ends inside a quoted attribute can lose its surrounding quote context and treat literal EOL differences as insignificant. This patch does not claim literal preservation for every arbitrary slice.
+Raw scanner input, caller source/index/config and immutable hosted blobs stay exact. Git-generated checkout EOL changes pass even when harmless comments touch old clones. Authored EOL-only literal changes that Git preserves retain real hunks and block, as do genuine content edits and new copies.
 
-Policy defaults, scopes, thresholds, schema, locked dependencies and exception semantics are unchanged. Configured review required this follow-up for multiline quoted JSX attributes and release workflow validation. The follow-up needs fresh review and qualification. [Local regression proof](acceptance.md#patch-101-local-evidence) covers the unchanged LF/CRLF pair and genuine new duplication. Hosted/platform qualification, final source readiness, publication and consumer adoption remain separate pending work. Published v1.0.0 runs do not qualify this changed runtime.
+The scoped source review passed. Policy defaults, scopes, thresholds, schema, package/lock dependencies and exception semantics are unchanged. [Local regression proof](acceptance.md#patch-101-local-evidence) records 255 tests and seven real CLI cases. Hosted/platform qualification, final source readiness, publication and consumer adoption remain pending. Published v1.0.0 runs do not qualify this runtime.
 
 ## Patch source and publication selection
 
-The previous source Q was `f8b11ee78a488f43ea910b17bf87899ea862559c`, and the superseded publication target R was `d93644e0744064841a3a5d734db372443a6bd0ef`. Neither qualifies the follow-up runtime. Do not tag or adopt the superseded target. Existing example pins remain unchanged during source correction; a new reviewed source and publication/docs sequence must be selected after qualification. Version 1.0.1 remains unpublished.
+Reviewed source Q2 is `bb24eb0e00420cc0691c69590f4f06f63dccc60e`. This intermediate documentation commit pins Q2 safely in the workflow example and local setup as 1.0.1. It is the selected future publication target R2. A later documentation head E2 will pin R2 without a self-referential commit. Preserve R2 through normal integration and complete required readiness and qualification before an immutable v1.0.1 tag.
 
-Final release validation must match the adoption template version to the package and retain a full immutable SHA. The reusable CI checks now run that validation when invoked with a release candidate, using their existing dependency installation. Ordinary candidate checks remain available without release mode. A passing version/pin contract does not establish hosted qualification or publication.
+The 48 manifest assets, action.yml and CI workflow must remain byte-for-byte and Git-blob identical across Q2/R2/E2. Normal `node scripts/validate-examples.mjs --release` must pass. The release-check workflow delegates its candidate to CI, which invokes that command when the candidate is nonempty, after its existing locked install. Source wiring and local positive/negative validation pass; actual hosted execution remains pending. Check the [v1.0.1 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) for publication status and the [acceptance record](acceptance.md) for actual results.
 
 ## Behavior and limits
+
+Context-free normalization retains string, template, raw and quoted-attribute distinctions when the tokenizer retains their context. A pre-existing arbitrary-slice limitation remains: a scanner slice that starts and ends inside a quoted attribute can lose the surrounding quote context and treat literal EOL differences as insignificant. This patch does not claim literal preservation for every arbitrary slice.
 
 The shared tool retains Git-relative growth rules, tests in enforced scope, lexical complexity identities and 132 routeable duplication formats. It preserves embedded-language detections and reports prose-only Markdown omissions. Source suppression markers fail operationally. Unsupported normalization grammars use conservative raw identities, which can produce additional findings after whitespace or comment changes.
 
@@ -44,11 +46,10 @@ Changes to shared default thresholds/exclusions, existing configuration semantic
 
 | Field                   | Local candidate value                                              |
 | ----------------------- | ------------------------------------------------------------------ |
-| Reviewed source Q       | `f8b11ee78a488f43ea910b17bf87899ea862559c`                         |
-| Publication target R    | `d93644e0744064841a3a5d734db372443a6bd0ef`                         |
+| Reviewed source Q2      | `bb24eb0e00420cc0691c69590f4f06f63dccc60e`                         |
 | Version / schema        | 1.0.1 / 1                                                          |
 | Observed / minimum Node | 24.18.0 / 24.15.0                                                  |
-| Runtime asset hash      | `be45b1c9ad11318dfb6ffe0ba03cac4723f87ff15c2b467de5ebfd89597c817b` |
+| Runtime asset hash      | `37bbe42c83c9a3a2ea0fa2a61ec7d2812aa336c35046d3835654bdfe7547a2ca` |
 | Lock hash               | `b940d79a1aaf5f947e3e85516d3f05cd459be40fbc99fc67576a926913e1d804` |
 
 ## Release 1.0.0 history
