@@ -64,12 +64,14 @@ export function resolveComparison({ repo, base }) {
       isolated,
       snapshot.current,
       snapshot.paths.current,
+      snapshot.eolProvenance?.normalizePaths,
     );
     Object.assign(comparison, comparisonDiff(isolated, before, after));
     comparison.workingTreeHash = workingIdentity(
       comparison,
       snapshot.current,
       snapshot.paths.current,
+      snapshot.eolProvenance,
     );
     assertWorkingIdentity(comparison);
     return comparison;
@@ -123,7 +125,6 @@ function comparisonDiff(isolated, before, after) {
     "--no-textconv",
     "--no-color",
     "--text",
-    "--ignore-cr-at-eol",
     "--find-renames",
     "--src-prefix=a/",
     "--dst-prefix=b/",

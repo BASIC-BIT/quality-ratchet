@@ -156,8 +156,26 @@ export async function runJscpd(repo, opts) {
     const rows = await Promise.all(
       report.duplicates.map(async (d) => {
         const [a, b] = await Promise.all([
-          fingerprintScannerEndpoint(repo, d.firstFile, d.format, cache),
-          fingerprintScannerEndpoint(repo, d.secondFile, d.format, cache),
+          fingerprintScannerEndpoint(
+            repo,
+            d.firstFile,
+            d.format,
+            cache,
+            null,
+            opts.normalizeEolPaths?.has(
+              scannerRepoPath(repo, d.firstFile.name, d.format),
+            ),
+          ),
+          fingerprintScannerEndpoint(
+            repo,
+            d.secondFile,
+            d.format,
+            cache,
+            null,
+            opts.normalizeEolPaths?.has(
+              scannerRepoPath(repo, d.secondFile.name, d.format),
+            ),
+          ),
         ]);
         if (a.layoutOnly || b.layoutOnly) return null;
         return {
@@ -211,7 +229,10 @@ export async function scanDuplication(context) {
       toolRoot,
     };
     const current = paths.current.length
-      ? await runJscpd(snapshot.current, opts)
+      ? await runJscpd(snapshot.current, {
+          ...opts,
+          normalizeEolPaths: snapshot.eolProvenance?.normalizePaths,
+        })
       : [];
     const baseline = paths.base.length
       ? await runJscpd(snapshot.base, opts)
