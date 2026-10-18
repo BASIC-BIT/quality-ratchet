@@ -16,7 +16,8 @@
   "reports": {
     "testDebt": false,
     "testSize": {
-      "enabled": false
+      "enabled": true,
+      "oversizedLines": 1000
     }
   }
 }
