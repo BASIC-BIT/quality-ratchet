@@ -1,6 +1,6 @@
 # Adopt a qualified release
 
-The [workflow example](../examples/code-quality.yml) pins qualified runtime `ba9c9bec7c312a303e61b6779591610cd32509b8` for v1.0.0. Publication still requires source integration and the tag/release at that commit. Begin enforcement only after publication and the consumer preparation below. Chronote and Perkcord remain unmigrated, with no policies staged; this documentation does not authorize activation.
+The [workflow example](../examples/code-quality.yml) pins qualified runtime `9d713408d8c12eb9ced26fe45b4a99e1df5505ff` for v1.0.0. Confirm publication on the [v1.0.0 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.0) and complete the consumer preparation below before beginning enforcement. The October 18, 2026 [acceptance snapshot](acceptance.md) records Chronote and Perkcord policy-preparation PRs under review. At that snapshot, neither policy was merged and neither consumer had activated the shared tool.
 
 ## Prepare the target branch
 
@@ -24,6 +24,8 @@ During migration, preserve unrelated lint, format, type, test, security, metrics
 
 Retain existing enforcement until clean, regressed and accepted-exception runs prove the replacement. For a later defective shared release, restore the previous compatible reviewed pin. This initial release has no predecessor, so reverse an incomplete cutover through a reviewed revert of its workflow, dependencies, copied checks and required context. Keep unrelated branch rules, and prove the restored check before removing replacement enforcement. Record the exact pin, policy hash, hosted runs and unresolved limits in the consumer migration note.
 
-The Perkcord runtime duplication boundary remains UNKNOWN until Task 10 refreshes and reconciles current source. Keep the legacy allowance logic until that comparison is accepted.
+Current-source comparison reconciled the reviewed Perkcord duplication boundaries. The dormant record remains dormant; unchanged and moved copies pass, while a new copy fails. Edited or newly copied active infrastructure boundaries also fail. Keep legacy enforcement until the full consumer cutover is accepted.
+
+Perkcord has one declaration-scope gap: legacy duplication includes an authored declaration contract that the shared v1 defaults exclude. Resolve that gap or obtain explicit agreement to the policy change before migrating Perkcord or removing its legacy duplication check.
 
 Configure GitHub Actions dependency-update PRs in each consumer where allowed. Updates are reviewed adoption decisions, not automatic rollout.
