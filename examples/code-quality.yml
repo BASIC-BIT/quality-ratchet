@@ -1,4 +1,4 @@
-# Reviewed v1.0.0 release commit. Publication and consumer activation are separate steps.
+# Selected 1.0.1 publication target R3. Hosted qualification, publication and activation remain pending.
 # See docs/releases.md and docs/adoption.md before enabling enforcement.
 name: Code quality
 on:
@@ -30,7 +30,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - uses: BASIC-BIT/quality-ratchet@84f47115b726d962e73f6c3a06ba69b07cc38ccb # v1.0.0
+      - uses: BASIC-BIT/quality-ratchet@0873869f6b8fd80150d24689849ec0aebd94e9dd # v1.0.1
         with:
           github-token: ${{ github.token }}
           repository-path: ${{ github.workspace }}

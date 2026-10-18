@@ -22,15 +22,53 @@ export function sourcePath(path) {
 }
 const nullFile = process.platform === "win32" ? "NUL" : "/dev/null";
 export function git(repo, args, options = {}) {
+  return runGit(repo, args, options);
+}
+
+// These fixed read operations need the actual EOL configuration, but cannot
+// request filters, hooks, textconv, an editor or any modifying Git command.
+export function readEolConfig(repo) {
+  return runGit(
+    repo,
+    [
+      "config",
+      "--get",
+      "--type=bool-or-str",
+      "--default=false",
+      "core.autocrlf",
+    ],
+    {},
+    true,
+  ).trim();
+}
+export function readEolFiles(repo, paths) {
+  return runGit(
+    repo,
+    [
+      `--work-tree=${repo}`,
+      "ls-files",
+      "--eol",
+      "--cached",
+      "--others",
+      "--exclude-standard",
+      "-z",
+      "--",
+      ...paths.map((path) => `:(literal)${sourcePath(path)}`),
+    ],
+    {},
+    true,
+  );
+}
+function runGit(repo, args, options, eolData = false) {
   const env = Object.fromEntries(
     Object.entries(process.env).filter(([key]) => !key.startsWith("GIT_")),
   );
   Object.assign(
     env,
     {
-      GIT_CONFIG_NOSYSTEM: "1",
-      GIT_CONFIG_GLOBAL: nullFile,
-      GIT_ATTR_NOSYSTEM: "1",
+      GIT_CONFIG_NOSYSTEM: eolData ? undefined : "1",
+      GIT_CONFIG_GLOBAL: eolData ? undefined : nullFile,
+      GIT_ATTR_NOSYSTEM: eolData ? undefined : "1",
       GIT_TERMINAL_PROMPT: "0",
       GIT_OPTIONAL_LOCKS: "0",
     },
@@ -44,8 +82,7 @@ export function git(repo, args, options = {}) {
         "core.fsmonitor=false",
         "-c",
         `core.hooksPath=${nullFile}`,
-        "-c",
-        `core.attributesFile=${nullFile}`,
+        ...(eolData ? [] : ["-c", `core.attributesFile=${nullFile}`]),
         "-c",
         "core.quotePath=true",
         ...args,

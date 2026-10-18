@@ -47,6 +47,9 @@ jobs:
       - run: git rev-parse HEAD
       - run: npm ci --ignore-scripts
       - run: npm run check
+      - name: Validate release adoption pin
+        if: inputs.candidate != ''
+        run: node scripts/validate-examples.mjs --release
       - run: node bin/quality-ratchet.mjs tool-manifest --json
   package:
     name: Linux production package

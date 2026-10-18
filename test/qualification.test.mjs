@@ -75,10 +75,10 @@ test("release qualification is read-only, covers platforms and keeps action PR-o
     assert.ok(scripts.check.includes(command));
 });
 
-test("schema examples and the qualified release template validate", () => {
+test("schema examples and the adoption template validate", () => {
   const result = spawnSync(
     process.execPath,
-    ["scripts/validate-examples.mjs", "--release"],
+    ["scripts/validate-examples.mjs"],
     { cwd: toolRoot, encoding: "utf8" },
   );
   assert.equal(result.status, 0, result.stdout + result.stderr);
@@ -105,7 +105,7 @@ test("release validation rejects placeholders, shortened pins and wrong versions
         repo,
         "examples/code-quality.yml",
         template.replace(
-          /quality-ratchet@[a-f0-9]{40} # v1\.0\.0/,
+          /quality-ratchet@[a-f0-9]{40} # v\d+\.\d+\.\d+/,
           `quality-ratchet@${pin}`,
         ),
       );
@@ -117,4 +117,67 @@ test("release validation rejects placeholders, shortened pins and wrong versions
       assert.equal(result.status, 1, result.stdout + result.stderr);
       assert.match(result.stderr, /AssertionError/);
     }
+
+    write(repo, "examples/code-quality.yml", template);
+    const ready = spawnSync(
+      process.execPath,
+      [join(toolRoot, "scripts/validate-examples.mjs"), "--release"],
+      { cwd: repo, encoding: "utf8" },
+    );
+    assert.equal(ready.status, 0, ready.stdout + ready.stderr);
+  }));
+
+test("release workflow delegates to a reused CI release validator with real pin checks", () =>
+  withRepo((repo) => {
+    const ci = readFileSync(join(toolRoot, ".github/workflows/ci.yml"), "utf8");
+    const release = readFileSync(
+      join(toolRoot, ".github/workflows/release-check.yml"),
+      "utf8",
+    );
+    assert.match(release, /uses: \.\/.github\/workflows\/ci.yml/);
+    assert.match(release, /candidate: \$\{\{ inputs.candidate \}\}/);
+    const routed = ci.match(
+      /- name: Validate release adoption pin\s+if: inputs\.candidate != ''\s+run: (node scripts\/validate-examples\.mjs --release)/,
+    );
+    assert.ok(
+      routed,
+      "reusable CI must execute release-mode validation for its candidate route",
+    );
+    assert.ok(
+      ci.indexOf("npm ci --ignore-scripts") < routed.index,
+      "reuse the existing locked install",
+    );
+    const [, script, flag] = routed[1].split(" ");
+    for (const path of [
+      "quality-ratchet.json",
+      "package.json",
+      "package-lock.json",
+    ])
+      cpSync(join(toolRoot, path), join(repo, path));
+    const template = readFileSync(
+      join(toolRoot, "examples/code-quality.yml"),
+      "utf8",
+    );
+    const validate = () =>
+      spawnSync(process.execPath, [join(toolRoot, script), flag], {
+        cwd: repo,
+        encoding: "utf8",
+      });
+    write(repo, "examples/code-quality.yml", template);
+    const positive = validate();
+    assert.equal(positive.status, 0, positive.stdout + positive.stderr);
+    write(
+      repo,
+      "examples/code-quality.yml",
+      template.replace(
+        /(quality-ratchet@[a-f0-9]{40} # v)\d+\.\d+\.\d+/,
+        "$19.9.9",
+      ),
+    );
+    const negative = validate();
+    assert.equal(negative.status, 1, negative.stdout + negative.stderr);
+    assert.match(
+      negative.stderr,
+      /Release template version must match package version/,
+    );
   }));

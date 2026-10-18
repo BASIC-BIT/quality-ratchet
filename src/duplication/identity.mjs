@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fromMarkdown } from "mdast-util-from-markdown";
+import { canonicalGitEol } from "../git/eol.mjs";
 import { formatForPath } from "./formats.mjs";
 import { findBashCommentRanges } from "./shell.mjs";
 import {
@@ -39,10 +40,13 @@ function scannerFilePath(repo, scannerName, format) {
   return existsSync(candidate) ? candidate : null;
 }
 
-function sourceIdentityContext(path, format, cache) {
-  const key = `${path}\0${format}`;
+function sourceIdentityContext(path, format, cache, normalizeEol) {
+  const key = `${path}\0${format}\0${normalizeEol}`;
   if (!cache.has(key)) {
-    const source = readFileSync(path, "utf8");
+    const bytes = readFileSync(path);
+    const source = (normalizeEol ? canonicalGitEol(bytes) : bytes).toString(
+      "utf8",
+    );
     const containerFormat = formatForPath(path) ?? "text";
     const nativeJsContext =
       JS_LIKE_FORMATS.has(format) && containerFormat === format
@@ -65,6 +69,7 @@ function sourceIdentityContext(path, format, cache) {
       // Embedded-language positions refer to their container, which is not a
       // valid JS/TS program. Those spans keep language-local parsing below.
       fullFileRegexRanges: nativeJsContext?.regexRanges ?? null,
+      fullFileLiteralRanges: nativeJsContext?.literalRanges ?? null,
       bashCommentRangesPromise: null,
       markdownCodeNodes,
       embeddedContexts: new Map(),
@@ -112,6 +117,7 @@ async function normalizeEndpointRange(
     ...range,
     context.fullFileRegexRanges,
     bashCommentRanges,
+    context.fullFileLiteralRanges,
   );
 }
 
@@ -121,6 +127,7 @@ export async function fingerprintScannerEndpoint(
   format,
   sourceCache,
   fallback = null,
+  normalizeEol = false,
 ) {
   let fragment = fallback;
   let normalized = null;
@@ -128,7 +135,12 @@ export async function fingerprintScannerEndpoint(
   try {
     const path = scannerFilePath(repo, file.name, format);
     if (path && Number.isInteger(file.start) && Number.isInteger(file.end)) {
-      const context = sourceIdentityContext(path, format, sourceCache);
+      const context = sourceIdentityContext(
+        path,
+        format,
+        sourceCache,
+        normalizeEol,
+      );
       const { source } = context;
       const bashCommentRanges = await bashCommentRangesForContext(
         context,

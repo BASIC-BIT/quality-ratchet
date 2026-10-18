@@ -21,6 +21,7 @@ import {
   matchesGlobalScope,
   isJsTsPath,
 } from "../config/resolve.mjs";
+import { workingEolProvenance, canonicalGitEol } from "./eol.mjs";
 import { reportSourceSelected } from "../reports/scope.mjs";
 const gates = ["duplication", "complexity", "file-size"];
 function selected(policy, path, repo, tree = null) {
@@ -89,9 +90,13 @@ export function createSourceSnapshot(context) {
       current,
       context.policy,
     );
+    const eolProvenance = context.comparison.treeSha
+      ? null
+      : workingEolProvenance(context.comparison.repo, proposed.paths);
     if (context.comparison.workingTreeHash && !context.comparison.treeSha)
       assertWorkingIdentity(context.comparison);
     return {
+      eolProvenance,
       root,
       base,
       current,
@@ -106,13 +111,20 @@ export function createSourceSnapshot(context) {
     throw error;
   }
 }
-/** Raw blob/index writes happen only in a new repository, never the consumer index. */
-export function writeSnapshotTree(repo, directory, paths) {
+/** Comparison blobs/index writes stay isolated. Local projections use captured
+ * Git EOL provenance; source snapshots and the consumer index keep raw bytes. */
+export function writeSnapshotTree(
+  repo,
+  directory,
+  paths,
+  normalizeEolPaths = null,
+) {
   git(repo, ["read-tree", "--empty"]);
   const records = paths
     .map((path) => {
+      const bytes = readFileSync(join(directory, path));
       const hash = git(repo, ["hash-object", "--no-filters", "-w", "--stdin"], {
-        input: readFileSync(join(directory, path)),
+        input: normalizeEolPaths?.has(path) ? canonicalGitEol(bytes) : bytes,
       }).trim();
       return `100644 ${hash}\t${path}\0`;
     })
@@ -142,6 +154,7 @@ export function workingIdentity(
   comparison,
   directory = null,
   capturedPaths = null,
+  capturedEolProvenance = null,
 ) {
   if (resolveCommit(comparison.repo, "HEAD") !== comparison.headSha)
     throw new SetupError("HEAD changed. Rerun the quality check.");
@@ -158,6 +171,10 @@ export function workingIdentity(
     hash.update(bytes);
   }
   add(comparison.headSha);
+  add(
+    (capturedEolProvenance ?? workingEolProvenance(comparison.repo, paths))
+      .identity,
+  );
   for (const path of [...paths].sort()) {
     if (path === "quality-ratchet.json") continue;
     add(path);
