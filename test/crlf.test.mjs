@@ -111,6 +111,7 @@ test("native JSX endpoint identities survive CRLF materialization", () =>
 
 test("an unchanged JSX clone passes after CRLF conversion while changed and new copies fail", () =>
   withRepo(async (repo) => {
+    git(repo, "config", "core.autocrlf", "true");
     write(repo, "src/a.tsx", source("alpha"));
     write(repo, "src/b.tsx", source("beta"));
     commit(repo);
