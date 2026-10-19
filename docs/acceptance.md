@@ -1,10 +1,44 @@
 # Acceptance record
 
+Version 1.0.1 is [published](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) and qualified for adoption. The final release check, PR CI and post-merge source CI passed. Consumer migrations remain pending at the October 19, 2026 UTC snapshot. Both consumers keep existing default-branch enforcement; [adoption](adoption.md) records the remaining cutover requirements.
+
+## Patch 1.0.1 publication and hosted qualification
+
+The amended [Release check 39176654614](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39176654614) completed successfully with workflow definition E3 and candidate R3 in every job. All four `--release` validation steps executed and passed. [Final PR CI 39176656062](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39176656062) passed all six jobs at E3. Each platform and Node combination below ran 255 tests with zero failures or skips in each workflow.
+
+| Platform | Node    | Release-check duration | Final PR CI duration |
+| -------- | ------- | ---------------------: | -------------------: |
+| Ubuntu   | 24.15.0 |               71.959 s |             69.889 s |
+| Ubuntu   | 24.21.0 |               62.429 s |             57.653 s |
+| Windows  | 24.15.0 |              470.150 s |            572.102 s |
+| Windows  | 24.21.0 |              384.343 s |            471.643 s |
+
+The production-only Linux Node 24.15.0 package smoke passed in 9.295 seconds in Release check and 9.462 seconds in final PR CI. The non-PR quality job in Release check skipped as designed. Final PR CI's own-PR JSON artifact reported clean, final 0 / strict 0. All three scanners exited 0 with no errors or findings. Eligible-file counts were 92/71/71 and changed-file counts were 22/13/13. Head, base, policy, tree and manifest identities matched the expected inputs.
+
+[Post-merge source CI 39178578401](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39178578401) completed successfully at the integrated main commit, with its final update at `2026-10-19T00:05:29Z`. All four platform checks and the Linux production package job succeeded; the non-PR quality job skipped as designed. This verifies source integration, not product deployment or runtime behavior.
+
+PR #3's post-window audit at `2026-10-18T23:56:19Z` refreshed checks, comments, inline threads, reviews, mutable AI summaries and mergeability for exact head E3. Checks were terminal and acceptable, mergeability was clean and no blocking feedback remained. Configured Codex review cleared E3, and an immediate second mutable-summary refresh remained clear. Copilot quota was unavailable; no Copilot approval is claimed. PR #3 merged normally at `2026-10-18T23:56:32Z`, after the required 30-minute window.
+
+### Publication identities
+
+| Evidence                         | Exact value                                |
+| -------------------------------- | ------------------------------------------ |
+| Reviewed runtime Q2              | `bb24eb0e00420cc0691c69590f4f06f63dccc60e` |
+| Qualified source and fixture Q3  | `b256189fa96e1a460609917a8a56383f793b4216` |
+| Published tag target R3          | `0873869f6b8fd80150d24689849ec0aebd94e9dd` |
+| Final documentation head E3      | `a70be518f65e23ea58ad66f255dc57711a4ac035` |
+| Integrated main commit           | `07651cc73aeae00f0bc695875c10df8d6323a54b` |
+| Integrated tree, identical to E3 | `1318053e0244a47ad8a85167dc561e9e46a20b6a` |
+| Release ID and publication time  | 416782245, `2026-10-18T23:57:06Z`          |
+| Final own-PR JSON artifact       | 12154572937                                |
+
+The release is neither draft nor prerelease. All 48 trusted manifest assets, action.yml and CI are unchanged across Q3/R3/E3. The integrated release validator, source manifest and clean-status checks passed. The tag archive safely pins Q3; current examples and local setup pin R3. The immutable tag and archive remain unchanged. The runtime and lock hashes appear in the local evidence below.
+
 ## Patch 1.0.1 local evidence
 
 Reviewed runtime Q2 is `bb24eb0e00420cc0691c69590f4f06f63dccc60e`, version 1.0.1 and schema 1. Its scoped source review passed with no open findings. On October 18, 2026, local Windows x64 on Node 24.18.0 passed 255 tests with zero failures or skips, followed by lint, formatting and schema/examples. Its focused contracts passed 36 tests, and the own strict scan reported zero findings. These are historical same-runtime results, not a complete run at the final source/fixture selection.
 
-Source and fixture Q3 is `b256189fa96e1a460609917a8a56383f793b4216`. It adds only an explicit repository-local `core.autocrlf=true` setting to the unchanged-clone fixture, before source creation and commit. The assertions and runtime remain unchanged. A neutral run with global `core.autocrlf=false` reproduced the earlier Ubuntu assertion, then 31 affected tests passed after correction on Windows Node 24.18.0, with zero failures or skips. The scoped fixture review passed. No complete platform run was repeated for this fixture fix; fresh final hosted qualification remains pending. Historical v1.0.0 runs below do not qualify the patch.
+Source and fixture Q3 is `b256189fa96e1a460609917a8a56383f793b4216`. It adds only an explicit repository-local `core.autocrlf=true` setting to the unchanged-clone fixture, before source creation and commit. The assertions and runtime remain unchanged. A neutral run with global `core.autocrlf=false` reproduced the earlier Ubuntu assertion, then 31 affected tests passed after correction on Windows Node 24.18.0, with zero failures or skips. The scoped fixture review passed. The final hosted qualification above subsequently exercised this fixture selection on both platforms and Node versions. Historical v1.0.0 runs below remain attributed to that release.
 
 The seven Q2 real CLI cases use actual Git and native scanners and preserve caller source bytes, index and configuration:
 
@@ -20,15 +54,15 @@ The seven Q2 real CLI cases use actual Git and native scanners and preserve call
 
 Read-only Git metadata establishes effective text/eol/autocrlf and index provenance. Comparison hashes and in-memory duplication identity share a byte projection that removes CR only before LF where Git conversion applies. Raw scanner input and immutable hosted blobs retain exact bytes. Authored EOL-only edits that Git preserves retain hunks and block. The [arbitrary split-literal tokenizer limitation](releases.md#behavior-and-limits) remains unchanged.
 
-The executable identity includes 48 manifest assets, plus action.yml and the CI workflow as separately recorded control-plane files. Asset hash is `37bbe42c83c9a3a2ea0fa2a61ec7d2812aa336c35046d3835654bdfe7547a2ca`; lock hash is `b940d79a1aaf5f947e3e85516d3f05cd459be40fbc99fc67576a926913e1d804`. Package/dependency mappings, policy and exception contracts are unchanged. Q3 retains that executable identity. Selected publication target R3 is `0873869f6b8fd80150d24689849ec0aebd94e9dd`; its archive safely pins Q3. This later documentation head E3 pins R3. All 48 manifest assets plus action.yml and CI are byte-for-byte and Git-blob identical across Q3/R3/E3. See [releases](releases.md#patch-source-and-publication-selection) for the publication sequence.
+The executable identity includes 48 manifest assets, plus action.yml and the CI workflow as separately recorded control-plane files. Asset hash is `37bbe42c83c9a3a2ea0fa2a61ec7d2812aa336c35046d3835654bdfe7547a2ca`; lock hash is `b940d79a1aaf5f947e3e85516d3f05cd459be40fbc99fc67576a926913e1d804`. Package/dependency mappings, policy and exception contracts are unchanged. Q3 retains that executable identity. Published release commit R3 is `0873869f6b8fd80150d24689849ec0aebd94e9dd`; its archive safely pins Q3. Final documentation head E3 pins R3. All 48 manifest assets plus action.yml and CI are byte-for-byte and Git-blob identical across Q3/R3/E3. See [releases](releases.md#patch-source-and-publication-selection) for the publication sequence.
 
-Release-check delegates its candidate to reusable CI, whose nonempty-candidate route invokes `node scripts/validate-examples.mjs --release`. The source route and real positive/negative local validator checks pass. Intermediate hosted own-PR execution was clean, and the earlier manual Linux production smoke passed on Node 24.15.0. Both earlier Ubuntu suites failed at the fixture setup corrected in Q3. Those intermediate results do not qualify the final selection. Fresh final PR CI and actual amended release-check execution, source readiness, publication and consumer adoption remain pending. Check the [v1.0.1 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) for publication status.
+Release-check delegates its candidate to reusable CI, whose nonempty-candidate route invokes `node scripts/validate-examples.mjs --release`. The source route and real positive/negative local validator checks passed. Intermediate hosted own-PR execution was clean, and the earlier manual Linux production smoke passed on Node 24.15.0. Both earlier Ubuntu suites failed at the fixture setup corrected in Q3. Those results remain historical; the final hosted runs above qualify the published selection. Consumer adoption remains separate.
 
 ## Consumer preparation and remaining work
 
-Chronote policy PR #419 merged at `8742782628e04e24e7cff84c056b1c6ff0129d0a`. Perkcord policy PR #1153 merged at `9f2c9e2917bf027f5ca1843682fec64ccfb22721`. These are merged policy references, not a claim about current branch tips. The actual policies were verified. Consumer migrations remain unmerged, neither replacement is active, and existing enforcement remains required.
+Chronote policy PR #419 merged at `8742782628e04e24e7cff84c056b1c6ff0129d0a`. Perkcord policy PR #1153 merged at `9f2c9e2917bf027f5ca1843682fec64ccfb22721`. These are merged policy references, not a claim about current branch tips. The actual policies were verified. [Chronote migration PR #421](https://github.com/Chronote-gg/Chronote/pull/421) remains open and unmerged, with CI and review in progress. Perkcord remains in local qualification and has no migration PR. Neither replacement is active, and both consumers retain existing default-branch enforcement. Perkcord required-context activation remains unapproved.
 
-The human accepted Perkcord's shared declaration exclusions. One authored `.d.mts` file loses duplication coverage; all other parity and local metrics remain required. Current-source boundary reconciliation does not establish completed migration. Acceptance still requires reviewed hooks and aggregate CI cutover, actual required-check settings, representative current-source evidence, and main-push behavior after an accepted exception. See [adoption](adoption.md) for preparation and rollback.
+The human accepted Perkcord's shared declaration exclusions. One authored `.d.mts` file loses duplication coverage, the only accepted coverage loss. All other local hooks, reports, metrics, aggregation and exception behavior remain required. Comparisons at the final release pin verified the reviewed duplication boundaries and matching debt/size reports in private evidence. Normal commit hooks, checks of each consumer's entire current tree and hosted migration acceptance remain pending. Acceptance still requires reviewed hooks and aggregate CI cutover, actual required-check settings, representative current-source evidence, and main-push behavior after an accepted exception. Exact accepted heads, merges and settings readbacks belong in the consumer cutover record. See [adoption](adoption.md) for preparation and rollback.
 
 ## Initial release qualification, October 18, 2026
 
@@ -36,7 +70,7 @@ Qualified source Q is `9d713408d8c12eb9ced26fe45b4a99e1df5505ff`, version 1.0.0 
 
 The earlier `ba9c9bec7c312a303e61b6779591610cd32509b8` candidate was withdrawn before publication after configured review found source-path and warning-transport defects. The runs below qualify Q, except deliberately faulty missing-scanner derivatives identified as such. They are not relabeled as runs at R.
 
-The v1.0.0 release archive at R contains an example that safely pins its corrected source Q. Current adoption examples now select the 1.0.1 candidate described above. The Q and R identifiers in this historical section refer only to v1.0.0.
+The v1.0.0 release archive at R contains an example that safely pins its corrected source Q. Current adoption examples now pin published 1.0.1 as described above. The Q and R identifiers in this historical section refer only to v1.0.0.
 
 At the initial qualification snapshot, both consumers retained their existing gates and policy preparation was under review. The current policy and migration status is recorded above.
 

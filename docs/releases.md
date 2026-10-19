@@ -1,16 +1,18 @@
-# Release 1.0.1, unpublished patch candidate
+# Release 1.0.1
+
+Version 1.0.1 was [published](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) on October 18, 2026 at 23:57:06 UTC. Release qualification and post-merge source CI passed. Current examples pin the immutable release SHA. Consumer migrations remain pending at the October 19, 2026 UTC snapshot; see [adoption](adoption.md) for their status and cutover requirements.
 
 Version 1.0.1 corrects local LF/CRLF comparison and JSX clone identity. Fixed read-only Git metadata operations establish effective text/eol attributes, autocrlf and index provenance for selected paths. One byte canonicalizer removes CR only before LF where Git conversion applies. Local comparison hashing and in-memory duplication identity share that projection.
 
 Raw scanner input, caller source/index/config and immutable hosted blobs stay exact. Git-generated checkout EOL changes pass even when harmless comments touch old clones. Authored EOL-only literal changes that Git preserves retain real hunks and block, as do genuine content edits and new copies.
 
-The scoped source review passed. Policy defaults, scopes, thresholds, schema, package/lock dependencies and exception semantics are unchanged. [Local regression proof](acceptance.md#patch-101-local-evidence) retains the same-runtime Q2 Windows 255-test result and seven real CLI cases. Q3 adds an explicit fixture conversion policy and a neutral 31-test result. These are separate local results; final hosted/platform qualification, source readiness, publication and consumer adoption remain pending. Published v1.0.0 runs do not qualify this runtime.
+The scoped source and fixture reviews passed. Policy defaults, scopes, thresholds, schema, package/lock dependencies and exception semantics are unchanged. [Local regression proof](acceptance.md#patch-101-local-evidence) retains the same-runtime Q2 Windows 255-test result and seven real CLI cases. Q3 adds an explicit fixture conversion policy and a neutral 31-test result. The separate [final hosted qualification](acceptance.md#patch-101-publication-and-hosted-qualification) ran 255 tests with zero failures or skips in each Ubuntu/Windows and Node 24.15.0/24.21.0 combination. Historical v1.0.0 runs remain attributed to that release.
 
 ## Patch source and publication selection
 
-Source and fixture Q3 is `b256189fa96e1a460609917a8a56383f793b4216`. Its runtime is identical to reviewed Q2, `bb24eb0e00420cc0691c69590f4f06f63dccc60e`. Selected publication target R3 is `0873869f6b8fd80150d24689849ec0aebd94e9dd`; its archive safely pins Q3 as 1.0.1. This later documentation head E3 pins R3 in current adoption examples and local setup. E3 is not the tag target. Preserve R3 through normal integration and complete required readiness and qualification before an immutable v1.0.1 tag.
+The immutable v1.0.1 tag points to release commit R3. Its archive safely pins qualified source and fixture Q3 as 1.0.1. The later documentation head E3 pins R3 in current adoption examples and local setup. Normal integration preserved R3 and the E3 tree; neither the tag nor its archive was rewritten. Exact identities are recorded below.
 
-The 48 manifest assets, action.yml and CI workflow are byte-for-byte and Git-blob identical across Q3/R3 and this documentation follow-up E3. Recheck that identity before publication. Normal `node scripts/validate-examples.mjs --release` must pass. The release-check workflow delegates its candidate to CI, which invokes that command when the candidate is nonempty, after its existing locked install. Source wiring and local positive/negative validation pass. Intermediate hosted execution exposed a fixture setup failure; fresh final PR CI and the actual amended release-check run remain pending for this selection. Check the [v1.0.1 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) for publication status and the [acceptance record](acceptance.md) for actual results.
+The 48 manifest assets, action.yml and CI workflow are byte-for-byte and Git-blob identical across Q3/R3/E3. The integrated release validator, source manifest and clean-status checks passed. [Release check 39176654614](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39176654614) used the E3 workflow and checked out R3 in every candidate job. All four `node scripts/validate-examples.mjs --release` steps executed and passed after the locked install. [Final PR CI 39176656062](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39176656062) passed all six jobs at E3. [Post-merge source CI 39178578401](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39178578401) also passed at the integrated main commit. Earlier Ubuntu fixture setup failures remain historical and are superseded by this final qualification. See the [acceptance record](acceptance.md) for exact results and review limits.
 
 ## Behavior and limits
 
@@ -44,15 +46,17 @@ Changes to shared default thresholds/exclusions, existing configuration semantic
 
 ## Patch runtime identity
 
-| Field                   | Local candidate value                                              |
-| ----------------------- | ------------------------------------------------------------------ |
-| Reviewed source Q2      | `bb24eb0e00420cc0691c69590f4f06f63dccc60e`                         |
-| Source and fixture Q3   | `b256189fa96e1a460609917a8a56383f793b4216`                         |
-| Publication target R3   | `0873869f6b8fd80150d24689849ec0aebd94e9dd`                         |
-| Version / schema        | 1.0.1 / 1                                                          |
-| Observed / minimum Node | 24.18.0 / 24.15.0                                                  |
-| Runtime asset hash      | `37bbe42c83c9a3a2ea0fa2a61ec7d2812aa336c35046d3835654bdfe7547a2ca` |
-| Lock hash               | `b940d79a1aaf5f947e3e85516d3f05cd459be40fbc99fc67576a926913e1d804` |
+| Field                 | Published release evidence                                         |
+| --------------------- | ------------------------------------------------------------------ |
+| Reviewed source Q2    | `bb24eb0e00420cc0691c69590f4f06f63dccc60e`                         |
+| Source and fixture Q3 | `b256189fa96e1a460609917a8a56383f793b4216`                         |
+| Release commit R3     | `0873869f6b8fd80150d24689849ec0aebd94e9dd`                         |
+| Version / schema      | 1.0.1 / 1                                                          |
+| Hosted Node versions  | 24.15.0 / 24.21.0                                                  |
+| Runtime asset hash    | `37bbe42c83c9a3a2ea0fa2a61ec7d2812aa336c35046d3835654bdfe7547a2ca` |
+| Lock hash             | `b940d79a1aaf5f947e3e85516d3f05cd459be40fbc99fc67576a926913e1d804` |
+
+Release ID is 416782245, published at `2026-10-18T23:57:06Z`, neither draft nor prerelease. Final documentation head E3 is `a70be518f65e23ea58ad66f255dc57711a4ac035`. PR #3 merged normally at `2026-10-18T23:56:32Z` into `07651cc73aeae00f0bc695875c10df8d6323a54b`. Its integrated tree, `1318053e0244a47ad8a85167dc561e9e46a20b6a`, equals E3's tree.
 
 ## Release 1.0.0 history
 
