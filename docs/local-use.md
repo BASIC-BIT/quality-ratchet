@@ -47,7 +47,7 @@ The check script runs test, lint, format and schema/example validation. Test dis
 
 ## Installation and diagnostic details
 
-The following setup pins selected 1.0.1 publication target R3. Hosted patch qualification and publication remain pending. Check the [release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) and [acceptance record](acceptance.md) before activation. Keep optional dependencies enabled for jscpd's platform executable:
+The following setup pins published and qualified version 1.0.1 at release commit R3. See the [release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) and [acceptance record](acceptance.md) for qualification evidence. Complete the consumer-specific acceptance steps in [adoption](adoption.md) before enabling enforcement. Keep optional dependencies enabled for jscpd's platform executable:
 
 ```text
 git clone https://github.com/BASIC-BIT/quality-ratchet.git ../quality-ratchet-tool

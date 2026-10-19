@@ -2,9 +2,9 @@
 
 Check new or growing duplication, function complexity and file size against Git history. Each repository owns one JSON policy. Existing debt may remain or shrink.
 
-Current source is the unpublished 1.0.1 CRLF correctness patch candidate. See [release notes](docs/releases.md) for its scope and qualification limits.
+Version 1.0.1 is [published](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1). It corrects local LF/CRLF comparison and JSX clone identity. The [workflow example](examples/code-quality.yml) pins its full release SHA. See [release notes](docs/releases.md) for behavior and limits, then follow [adoption](docs/adoption.md).
 
-The [workflow example](examples/code-quality.yml) pins selected 1.0.1 publication target R3, `0873869f6b8fd80150d24689849ec0aebd94e9dd`. Scoped runtime and fixture reviews passed; final hosted patch qualification and publication remain pending. Check the [v1.0.1 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) and [acceptance record](docs/acceptance.md) before [adoption](docs/adoption.md). Consumer policies have merged, but migrations remain unmerged and existing enforcement remains active.
+At the October 19, 2026 UTC snapshot, release qualification and post-merge source CI passed on Ubuntu and Windows with Node 24.15.0 and 24.21.0. Consumer policies have merged. [Chronote migration PR #421](https://github.com/Chronote-gg/Chronote/pull/421) remains open, and Perkcord is still in local qualification with no migration PR. Both keep existing default-branch enforcement. The [acceptance record](docs/acceptance.md) separates release evidence from pending consumer cutovers.
 
 ## Start locally
 
