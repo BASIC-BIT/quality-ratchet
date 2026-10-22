@@ -6,9 +6,11 @@ Version 1.0.1 is [published](https://github.com/BASIC-BIT/quality-ratchet/releas
 
 At the October 19, 2026 UTC snapshot, release qualification and post-merge source CI passed on Ubuntu and Windows with Node 24.15.0 and 24.21.0. Consumer policies have merged. [Chronote migration PR #421](https://github.com/Chronote-gg/Chronote/pull/421) remains open, and Perkcord is still in local qualification with no migration PR. Both keep existing default-branch enforcement. The [acceptance record](docs/acceptance.md) separates release evidence from pending consumer cutovers.
 
+The current source raises the Node runtime floor and action pin to 24.22.1 for security maintenance. This change is unreleased. It requires fresh qualification, a new release and explicit consumer pin adoption. Published v1.0.1 and the workflow example still select the older action runtime. The dated qualification evidence above applies to that published source.
+
 ## Start locally
 
-Use Node 24.15.0 or a newer Node 24 release. In a separate tool checkout:
+Use Node 24.22.1 or a newer Node 24 release. In a separate tool checkout:
 
 ```sh
 npm ci --ignore-scripts

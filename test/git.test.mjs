@@ -686,9 +686,14 @@ test("hostile attributes, clean filters, fsmonitor, hooks, external diff and tex
     chmodSync(join(repo, "hooks/post-index-change"), 0o755);
     const beforeIndex = readFileSync(join(repo, ".git/index"));
     const beforeConfig = readFileSync(join(repo, ".git/config"));
-    const beforeTree = safeGit(repo, ["write-tree"]);
+    const beforeTree = safeGit(repo, ["rev-parse", "HEAD^{tree}"]);
     write(repo, "src/base.ts", "export const changed = 2;\n");
     const beforeFile = readFileSync(join(repo, "src/base.ts"));
+    assert.equal(
+      existsSync(sentinel),
+      false,
+      "fixture setup must not execute consumer configuration",
+    );
     const comparison = resolveComparison({ repo, base: "HEAD" });
     assert.deepEqual(comparison.ranges.get("src/base.ts"), [[1, 1]]);
     await withSourceSnapshot(context(comparison), (snapshot) => {
@@ -705,7 +710,7 @@ test("hostile attributes, clean filters, fsmonitor, hooks, external diff and tex
     );
     assert.deepEqual(readFileSync(join(repo, ".git/index")), beforeIndex);
     assert.deepEqual(readFileSync(join(repo, ".git/config")), beforeConfig);
-    assert.equal(safeGit(repo, ["write-tree"]), beforeTree);
+    assert.equal(safeGit(repo, ["rev-parse", "HEAD^{tree}"]), beforeTree);
     assert.deepEqual(readFileSync(join(repo, "src/base.ts")), beforeFile);
   }));
 

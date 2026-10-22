@@ -39,7 +39,13 @@ test("release qualification is read-only, covers platforms and keeps action PR-o
   const release = read(".github/workflows/release-check.yml");
 
   assert.match(ci, /os: \[ubuntu-latest, windows-latest\]/);
-  assert.match(ci, /node: \["24.15.0", "24"\]/);
+  assert.match(ci, /node: \["24.22.1", "24"\]/);
+  assert.match(
+    ci,
+    /node-version: \$\{\{ matrix\.node \}\}\n\s+check-latest: \$\{\{ matrix\.node == '24' \}\}\n\s+package-manager-cache: false/,
+  );
+  assert.match(ci, /node-version: "24.22.1"/);
+  assert.equal(read(".nvmrc").trim(), "24.22.1");
   assert.match(ci, /npm run check/);
   assert.match(ci, /npm ci --ignore-scripts --omit=dev --include=optional/);
   assert.match(ci, /node scripts\/package-smoke.mjs/);

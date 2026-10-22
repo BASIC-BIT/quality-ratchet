@@ -7,6 +7,7 @@ import { eventIdentity, readCurrentPr } from "./client.mjs";
 import { evaluatePolicy } from "./policy.mjs";
 import { writeEvidence, toolMetadata } from "./evidence.mjs";
 import { renderSummary } from "./summary.mjs";
+import { supportsNodeVersion } from "../runtime.mjs";
 /** Task 8 calls this installed entrypoint after manifest/dependency verification. */
 export async function runHosted({
   checkout,
@@ -31,8 +32,7 @@ export async function runHosted({
       "Quality preparation or execution failed. Evidence may be missing. Rerun the quality check.",
   };
   try {
-    const [major, minor] = process.versions.node.split(".").map(Number);
-    if (major !== 24 || minor < 15) throw new Error();
+    if (!supportsNodeVersion(process.versions.node)) throw new Error();
     tool = toolMetadata(toolVerified);
     if (toolVerified !== true) throw new Error();
     const info = eventIdentity(event);

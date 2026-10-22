@@ -16,6 +16,56 @@ const cli = (repo, args) =>
     { encoding: "utf8", windowsHide: true },
   );
 
+const runtimeCommands = [
+  ["--version"],
+  ["tool-manifest"],
+  [],
+  ["check", "--base", "HEAD"],
+  ["report-test-debt"],
+  ["report-test-size"],
+  ["explain-config", "--base", "HEAD"],
+];
+const runtimeCli = (repo, args, version) =>
+  spawnSync(
+    process.execPath,
+    [
+      "--import",
+      `data:text/javascript,${encodeURIComponent(`Object.defineProperty(process.versions, "node", { value: ${JSON.stringify(version)} });`)}`,
+      join(toolRoot, "bin/quality-ratchet.mjs"),
+      ...args,
+    ],
+    { cwd: repo, encoding: "utf8", windowsHide: true },
+  );
+
+test("all local entry routes reject unsupported runtimes before tool or repository work", async () =>
+  withRepo((repo) => {
+    for (const version of ["24.21.0", "24.22.0", "23.22.1", "25.0.0"])
+      for (const args of runtimeCommands) {
+        const plain = runtimeCli(repo, args, version);
+        assert.equal(plain.status, 2, plain.stdout + plain.stderr);
+        assert.match(plain.stdout, /Unsupported tool runtime/);
+        const json = runtimeCli(repo, [...args, "--json"], version);
+        assert.equal(json.status, 2, json.stdout + json.stderr);
+        assert.deepEqual(JSON.parse(json.stdout), {
+          schemaVersion: 1,
+          error: "Unsupported tool runtime; use Node >=24.22.1 <25",
+          strictExitCode: 2,
+        });
+      }
+  }));
+
+test("all local entry routes accept the floor and later Node 24 versions", async () =>
+  withRepo((repo) => {
+    for (const version of ["24.22.1", "24.23.0"])
+      for (const args of runtimeCommands) {
+        const options = args[0] === "--version" ? args : [...args, "--json"];
+        if (args.length === 0) options.unshift("--base", "HEAD");
+        const result = runtimeCli(repo, options, version);
+        assert.equal(result.status, 0, result.stdout + result.stderr);
+        assert.ok(result.stdout.trim());
+      }
+  }));
+
 test("local commands reject policy flags and explain the missing default base", async () =>
   withRepo((repo) => {
     for (const args of [

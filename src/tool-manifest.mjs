@@ -4,6 +4,7 @@ import { join, relative, isAbsolute, sep } from "node:path";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
+import { supportsNodeVersion } from "./runtime.mjs";
 
 export const toolAssets = [
   "src",
@@ -86,12 +87,10 @@ export async function verifyInstalledTool(root, expected) {
   const manifest = toolManifest(root);
   if (JSON.stringify(manifest) !== JSON.stringify(expected))
     throw new Error("Installed tool does not match pinned assets");
-  const [major, minor] = process.versions.node.split(".").map(Number);
   if (
-    major !== 24 ||
-    minor < 15 ||
-    manifest.minimumNode !== "24.15.0" ||
-    manifest.supportedNode !== ">=24.15.0 <25"
+    !supportsNodeVersion(process.versions.node) ||
+    manifest.minimumNode !== "24.22.1" ||
+    manifest.supportedNode !== ">=24.22.1 <25"
   )
     throw new Error("Unsupported tool runtime");
   const require = createRequire(join(root, "package.json"));

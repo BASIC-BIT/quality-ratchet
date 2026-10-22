@@ -9,7 +9,8 @@ const pkg = read("package.json"),
   lock = read("package-lock.json");
 assert.equal(pkg.version, lock.version);
 assert.equal(pkg.version, lock.packages[""].version);
-assert.equal(pkg.engines.node, ">=24.15.0 <25");
+assert.equal(pkg.engines.node, ">=24.22.1 <25");
+assert.equal(lock.packages[""].engines.node, pkg.engines.node);
 const workflow = readFileSync("examples/code-quality.yml", "utf8");
 const releasePin = workflow.match(
   /BASIC-BIT\/quality-ratchet@([a-f0-9]{40}) # v(\d+\.\d+\.\d+)(?=\s|$)/,
