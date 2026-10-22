@@ -196,3 +196,30 @@ test("failed installed-tool verification blocks before any fetch", async () =>
       ["report", "scanned", "current"],
     );
   }));
+
+test("unsupported hosted runtimes fail before fetching or scanning", async () =>
+  withHostedRepo(async (input) => {
+    const original = Object.getOwnPropertyDescriptor(process.versions, "node");
+    try {
+      for (const version of ["24.22.0", "24.21.0", "23.22.1", "25.0.0"]) {
+        Object.defineProperty(process.versions, "node", {
+          ...original,
+          value: version,
+        });
+        let fetched = false;
+        const output = await runHosted({
+          ...input,
+          transport() {
+            fetched = true;
+            throw new Error("Unexpected fetch");
+          },
+        });
+        assert.equal(fetched, false, version);
+        assert.equal(output.result.exitCode, 2);
+        assert.equal(output.report, null);
+        assert.equal(output.scanned, null);
+      }
+    } finally {
+      Object.defineProperty(process.versions, "node", original);
+    }
+  }));

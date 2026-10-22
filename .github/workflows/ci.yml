@@ -31,7 +31,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        node: ["24.15.0", "24"]
+        node: ["24.22.1", "24"]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:
@@ -62,7 +62,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: "24.15.0"
+          node-version: "24.22.1"
           package-manager-cache: false
       - run: git rev-parse HEAD
       - run: npm ci --ignore-scripts --omit=dev --include=optional

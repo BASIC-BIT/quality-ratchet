@@ -86,12 +86,13 @@ export async function verifyInstalledTool(root, expected) {
   const manifest = toolManifest(root);
   if (JSON.stringify(manifest) !== JSON.stringify(expected))
     throw new Error("Installed tool does not match pinned assets");
-  const [major, minor] = process.versions.node.split(".").map(Number);
+  const [major, minor, patch] = process.versions.node.split(".").map(Number);
   if (
     major !== 24 ||
-    minor < 15 ||
-    manifest.minimumNode !== "24.15.0" ||
-    manifest.supportedNode !== ">=24.15.0 <25"
+    minor < 22 ||
+    (minor === 22 && patch < 1) ||
+    manifest.minimumNode !== "24.22.1" ||
+    manifest.supportedNode !== ">=24.22.1 <25"
   )
     throw new Error("Unsupported tool runtime");
   const require = createRequire(join(root, "package.json"));

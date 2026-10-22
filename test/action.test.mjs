@@ -60,7 +60,7 @@ test("action exposes only supported inputs and publishes before saved failure", 
     action,
     /actions\/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1/,
   );
-  assert.match(action, /node-version: "24.15.0"/);
+  assert.match(action, /node-version: "24.22.1"/);
   assert.match(action, /package-manager-cache: false/);
   assert.match(
     action,
@@ -316,6 +316,39 @@ test(
     }
   },
 );
+
+test("installed runtime accepts the security floor and rejects older patches or other majors", async () => {
+  const original = Object.getOwnPropertyDescriptor(process.versions, "node");
+  try {
+    for (const version of ["24.22.1", "24.23.0"]) {
+      Object.defineProperty(process.versions, "node", {
+        ...original,
+        value: version,
+      });
+      await assert.doesNotReject(
+        verifyInstalledTool(toolRoot, toolManifest(toolRoot)),
+      );
+    }
+    for (const version of [
+      "24.15.0",
+      "24.21.0",
+      "24.22.0",
+      "23.22.1",
+      "25.0.0",
+    ]) {
+      Object.defineProperty(process.versions, "node", {
+        ...original,
+        value: version,
+      });
+      await assert.rejects(
+        verifyInstalledTool(toolRoot, toolManifest(toolRoot)),
+        /Unsupported tool runtime/,
+      );
+    }
+  } finally {
+    Object.defineProperty(process.versions, "node", original);
+  }
+});
 
 test("manifest command is inspection-only and preserves strict command parsing", () => {
   const result = execute(join(toolRoot, "bin/quality-ratchet.mjs"), [

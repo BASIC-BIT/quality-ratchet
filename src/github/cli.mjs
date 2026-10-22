@@ -31,8 +31,9 @@ export async function runHosted({
       "Quality preparation or execution failed. Evidence may be missing. Rerun the quality check.",
   };
   try {
-    const [major, minor] = process.versions.node.split(".").map(Number);
-    if (major !== 24 || minor < 15) throw new Error();
+    const [major, minor, patch] = process.versions.node.split(".").map(Number);
+    if (major !== 24 || minor < 22 || (minor === 22 && patch < 1))
+      throw new Error();
     tool = toolMetadata(toolVerified);
     if (toolVerified !== true) throw new Error();
     const info = eventIdentity(event);

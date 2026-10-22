@@ -73,7 +73,7 @@ Ajv `8.20.0` was reviewed on 2026-10-17 against the [upstream release notes](htt
 
 ### Install and runtime verification
 
-Supported runtime: Node `>=24.15.0 <25`, with `.nvmrc` selecting `24.15.0`. Initial verification used Windows, Node `24.18.0` and npm `11.16.0`. The exact minimum Node version and Linux runtime still need acceptance in later tasks.
+At initial setup, the supported runtime was Node `>=24.15.0 <25`, with `.nvmrc` selecting `24.15.0`. Initial verification used Windows, Node `24.18.0` and npm `11.16.0`. At that stage, the exact minimum Node version and Linux runtime still needed acceptance in later tasks. See the [README](../README.md) for the current source runtime floor and release status.
 
 The initial lockfile was generated with `npm install --package-lock-only --ignore-scripts`. A temporary directory initially containing only `package.json` and `package-lock.json` passed `npm ci --ignore-scripts --omit=dev`. Every importable runtime package resolved inside that directory's own `node_modules`; the development formatter was absent. Ajv draft-07 and shell valid/invalid parse assertions passed. The shell check loaded the bundled `main.wasm` without lifecycle scripts. `jscpd@5.0.12` intentionally has no package-root module, so its shipped `run-jscpd.js --version` was executed and returned `cpd 5.0.12`. Its native binary is supplied by an optional platform package, so runtime installations must retain supported optional dependencies.
 

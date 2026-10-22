@@ -1,6 +1,8 @@
 # Local use
 
-Install the tool in its own checkout pinned to the reviewed release commit. Use Node 24.15.0 or a later Node 24 release and `npm ci --ignore-scripts`. Application dependencies are unnecessary. Keep the tool outside authored application source, or in the hard-excluded `.quality-ratchet-tool` directory.
+Install the tool in its own checkout pinned to the reviewed release commit. Use Node 24.22.1 or a later Node 24 release and `npm ci --ignore-scripts`. Application dependencies are unnecessary. Keep the tool outside authored application source, or in the hard-excluded `.quality-ratchet-tool` directory.
+
+The current source selects Node 24.22.1 for the action and minimum supported runtime. This security maintenance is unreleased and still needs qualification, release and consumer adoption. The v1.0.1 checkout below retains its published runtime pin and historical qualification evidence. Running it locally on newer Node does not update its hosted action pin.
 
 ## Commands
 
