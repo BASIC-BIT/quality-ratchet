@@ -8,6 +8,7 @@ import { coverageFor, scanContext } from "./report.mjs";
 import { collectTestSourceInventory } from "./reports/test-size.mjs";
 import { summarizeTestDebt } from "./reports/test-debt.mjs";
 import { toolManifest } from "./tool-manifest.mjs";
+import { supportsNodeVersion } from "./runtime.mjs";
 const toolRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 export function parseArgs(argv) {
   const args = [...argv],
@@ -148,6 +149,8 @@ function inspectTool(argv) {
 export async function main(argv = process.argv.slice(2)) {
   const json = argv.includes("--json");
   try {
+    if (!supportsNodeVersion(process.versions.node))
+      throw new SetupError("Unsupported tool runtime; use Node >=24.22.1 <25");
     if (inspectTool(argv)) return 0;
     const options = parseArgs(argv);
     const comparison = resolveComparison({
