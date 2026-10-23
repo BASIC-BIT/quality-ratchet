@@ -1,6 +1,24 @@
-# Release 1.0.1
+# Release 1.0.2 qualification
 
-Version 1.0.1 was [published](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) on October 18, 2026 at 23:57:06 UTC. Release qualification and post-merge source CI passed. Current examples pin the immutable release SHA. Consumer migrations remain pending at the October 19, 2026 UTC snapshot; see [adoption](adoption.md) for their status and cutover requirements.
+Version 1.0.2 contains the Node security maintenance merged in [PR #5](https://github.com/BASIC-BIT/quality-ratchet/pull/5). It requires Node `>=24.22.1 <25`, pins the action to Node 24.22.1, rejects unsupported local runtimes before checking source, and sets `check-latest` for the floating Node 24 CI lane. It preserves the 1.0.1 LF/CRLF and JSX corrections and their documented limits.
+
+This is a security patch with no scanner, dependency version, policy, threshold, scope, schema or exception changes. Package and lockfile changes only set the release version to 1.0.2. LICENSE, NOTICE and [publication provenance](provenance.md) remain unchanged.
+
+## Candidate identity and publication
+
+The reviewed source head is `ed571d40b471c9ca34f82cf2bea5d85520408e12`. Main merged it at `29686861c96025dc74061ab2494c40d85c7e6cb5`; both have tree `4f6080c07f2fec8043d0e673e8dcd3ab332312df`. [Source CI 39865414504](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39865414504) passed all four 259-test platform jobs and the Linux production package smoke on Node 24.22.1/npm 11.19.1.
+
+[Release check 39927791916](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39927791916) qualified release candidate R, `84fa993cf93b9dedd4da19ecbad75bc8712d0874`, with tree `7073adbb9ee8d9ca468b25550484a9c623406621`. All four Ubuntu/Windows minimum/floating Node lanes resolved R, passed 259 tests each, executed `--release` validation and emitted the expected manifests. Linux production package smoke passed at R. The non-PR quality job skipped by design. The workflow is read-only and does not publish.
+
+R's immutable archive pins versioned source `4dd0e2056b6e7b36cb805dc75421fbe32e811a54` as v1.0.2 to avoid a self-referential commit hash. That intermediate commit supplies R's identical runtime assets, action and qualification workflow. It is an identity anchor, not the release target. Current examples and local setup pin qualified R. Later documentation commits do not rewrite R or its archive.
+
+Publication requires normal PR CI and review, the repository's review-age and fresh-audit requirements, and integration that preserves R. Immutable tag `v1.0.2` must point to R. Release notes must name R, its runtime, source CI and successful Release check. Do not move existing release tags or add a mutable major-version tag.
+
+Use the [v1.0.2 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.2) for authoritative publication status. Before consumer activation, verify that the release is published and its tag resolves to `84fa993cf93b9dedd4da19ecbad75bc8712d0874`. Consumers must adopt that same full SHA explicitly in both their hosted action and local checker. Shared-tool qualification and publication do not establish consumer acceptance. The 1.0.1 evidence below remains historical and applies only to its recorded source; consumer rollout status remains in its dated record.
+
+## Release 1.0.1 history
+
+Version 1.0.1 was [published](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) on October 18, 2026 at 23:57:06 UTC. Release qualification and post-merge source CI passed. At that publication, examples pinned the immutable release SHA. Consumer migrations remained pending at the October 19, 2026 UTC snapshot; see [adoption](adoption.md) for their status and cutover requirements.
 
 Version 1.0.1 corrects local LF/CRLF comparison and JSX clone identity. Fixed read-only Git metadata operations establish effective text/eol attributes, autocrlf and index provenance for selected paths. One byte canonicalizer removes CR only before LF where Git conversion applies. Local comparison hashing and in-memory duplication identity share that projection.
 
@@ -10,7 +28,7 @@ The scoped source and fixture reviews passed. Policy defaults, scopes, threshold
 
 ## Patch source and publication selection
 
-The immutable v1.0.1 tag points to release commit R3. Its archive safely pins qualified source and fixture Q3 as 1.0.1. The later documentation head E3 pins R3 in current adoption examples and local setup. Normal integration preserved R3 and the E3 tree; neither the tag nor its archive was rewritten. Exact identities are recorded below.
+The immutable v1.0.1 tag points to release commit R3. Its archive safely pins qualified source and fixture Q3 as 1.0.1. The later documentation head E3 pinned R3 in the adoption examples and local setup at the October 19, 2026 UTC snapshot. Normal integration preserved R3 and the E3 tree; neither the tag nor its archive was rewritten. Exact identities are recorded below.
 
 The 48 manifest assets, action.yml and CI workflow are byte-for-byte and Git-blob identical across Q3/R3/E3. The integrated release validator, source manifest and clean-status checks passed. [Release check 39176654614](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39176654614) used the E3 workflow and checked out R3 in every candidate job. All four `node scripts/validate-examples.mjs --release` steps executed and passed after the locked install. [Final PR CI 39176656062](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39176656062) passed all six jobs at E3. [Post-merge source CI 39178578401](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39178578401) also passed at the integrated main commit. Earlier Ubuntu fixture setup failures remain historical and are superseded by this final qualification. See the [acceptance record](acceptance.md) for exact results and review limits.
 
@@ -30,7 +48,7 @@ The manual `Release check` workflow accepts a candidate ref and prints its resol
 
 The manifest hashes raw runtime asset bytes and verifies the isolated copy against its source on the same machine. Checkout line-ending conversion can change that hash for one Git commit. This repository declares LF text checkout to keep its assets consistent; retain the observed platform manifest with each qualification record. Use the full Git SHA as the portable release identity.
 
-The adoption template uses a full immutable SHA and a `# v1.0.1` comment. No mutable major-version tag is planned. Rollback requires a compatible reviewed pin or a reviewed cutover revert. See [adoption](adoption.md) for the v1.0.0 CRLF caveat.
+The 1.0.1 adoption template at E3 used a full immutable SHA and a `# v1.0.1` comment. No mutable major-version tag is planned. Rollback requires a compatible reviewed pin or a reviewed cutover revert. See [adoption](adoption.md) for the v1.0.0 CRLF caveat.
 
 Current reviewed nested pins:
 

@@ -1,5 +1,17 @@
 # Acceptance record
 
+## Security patch 1.0.2 qualification
+
+Merged PR #5 source `29686861c96025dc74061ab2494c40d85c7e6cb5` has tree `4f6080c07f2fec8043d0e673e8dcd3ab332312df`, identical to reviewed head `ed571d40b471c9ca34f82cf2bea5d85520408e12`. [CI 39865414504](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39865414504) passed all six PR jobs. Each of the four Ubuntu/Windows minimum/floating Node lanes ran 259 tests with zero failures on Node 24.22.1 and npm 11.19.1. The Linux production package smoke and own-PR quality job also passed.
+
+[Release check 39927791916](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39927791916) then qualified exact release candidate R, `84fa993cf93b9dedd4da19ecbad75bc8712d0874`, with tree `7073adbb9ee8d9ca468b25550484a9c623406621`. All four platform/Node lanes resolved R, passed 259 tests each and executed the `--release` validators. Linux production package smoke passed. The non-PR quality job skipped by design. Candidate manifests reported asset hash `9eac9c41f52924a91952b71e092d758a15a078bfdda68722906066c4e88e7c6d` and lock hash `a05ac70aa0ef35310e77f281e492d45e82ccee9bb5e730d09002f42cf5eb99b2`.
+
+The 1.0.2 preparation changes only package version metadata and release/adoption documentation. Source, tests, dependencies, schema, policy, action and workflows remain unchanged. R's archive retains its pin to versioned source `4dd0e2056b6e7b36cb805dc75421fbe32e811a54`. Current examples and local setup pin qualified R; later documentation changes do not alter its archive or runtime assets.
+
+Use the [v1.0.2 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.2) for authoritative publication status and verify that its tag resolves to `84fa993cf93b9dedd4da19ecbad75bc8712d0874` before consumer activation. Qualification does not establish publication, post-merge candidate CI or consumer acceptance. See [publication requirements](releases.md#candidate-identity-and-publication).
+
+## Published 1.0.1 record
+
 Version 1.0.1 is [published](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) and qualified for adoption. The final release check, PR CI and post-merge source CI passed. Consumer migrations remain pending at the October 19, 2026 UTC snapshot. Both consumers keep existing default-branch enforcement; [adoption](adoption.md) records the remaining cutover requirements.
 
 ## Patch 1.0.1 publication and hosted qualification
@@ -32,7 +44,7 @@ PR #3's post-window audit at `2026-10-18T23:56:19Z` refreshed checks, comments, 
 | Release ID and publication time  | 416782245, `2026-10-18T23:57:06Z`          |
 | Final own-PR JSON artifact       | 12154572937                                |
 
-The release is neither draft nor prerelease. All 48 trusted manifest assets, action.yml and CI are unchanged across Q3/R3/E3. The integrated release validator, source manifest and clean-status checks passed. The tag archive safely pins Q3; current examples and local setup pin R3. The immutable tag and archive remain unchanged. The runtime and lock hashes appear in the local evidence below.
+The release is neither draft nor prerelease. All 48 trusted manifest assets, action.yml and CI are unchanged across Q3/R3/E3. The integrated release validator, source manifest and clean-status checks passed. The tag archive safely pins Q3; at E3, the examples and local setup pinned R3. The immutable tag and archive remain unchanged. The runtime and lock hashes appear in the local evidence below.
 
 ## Patch 1.0.1 local evidence
 
@@ -70,9 +82,9 @@ Qualified source Q is `9d713408d8c12eb9ced26fe45b4a99e1df5505ff`, version 1.0.0 
 
 The earlier `ba9c9bec7c312a303e61b6779591610cd32509b8` candidate was withdrawn before publication after configured review found source-path and warning-transport defects. The runs below qualify Q, except deliberately faulty missing-scanner derivatives identified as such. They are not relabeled as runs at R.
 
-The v1.0.0 release archive at R contains an example that safely pins its corrected source Q. Current adoption examples now pin published 1.0.1 as described above. The Q and R identifiers in this historical section refer only to v1.0.0.
+The v1.0.0 release archive at R contains an example that safely pins its corrected source Q. At the October 19, 2026 UTC snapshot, adoption examples pinned published 1.0.1 as described above. The Q and R identifiers in this historical section refer only to v1.0.0.
 
-At the initial qualification snapshot, both consumers retained their existing gates and policy preparation was under review. The current policy and migration status is recorded above.
+At the initial qualification snapshot, both consumers retained their existing gates and policy preparation was under review. The October 19, 2026 UTC policy and migration snapshot is recorded above.
 
 ### Corrected runtime qualification
 

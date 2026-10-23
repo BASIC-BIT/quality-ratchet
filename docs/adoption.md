@@ -1,8 +1,14 @@
-# Adopt 1.0.1
+# Adopt 1.0.2
 
-Version 1.0.1 is [published](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) and qualified. The [workflow example](../examples/code-quality.yml) pins the full immutable release SHA. Follow the preparation and cutover steps below before replacing an existing gate; release qualification alone does not establish consumer acceptance. See the [acceptance record](acceptance.md) for source and hosted evidence.
+Version 1.0.2 commit `84fa993cf93b9dedd4da19ecbad75bc8712d0874` passed [Release check 39927791916](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39927791916). The [workflow example](../examples/code-quality.yml) and [local checker setup](local-use.md#installation-and-diagnostic-details) pin this same qualified commit. Before consumer activation, use the [release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.2) for authoritative publication status and verify that v1.0.2 resolves to `84fa993cf93b9dedd4da19ecbad75bc8712d0874`. See [release notes](releases.md#candidate-identity-and-publication).
 
-## Rollout snapshot, October 19, 2026 UTC
+Use Node 24.22.1 or a newer Node 24 release for local checks. The hosted action supplies Node 24.22.1 itself. Keep consumer policy, enforced scopes, thresholds, coverage and exception rules unchanged. A local Node upgrade alone does not change the hosted action selected by an older SHA.
+
+For an existing 1.0.1 consumer, update its action SHA/version comment, local checker checkout SHA and any recorded manifest asset/lock hashes together. Install from the new lockfile with lifecycle scripts disabled and optional dependencies retained. Verify strict quality and diagnostics on the consumer's actual current source, normal hooks, and hosted PR CI before integration. Record the exact accepted consumer head and main result. Do not use a quality exception or reduce coverage to make this pin update pass.
+
+Release check passed all four 259-test Ubuntu/Windows lanes, their executed `--release` validators, and Linux production package smoke at the exact qualified commit. These shared-tool results do not establish consumer acceptance. The dated rollout and 1.0.1 qualification below remain historical. Follow the preparation and cutover requirements when changing an existing gate.
+
+## Historical rollout snapshot, October 19, 2026 UTC
 
 Chronote policy PR #419 and Perkcord policy PR #1153 have merged, and the actual policies were verified. [Chronote migration PR #421](https://github.com/Chronote-gg/Chronote/pull/421) is open and unmerged, with CI and review in progress. Perkcord remains in local qualification; no migration PR exists yet. Both keep existing default-branch enforcement. Perkcord required-context activation remains unapproved.
 

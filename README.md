@@ -2,11 +2,11 @@
 
 Check new or growing duplication, function complexity and file size against Git history. Each repository owns one JSON policy. Existing debt may remain or shrink.
 
-Version 1.0.1 is [published](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1). It corrects local LF/CRLF comparison and JSX clone identity. The [workflow example](examples/code-quality.yml) pins its full release SHA. See [release notes](docs/releases.md) for behavior and limits, then follow [adoption](docs/adoption.md).
+Version 1.0.2 raises the Node runtime floor and hosted action pin to 24.22.1, rejects older local Node releases, and resolves the floating Node 24 CI lane with `check-latest`. Scanner versions, policy defaults, scopes, thresholds, schema and exception behavior are unchanged. See [release notes](docs/releases.md) for qualification and publication requirements.
 
-At the October 19, 2026 UTC snapshot, release qualification and post-merge source CI passed on Ubuntu and Windows with Node 24.15.0 and 24.21.0. Consumer policies have merged. [Chronote migration PR #421](https://github.com/Chronote-gg/Chronote/pull/421) remains open, and Perkcord is still in local qualification with no migration PR. Both keep existing default-branch enforcement. The [acceptance record](docs/acceptance.md) separates release evidence from pending consumer cutovers.
+[Release check 39927791916](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39927791916) qualified commit `84fa993cf93b9dedd4da19ecbad75bc8712d0874`. All four Ubuntu/Windows lanes passed 259 tests each on Node 24.22.1 and npm 11.19.1, executed release-mode validation, and emitted the expected manifests. Linux production package smoke also passed. The [acceptance record](docs/acceptance.md) separates shared-tool qualification from consumer acceptance.
 
-The current source raises the Node runtime floor and action pin to 24.22.1 for security maintenance. This change is unreleased. It requires fresh qualification, a new release and explicit consumer pin adoption. Published v1.0.1 and the workflow example still select the older action runtime. The dated qualification evidence above applies to that published source.
+The [workflow example](examples/code-quality.yml) and [local setup](docs/local-use.md#installation-and-diagnostic-details) pin that same qualified commit as v1.0.2. Use the [release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.2) for authoritative publication status and verify that v1.0.2 resolves to `84fa993cf93b9dedd4da19ecbad75bc8712d0874` before consumer activation. Follow [adoption](docs/adoption.md) before changing consumer pins.
 
 ## Start locally
 
