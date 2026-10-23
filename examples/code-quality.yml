@@ -1,4 +1,4 @@
-# v1.0.2 candidate archive source. Publish and qualify before consumer adoption.
+# Qualified v1.0.2 commit. Verify the release target before consumer activation.
 # See docs/releases.md and docs/adoption.md before enabling enforcement.
 name: Code quality
 on:
@@ -30,7 +30,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - uses: BASIC-BIT/quality-ratchet@4dd0e2056b6e7b36cb805dc75421fbe32e811a54 # v1.0.2
+      - uses: BASIC-BIT/quality-ratchet@84fa993cf93b9dedd4da19ecbad75bc8712d0874 # v1.0.2
         with:
           github-token: ${{ github.token }}
           repository-path: ${{ github.workspace }}

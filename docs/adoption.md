@@ -1,14 +1,12 @@
-# Adopt 1.0.2 after publication
+# Adopt 1.0.2
 
-Version 1.0.2 is a prepared security release candidate. It needs final candidate qualification and publication before consumer adoption. See [release notes](releases.md#candidate-identity-and-publication). The template currently pins the candidate archive's versioned source; once published, replace it with the full immutable v1.0.2 release target in both the workflow and local checker setup.
+Version 1.0.2 commit `84fa993cf93b9dedd4da19ecbad75bc8712d0874` passed [Release check 39927791916](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39927791916). The [workflow example](../examples/code-quality.yml) and [local checker setup](local-use.md#installation-and-diagnostic-details) pin this same qualified commit. Before consumer activation, use the [release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.2) for authoritative publication status and verify that v1.0.2 resolves to `84fa993cf93b9dedd4da19ecbad75bc8712d0874`. See [release notes](releases.md#candidate-identity-and-publication).
 
 Use Node 24.22.1 or a newer Node 24 release for local checks. The hosted action supplies Node 24.22.1 itself. Keep consumer policy, enforced scopes, thresholds, coverage and exception rules unchanged. A local Node upgrade alone does not change the hosted action selected by an older SHA.
 
 For an existing 1.0.1 consumer, update its action SHA/version comment, local checker checkout SHA and any recorded manifest asset/lock hashes together. Install from the new lockfile with lifecycle scripts disabled and optional dependencies retained. Verify strict quality and diagnostics on the consumer's actual current source, normal hooks, and hosted PR CI before integration. Record the exact accepted consumer head and main result. Do not use a quality exception or reduce coverage to make this pin update pass.
 
-The source qualification for 1.0.2 passed four 259-test Ubuntu/Windows jobs plus Linux production package smoke. Final candidate Release check remains a separate publication prerequisite. This does not establish consumer acceptance.
-
-Version 1.0.1 remains the latest [published release](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) at this preparation snapshot. The dated rollout and 1.0.1 qualification below remain historical. Follow the preparation and cutover requirements when changing an existing gate.
+Release check passed all four 259-test Ubuntu/Windows lanes, their executed `--release` validators, and Linux production package smoke at the exact qualified commit. These shared-tool results do not establish consumer acceptance. The dated rollout and 1.0.1 qualification below remain historical. Follow the preparation and cutover requirements when changing an existing gate.
 
 ## Historical rollout snapshot, October 19, 2026 UTC
 

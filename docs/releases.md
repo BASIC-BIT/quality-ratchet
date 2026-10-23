@@ -1,20 +1,20 @@
-# Release 1.0.2 candidate
+# Release 1.0.2 qualification
 
-Version 1.0.2 prepares the Node security maintenance merged in [PR #5](https://github.com/BASIC-BIT/quality-ratchet/pull/5). It requires Node `>=24.22.1 <25`, pins the action to Node 24.22.1, rejects unsupported local runtimes before checking source, and sets `check-latest` for the floating Node 24 CI lane. It preserves the 1.0.1 LF/CRLF and JSX corrections and their documented limits.
+Version 1.0.2 contains the Node security maintenance merged in [PR #5](https://github.com/BASIC-BIT/quality-ratchet/pull/5). It requires Node `>=24.22.1 <25`, pins the action to Node 24.22.1, rejects unsupported local runtimes before checking source, and sets `check-latest` for the floating Node 24 CI lane. It preserves the 1.0.1 LF/CRLF and JSX corrections and their documented limits.
 
 This is a security patch with no scanner, dependency version, policy, threshold, scope, schema or exception changes. Package and lockfile changes only set the release version to 1.0.2. LICENSE, NOTICE and [publication provenance](provenance.md) remain unchanged.
 
 ## Candidate identity and publication
 
-The reviewed source head is `ed571d40b471c9ca34f82cf2bea5d85520408e12`. Main merged it at `29686861c96025dc74061ab2494c40d85c7e6cb5`; both have tree `4f6080c07f2fec8043d0e673e8dcd3ab332312df`. [Source CI 39865414504](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39865414504) passed all four 259-test platform jobs and the Linux production package smoke on Node 24.22.1/npm 11.19.1. This source CI did not exercise the manual candidate-only release validator.
+The reviewed source head is `ed571d40b471c9ca34f82cf2bea5d85520408e12`. Main merged it at `29686861c96025dc74061ab2494c40d85c7e6cb5`; both have tree `4f6080c07f2fec8043d0e673e8dcd3ab332312df`. [Source CI 39865414504](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39865414504) passed all four 259-test platform jobs and the Linux production package smoke on Node 24.22.1/npm 11.19.1.
 
-The archive pins versioned source `4dd0e2056b6e7b36cb805dc75421fbe32e811a54` as v1.0.2 to avoid a self-referential commit hash. That intermediate commit supplies the candidate's identical runtime assets, action and qualification workflow. It is an identity anchor, not the final release qualification target. The final candidate adds only release and adoption metadata; its full commit SHA must be recorded by the publisher.
+[Release check 39927791916](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39927791916) qualified release candidate R, `84fa993cf93b9dedd4da19ecbad75bc8712d0874`, with tree `7073adbb9ee8d9ca468b25550484a9c623406621`. All four Ubuntu/Windows minimum/floating Node lanes resolved R, passed 259 tests each, executed `--release` validation and emitted the expected manifests. Linux production package smoke passed at R. The non-PR quality job skipped by design. The workflow is read-only and does not publish.
 
-Before publication, pass normal PR CI and review, then run `Release check` with the final full candidate SHA. All candidate jobs must resolve that SHA. Require the four Node/platform checks, the executed `--release` validators and Linux production package smoke to pass. Preserve the recorded manifests. The non-PR quality job skips by design. The workflow is read-only and does not publish.
+R's immutable archive pins versioned source `4dd0e2056b6e7b36cb805dc75421fbe32e811a54` as v1.0.2 to avoid a self-referential commit hash. That intermediate commit supplies R's identical runtime assets, action and qualification workflow. It is an identity anchor, not the release target. Current examples and local setup pin qualified R. Later documentation commits do not rewrite R or its archive.
 
-After the repository's review-age and fresh-audit requirements pass, preserve the candidate through integration and create immutable tag `v1.0.2` at that exact qualified commit. Publish release notes that name the commit, runtime, source CI and release-check run. Do not move either existing release tag or add a mutable major-version tag. Update current examples and local setup to the published target afterward. Consumers must adopt that same full SHA explicitly; release publication alone does not update their hosted action or local checker.
+Publication requires normal PR CI and review, the repository's review-age and fresh-audit requirements, and integration that preserves R. Immutable tag `v1.0.2` must point to R. Release notes must name R, its runtime, source CI and successful Release check. Do not move existing release tags or add a mutable major-version tag.
 
-Version 1.0.2 is not yet published at this preparation snapshot. The 1.0.1 evidence below remains historical and applies only to its recorded source. Consumer rollout status also remains in its dated record rather than being inferred from shared-tool CI.
+Use the [v1.0.2 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.2) for authoritative publication status. Before consumer activation, verify that the release is published and its tag resolves to `84fa993cf93b9dedd4da19ecbad75bc8712d0874`. Consumers must adopt that same full SHA explicitly in both their hosted action and local checker. Shared-tool qualification and publication do not establish consumer acceptance. The 1.0.1 evidence below remains historical and applies only to its recorded source; consumer rollout status remains in its dated record.
 
 ## Release 1.0.1 history
 
