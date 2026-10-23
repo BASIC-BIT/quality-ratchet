@@ -2,7 +2,7 @@
 
 Install the tool in its own checkout pinned to the reviewed release commit. Use Node 24.22.1 or a later Node 24 release and `npm ci --ignore-scripts`. Application dependencies are unnecessary. Keep the tool outside authored application source, or in the hard-excluded `.quality-ratchet-tool` directory.
 
-The current source selects Node 24.22.1 for the action and minimum supported runtime. This security maintenance is unreleased and still needs qualification, release and consumer adoption. The v1.0.1 checkout below retains its published runtime pin and historical qualification evidence. Running it locally on newer Node does not update its hosted action pin.
+The 1.0.2 candidate selects Node 24.22.1 for the action and minimum supported runtime. Final release qualification and publication remain pending. The candidate setup below pins its versioned source. After publication, use the full immutable release target consistently with the hosted action. Running an older pinned tool locally on newer Node does not update its hosted action pin.
 
 ## Commands
 
@@ -49,11 +49,11 @@ The check script runs test, lint, format and schema/example validation. Test dis
 
 ## Installation and diagnostic details
 
-The following setup pins published and qualified version 1.0.1 at release commit R3. See the [release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) and [acceptance record](acceptance.md) for qualification evidence. Complete the consumer-specific acceptance steps in [adoption](adoption.md) before enabling enforcement. Keep optional dependencies enabled for jscpd's platform executable:
+The following candidate setup pins versioned 1.0.2 source. It is not a publication claim. See the [release prerequisites](releases.md#candidate-identity-and-publication) and [acceptance record](acceptance.md). After publication, replace this SHA with the full immutable release target and complete the consumer checks in [adoption](adoption.md). Keep optional dependencies enabled for jscpd's platform executable:
 
 ```text
 git clone https://github.com/BASIC-BIT/quality-ratchet.git ../quality-ratchet-tool
-git -C ../quality-ratchet-tool checkout --detach 0873869f6b8fd80150d24689849ec0aebd94e9dd # v1.0.1
+git -C ../quality-ratchet-tool checkout --detach 4dd0e2056b6e7b36cb805dc75421fbe32e811a54 # v1.0.2
 npm --prefix ../quality-ratchet-tool ci --ignore-scripts --include=optional
 ```
 

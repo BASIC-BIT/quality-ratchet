@@ -1,6 +1,24 @@
-# Release 1.0.1
+# Release 1.0.2 candidate
 
-Version 1.0.1 was [published](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) on October 18, 2026 at 23:57:06 UTC. Release qualification and post-merge source CI passed. Current examples pin the immutable release SHA. Consumer migrations remain pending at the October 19, 2026 UTC snapshot; see [adoption](adoption.md) for their status and cutover requirements.
+Version 1.0.2 prepares the Node security maintenance merged in [PR #5](https://github.com/BASIC-BIT/quality-ratchet/pull/5). It requires Node `>=24.22.1 <25`, pins the action to Node 24.22.1, rejects unsupported local runtimes before checking source, and sets `check-latest` for the floating Node 24 CI lane. It preserves the 1.0.1 LF/CRLF and JSX corrections and their documented limits.
+
+This is a security patch with no scanner, dependency version, policy, threshold, scope, schema or exception changes. Package and lockfile changes only set the release version to 1.0.2. LICENSE, NOTICE and [publication provenance](provenance.md) remain unchanged.
+
+## Candidate identity and publication
+
+The reviewed source head is `ed571d40b471c9ca34f82cf2bea5d85520408e12`. Main merged it at `29686861c96025dc74061ab2494c40d85c7e6cb5`; both have tree `4f6080c07f2fec8043d0e673e8dcd3ab332312df`. [Source CI 39865414504](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39865414504) passed all four 259-test platform jobs and the Linux production package smoke on Node 24.22.1/npm 11.19.1. This source CI did not exercise the manual candidate-only release validator.
+
+The archive pins versioned source `4dd0e2056b6e7b36cb805dc75421fbe32e811a54` as v1.0.2 to avoid a self-referential commit hash. That intermediate commit supplies the candidate's identical runtime assets, action and qualification workflow. It is an identity anchor, not the final release qualification target. The final candidate adds only release and adoption metadata; its full commit SHA must be recorded by the publisher.
+
+Before publication, pass normal PR CI and review, then run `Release check` with the final full candidate SHA. All candidate jobs must resolve that SHA. Require the four Node/platform checks, the executed `--release` validators and Linux production package smoke to pass. Preserve the recorded manifests. The non-PR quality job skips by design. The workflow is read-only and does not publish.
+
+After the repository's review-age and fresh-audit requirements pass, preserve the candidate through integration and create immutable tag `v1.0.2` at that exact qualified commit. Publish release notes that name the commit, runtime, source CI and release-check run. Do not move either existing release tag or add a mutable major-version tag. Update current examples and local setup to the published target afterward. Consumers must adopt that same full SHA explicitly; release publication alone does not update their hosted action or local checker.
+
+Version 1.0.2 is not yet published at this preparation snapshot. The 1.0.1 evidence below remains historical and applies only to its recorded source. Consumer rollout status also remains in its dated record rather than being inferred from shared-tool CI.
+
+## Release 1.0.1 history
+
+Version 1.0.1 was [published](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) on October 18, 2026 at 23:57:06 UTC. Release qualification and post-merge source CI passed. At that publication, examples pinned the immutable release SHA. Consumer migrations remained pending at the October 19, 2026 UTC snapshot; see [adoption](adoption.md) for their status and cutover requirements.
 
 Version 1.0.1 corrects local LF/CRLF comparison and JSX clone identity. Fixed read-only Git metadata operations establish effective text/eol attributes, autocrlf and index provenance for selected paths. One byte canonicalizer removes CR only before LF where Git conversion applies. Local comparison hashing and in-memory duplication identity share that projection.
 

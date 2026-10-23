@@ -1,5 +1,13 @@
 # Acceptance record
 
+## Security patch 1.0.2 preparation
+
+Merged PR #5 source `29686861c96025dc74061ab2494c40d85c7e6cb5` has tree `4f6080c07f2fec8043d0e673e8dcd3ab332312df`, identical to reviewed head `ed571d40b471c9ca34f82cf2bea5d85520408e12`. [CI 39865414504](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39865414504) passed all six PR jobs. Each of the four Ubuntu/Windows minimum/floating Node lanes ran 259 tests with zero failures on Node 24.22.1 and npm 11.19.1. The Linux production package smoke and own-PR quality job also passed.
+
+The 1.0.2 preparation changes only package version metadata and release/adoption documentation. Source, tests, dependencies, schema, policy, action and workflows remain unchanged. Its archive pins versioned source `4dd0e2056b6e7b36cb805dc75421fbe32e811a54`; the final candidate must be qualified by its own full SHA through `Release check`, including the candidate-only release validator and production smoke. This section records source proof, not a published release, post-merge candidate CI or consumer acceptance. See [publication prerequisites](releases.md#candidate-identity-and-publication).
+
+## Published 1.0.1 record
+
 Version 1.0.1 is [published](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) and qualified for adoption. The final release check, PR CI and post-merge source CI passed. Consumer migrations remain pending at the October 19, 2026 UTC snapshot. Both consumers keep existing default-branch enforcement; [adoption](adoption.md) records the remaining cutover requirements.
 
 ## Patch 1.0.1 publication and hosted qualification
