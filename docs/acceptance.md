@@ -40,7 +40,7 @@ PR #3's post-window audit at `2026-10-18T23:56:19Z` refreshed checks, comments, 
 | Release ID and publication time  | 416782245, `2026-10-18T23:57:06Z`          |
 | Final own-PR JSON artifact       | 12154572937                                |
 
-The release is neither draft nor prerelease. All 48 trusted manifest assets, action.yml and CI are unchanged across Q3/R3/E3. The integrated release validator, source manifest and clean-status checks passed. The tag archive safely pins Q3; current examples and local setup pin R3. The immutable tag and archive remain unchanged. The runtime and lock hashes appear in the local evidence below.
+The release is neither draft nor prerelease. All 48 trusted manifest assets, action.yml and CI are unchanged across Q3/R3/E3. The integrated release validator, source manifest and clean-status checks passed. The tag archive safely pins Q3; at E3, the examples and local setup pinned R3. The immutable tag and archive remain unchanged. The runtime and lock hashes appear in the local evidence below.
 
 ## Patch 1.0.1 local evidence
 
@@ -78,9 +78,9 @@ Qualified source Q is `9d713408d8c12eb9ced26fe45b4a99e1df5505ff`, version 1.0.0 
 
 The earlier `ba9c9bec7c312a303e61b6779591610cd32509b8` candidate was withdrawn before publication after configured review found source-path and warning-transport defects. The runs below qualify Q, except deliberately faulty missing-scanner derivatives identified as such. They are not relabeled as runs at R.
 
-The v1.0.0 release archive at R contains an example that safely pins its corrected source Q. Current adoption examples now pin published 1.0.1 as described above. The Q and R identifiers in this historical section refer only to v1.0.0.
+The v1.0.0 release archive at R contains an example that safely pins its corrected source Q. At the October 19, 2026 UTC snapshot, adoption examples pinned published 1.0.1 as described above. The Q and R identifiers in this historical section refer only to v1.0.0.
 
-At the initial qualification snapshot, both consumers retained their existing gates and policy preparation was under review. The current policy and migration status is recorded above.
+At the initial qualification snapshot, both consumers retained their existing gates and policy preparation was under review. The October 19, 2026 UTC policy and migration snapshot is recorded above.
 
 ### Corrected runtime qualification
 

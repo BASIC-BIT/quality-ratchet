@@ -28,7 +28,7 @@ The scoped source and fixture reviews passed. Policy defaults, scopes, threshold
 
 ## Patch source and publication selection
 
-The immutable v1.0.1 tag points to release commit R3. Its archive safely pins qualified source and fixture Q3 as 1.0.1. The later documentation head E3 pins R3 in current adoption examples and local setup. Normal integration preserved R3 and the E3 tree; neither the tag nor its archive was rewritten. Exact identities are recorded below.
+The immutable v1.0.1 tag points to release commit R3. Its archive safely pins qualified source and fixture Q3 as 1.0.1. The later documentation head E3 pinned R3 in the adoption examples and local setup at the October 19, 2026 UTC snapshot. Normal integration preserved R3 and the E3 tree; neither the tag nor its archive was rewritten. Exact identities are recorded below.
 
 The 48 manifest assets, action.yml and CI workflow are byte-for-byte and Git-blob identical across Q3/R3/E3. The integrated release validator, source manifest and clean-status checks passed. [Release check 39176654614](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39176654614) used the E3 workflow and checked out R3 in every candidate job. All four `node scripts/validate-examples.mjs --release` steps executed and passed after the locked install. [Final PR CI 39176656062](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39176656062) passed all six jobs at E3. [Post-merge source CI 39178578401](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39178578401) also passed at the integrated main commit. Earlier Ubuntu fixture setup failures remain historical and are superseded by this final qualification. See the [acceptance record](acceptance.md) for exact results and review limits.
 
@@ -48,7 +48,7 @@ The manual `Release check` workflow accepts a candidate ref and prints its resol
 
 The manifest hashes raw runtime asset bytes and verifies the isolated copy against its source on the same machine. Checkout line-ending conversion can change that hash for one Git commit. This repository declares LF text checkout to keep its assets consistent; retain the observed platform manifest with each qualification record. Use the full Git SHA as the portable release identity.
 
-The adoption template uses a full immutable SHA and a `# v1.0.1` comment. No mutable major-version tag is planned. Rollback requires a compatible reviewed pin or a reviewed cutover revert. See [adoption](adoption.md) for the v1.0.0 CRLF caveat.
+The 1.0.1 adoption template at E3 used a full immutable SHA and a `# v1.0.1` comment. No mutable major-version tag is planned. Rollback requires a compatible reviewed pin or a reviewed cutover revert. See [adoption](adoption.md) for the v1.0.0 CRLF caveat.
 
 Current reviewed nested pins:
 
