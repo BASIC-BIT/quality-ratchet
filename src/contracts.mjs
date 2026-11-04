@@ -184,12 +184,13 @@ export function decodeScanContext(json) {
 /**
  * @typedef {{headSha: string, baseRef: string, baseSha: string, baseTipSha: string, treeSha: string, configCommit: string, policyHash: string, baseTipPolicyHash: string}} ScannedRevision
  * @typedef {{headSha: string, baseRef: string, baseSha: string | null, labels: string[], body: string}} CurrentPr
- * @typedef {{exitCode: 0 | 1 | 2, outcome: "clean" | "advisory" | "exception" | "regression" | "invalid-exception" | "stale" | "error", rationale: string | null, message: string}} PolicyResult
+ * @typedef {{exitCode: 0 | 1 | 2, outcome: "clean" | "advisory" | "exception" | "regression" | "invalid-exception" | "stale" | "policy-divergence" | "error", rationale: string | null, message: string}} PolicyResult
  *
  * baseSha is the merge base of the PR head and the target branch in both records,
  * and the comparison baseline. baseTipSha is the target tip observed while scanning;
  * tip movement alone is not stale. policyHash is enforced from baseSha, and a
- * differing baseTipPolicyHash is stale: the branch must take the target policy.
+ * differing baseTipPolicyHash is policy-divergence: the branch must take the
+ * target policy, which no rerun can do.
  * A retargeted PR is stale from baseRef alone, so its live baseSha is null.
  * Hosted evidence is schemaVersion 2.
  *

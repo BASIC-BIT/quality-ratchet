@@ -243,7 +243,7 @@ test("a target policy the branch never took blocks instead of passing", async ()
       output.scanned.policyHash,
       output.scanned.baseTipPolicyHash,
     );
-    assert.equal(output.result.outcome, "stale");
+    assert.equal(output.result.outcome, "policy-divergence");
     assert.equal(output.result.exitCode, 1);
     assert.match(output.result.message, /Rebase or merge the target branch/);
     assert.equal(

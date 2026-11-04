@@ -27,7 +27,7 @@ Follow [adoption](docs/adoption.md). Stage the intended policy on the target bra
 
 Hosted runs compare the PR head against the merge base of that head and the target branch, so unrelated merges into the target branch no longer invalidate a scan. In exchange the action no longer simulates merging the target tip into the head; [adoption](docs/adoption.md#activate-the-action) describes that trade-off and where the merge-base policy is read.
 
-Enforcement policy is read from that merge base, not from the PR head tree, so a PR cannot relax its own enforcement; proposed policy edits are validated and displayed. When the policy at the merge base differs from the policy at the target tip, the run is reported stale and blocks until the branch rebases or merges the target branch, so a target-branch policy change cannot be bypassed by branching before it. A human-authorized `quality-exception` label plus nonempty text under `## Quality exception` accepts blocking regressions across pushes. It cannot accept setup, scanner, configuration or stale-result failures.
+Enforcement policy is read from that merge base, not from the PR head tree, so a PR cannot relax its own enforcement; proposed policy edits are validated and displayed. When the policy at the merge base differs from the policy at the target tip, the run is reported as `policy-divergence` and blocks until the branch rebases or merges the target branch, so a target-branch policy change cannot be bypassed by branching before it. A human-authorized `quality-exception` label plus nonempty text under `## Quality exception` accepts blocking regressions across pushes. It cannot accept setup, scanner, configuration, stale-result or policy-divergence failures.
 
 ## Develop and release
 

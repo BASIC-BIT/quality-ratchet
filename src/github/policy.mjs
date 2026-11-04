@@ -96,8 +96,8 @@ export function evaluatePolicy({ report, scanned, current, toolVerified }) {
       "Tool verification, preparation or quality evidence failed. Exceptions do not apply.",
     );
   }
-  const stale = staleResult(scanned, current);
-  if (stale) return stale;
+  const blocked = branchStateResult(scanned, current);
+  if (blocked) return blocked;
   const label = current.labels.includes("quality-exception"),
     rationale = extractRationale(current.body);
   if (label && !rationale)
@@ -135,7 +135,7 @@ export function evaluatePolicy({ report, scanned, current, toolVerified }) {
 }
 
 /** Blocking branch-state checks, before any clean, advisory or exception verdict. */
-function staleResult(scanned, current) {
+function branchStateResult(scanned, current) {
   // baseSha is the compared merge base, not the target tip: unrelated merges
   // into the target branch move the tip without invalidating this scan.
   if (
@@ -150,11 +150,13 @@ function staleResult(scanned, current) {
     );
   // Enforcement reads the merge base, so a target branch whose policy has since
   // changed cannot apply it to this PR. Blocking keeps the divergence visible
-  // instead of quietly enforcing the policy at the branch point.
+  // instead of quietly enforcing the policy at the branch point. It is its own
+  // outcome because only a rebase or merge clears it: reporting stale invites a
+  // rerun loop that can never terminate.
   if (scanned.policyHash !== scanned.baseTipPolicyHash)
     return result(
       1,
-      "stale",
+      "policy-divergence",
       "The target branch policy differs from the policy at this branch's merge base. Rebase or merge the target branch so its current policy applies.",
     );
   return null;

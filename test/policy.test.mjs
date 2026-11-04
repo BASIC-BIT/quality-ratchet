@@ -106,13 +106,14 @@ test("accepted exception retains findings and current metadata controls pushes",
     "exception",
   );
 });
-test("a divergent target policy blocks and no label waives it", () => {
+test("a divergent target policy blocks under its own outcome", () => {
   const diverged = {
     ...input,
     scanned: { ...input.scanned, baseTipPolicyHash: "a".repeat(64) },
   };
   const verdict = evaluatePolicy(diverged);
-  assert.equal(verdict.outcome, "stale");
+  // Distinct from stale: a rerun clears stale and can never clear this.
+  assert.equal(verdict.outcome, "policy-divergence");
   assert.equal(verdict.exitCode, 1);
   assert.match(verdict.message, /Rebase or merge the target branch/);
   // The accepted exception label is evaluated only after this check.
@@ -121,6 +122,14 @@ test("a divergent target policy blocks and no label waives it", () => {
     evaluatePolicy({
       ...diverged,
       current: { ...input.current, labels: [] },
+    }).outcome,
+    "policy-divergence",
+  );
+  // A moved head is reported as stale even while the policies also diverge.
+  assert.equal(
+    evaluatePolicy({
+      ...diverged,
+      current: { ...input.current, headSha: "a".repeat(40) },
     }).outcome,
     "stale",
   );

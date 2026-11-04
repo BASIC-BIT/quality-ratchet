@@ -16,6 +16,10 @@ Publication requires normal PR CI and review, the repository's review-age and fr
 
 Use the [v1.0.2 release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.2) for authoritative publication status. Before consumer activation, verify that the release is published and its tag resolves to `84fa993cf93b9dedd4da19ecbad75bc8712d0874`. Consumers must adopt that same full SHA explicitly in both their hosted action and local checker. Shared-tool qualification and publication do not establish consumer acceptance. The 1.0.1 evidence below remains historical and applies only to its recorded source; consumer rollout status remains in its dated record.
 
+## Unreleased outcome addition
+
+The action can return a new `outcome` value, `policy-divergence`, with exit code 1. It is reported when the policy at the pull request's merge base differs from the policy at the target tip, so the enforced policy is not the target branch's current one. That case previously reused `stale`. The two are now distinct because `stale` clears by rerunning against the current revision and a divergence does not: it clears only when the branch rebases or merges the target branch. Consumers that branch on the `outcome` output, or that rerun automatically on `stale`, must treat `policy-divergence` as blocking and not rerunnable. A `quality-exception` label does not waive it. The outcome set is additive, hosted evidence remains `schemaVersion` 2, and no input, output or evidence field changed.
+
 ## Release 1.0.1 history
 
 Version 1.0.1 was [published](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.1) on October 18, 2026 at 23:57:06 UTC. Release qualification and post-merge source CI passed. At that publication, examples pinned the immutable release SHA. Consumer migrations remained pending at the October 19, 2026 UTC snapshot; see [adoption](adoption.md) for their status and cutover requirements.
