@@ -69,8 +69,26 @@ test("finish prints the saved verdict and keeps its exit code", () => {
       env: { ...process.env, QR_REPORT_DIRECTORY: directory },
     });
     assert.equal(clean.status, 0);
-    assert.match(clean.stdout, /outcome: clean\nNo new regressions\./);
+    assert.match(clean.stdout, /outcome: clean - No new regressions\./);
     assert.equal(clean.stderr, "");
+    // The verdict stays on one prefixed line, so a message that looks like a
+    // workflow command can never begin an emitted line.
+    save({ exitCode: 1, outcome: "stale", message: "::error::forged" });
+    const forged = execute(finish, [], {
+      env: { ...process.env, QR_REPORT_DIRECTORY: directory },
+    });
+    assert.equal(forged.status, 1);
+    assert.ok(forged.stderr.includes("::error::forged"));
+    for (const line of forged.stderr.split("\n"))
+      assert.ok(!line.startsWith("::"), line);
+    save({ exitCode: 1, outcome: "stale", message: "x".repeat(600) });
+    const long = execute(finish, [], {
+      env: { ...process.env, QR_REPORT_DIRECTORY: directory },
+    });
+    assert.match(
+      long.stderr,
+      /\[truncated; full text in the evidence artifact]/,
+    );
     save({ exitCode: 1, outcome: "stale", message: 7 });
     const invalid = execute(finish, [], {
       env: { ...process.env, QR_REPORT_DIRECTORY: directory },
@@ -546,16 +564,22 @@ async function warningReport(callback, reports = {}) {
     return callback(report);
   });
 }
-function published(f, report) {
+function published(f, report, current = null, scanned = null) {
   const directory = join(f.root, "publication");
   mkdirSync(directory, { recursive: true });
   writeFileSync(join(directory, "summary.md"), "saved summary\n");
-  const saved = { report, result: { outcome: "clean", exitCode: 0 } };
+  const saved = {
+    report,
+    current,
+    scanned,
+    result: { outcome: "clean", exitCode: 0 },
+  };
   const input = join(directory, "input.json");
   writeFileSync(input, JSON.stringify(saved));
   const script = `import { publishWarnings } from ${JSON.stringify(new URL("../scripts/run-action.mjs", import.meta.url).href)};
     import { readFileSync } from "node:fs";
-    await publishWarnings(JSON.parse(readFileSync(process.argv[1])).report);`;
+    const saved = JSON.parse(readFileSync(process.argv[1]));
+    await publishWarnings(saved.report, saved.current, saved.scanned);`;
   return execute("--input-type=module", ["-e", script, input, directory]);
 }
 test("publication warns for unchanged oversized tests without changing the clean verdict", async () => {
@@ -621,6 +645,115 @@ test("warning properties escape command delimiters and controls and reject inval
       const invalid = published(f, report);
       assert.notEqual(invalid.status, 0);
       assert.equal(invalid.stdout, "");
+    });
+  } finally {
+    rmSync(f.root, { recursive: true, force: true });
+  }
+});
+const unreadableTip = {
+  baseTipPolicyUnreadable: true,
+  baseTipSha: "b".repeat(40),
+};
+test("an unresolved target configuration is annotated, not only summarized", async () => {
+  const f = fixture();
+  try {
+    await warningReport((report) => {
+      const run = published(f, report, unreadableTip);
+      assert.equal(run.status, 0, run.stderr);
+      // Divergence enforcement is disabled while the outcome still passes, so
+      // the condition must reach the checks view, not only the job summary.
+      assert.match(
+        run.stdout,
+        new RegExp(
+          `^::warning::The policy divergence check did not run: .*${unreadableTip.baseTipSha}\\.`,
+          "m",
+        ),
+      );
+      // The oversized-test annotations still publish alongside it.
+      assert.match(run.stdout, /^::warning file=test\/large.ts,line=1::/m);
+      // It publishes before the report is validated, so an unusable report
+      // cannot swallow it.
+      assert.match(
+        published(f, null, unreadableTip).stdout,
+        /divergence check did not run/,
+      );
+      // A forged SHA cannot start an emitted line with another command.
+      const forged = published(f, null, {
+        baseTipPolicyUnreadable: true,
+        baseTipSha: "x\r\n::error::injected",
+      });
+      assert.equal(forged.stdout.trimEnd().split("\n").length, 1);
+      assert.doesNotMatch(forged.stdout, /::error::/);
+      // A resolved tip, and an absent live record, annotate nothing.
+      for (const current of [
+        { ...unreadableTip, baseTipPolicyUnreadable: false },
+        null,
+      ])
+        assert.doesNotMatch(
+          published(f, report, current).stdout,
+          /divergence check did not run/,
+        );
+    });
+  } finally {
+    rmSync(f.root, { recursive: true, force: true });
+  }
+});
+const enforced = "a".repeat(64),
+  divergent = "b".repeat(64);
+const divergedScan = {
+  policyHash: enforced,
+  baseTipPolicyHash: enforced,
+};
+test("a divergent target policy is annotated without changing the outcome", async () => {
+  const f = fixture();
+  try {
+    await warningReport((report) => {
+      const current = {
+        baseTipPolicyHash: divergent,
+        baseTipPolicyUnreadable: false,
+      };
+      const run = published(f, report, current, divergedScan);
+      assert.equal(run.status, 0, run.stderr);
+      // The saved outcome stays clean, so the checks view is the only place a
+      // reviewer sees this without opening the summary.
+      assert.match(
+        run.stdout,
+        /^::warning::The target branch policy differs from the enforced merge-base policy/m,
+      );
+      // The oversized-test annotations still publish alongside it.
+      assert.match(run.stdout, /^::warning file=test\/large.ts,line=1::/m);
+      // It publishes before the report is validated, so an unusable report
+      // cannot swallow it.
+      assert.match(
+        published(f, null, current, divergedScan).stdout,
+        /target branch policy differs/,
+      );
+      // An unreadable live tip falls back to the scan-time hash.
+      assert.match(
+        published(
+          f,
+          null,
+          { baseTipPolicyHash: null, baseTipPolicyUnreadable: true },
+          { policyHash: enforced, baseTipPolicyHash: divergent },
+        ).stdout,
+        /target branch policy differs/,
+      );
+      // Equal policies, two unresolved tips, and a missing record either side,
+      // annotate nothing.
+      for (const [live, scan] of [
+        [{ baseTipPolicyHash: enforced }, divergedScan],
+        [
+          { baseTipPolicyHash: null },
+          { policyHash: enforced, baseTipPolicyHash: null },
+        ],
+        [null, divergedScan],
+        [{ baseTipPolicyHash: divergent }, null],
+      ])
+        assert.doesNotMatch(
+          published(f, report, live, scan).stdout,
+          /target branch policy differs/,
+          JSON.stringify([live, scan]),
+        );
     });
   } finally {
     rmSync(f.root, { recursive: true, force: true });
