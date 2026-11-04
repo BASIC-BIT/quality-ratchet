@@ -21,6 +21,8 @@ import { spawnSync } from "node:child_process";
 import {
   withInstalledTool,
   repositoryPath,
+  INSTALL_TIMEOUT_MS,
+  RUN_TIMEOUT_MS,
 } from "../scripts/bootstrap-tool.mjs";
 import {
   assetFiles,
@@ -30,11 +32,14 @@ import {
 import { git, commit, write, toolRoot, withRepo } from "./helpers/repo.mjs";
 
 import { runContext } from "./helpers/process.mjs";
-import { runQuality } from "../src/runner.mjs";
-import { validatePolicyReport } from "../src/report.mjs";
+import { runQuality, SCANNER_TIMEOUT_MS } from "../src/runner.mjs";
+import { validatePolicyReport, GATES } from "../src/report.mjs";
 import { summarizeTestSources } from "../src/reports/test-size.mjs";
 
 const read = (name) => readFileSync(join(toolRoot, name), "utf8");
+// Outlasts the longest chain a bootstrap test drives, install then action run,
+// so the bounded spawn reports first and this net only catches a real hang.
+const BOOTSTRAP_TIMEOUT = INSTALL_TIMEOUT_MS + RUN_TIMEOUT_MS + 60_000;
 const execute = (file, args = [], options = {}) =>
   spawnSync(process.execPath, [file, ...args], {
     encoding: "utf8",
@@ -185,6 +190,28 @@ test("consumer template has seven read-only events and exact-head checkout", () 
   );
 });
 
+test("nested spawn budgets stay ordered under the workflow job timeout", () => {
+  const job =
+    60_000 *
+    Math.min(
+      ...[
+        ...read(".github/workflows/ci.yml").matchAll(/timeout-minutes: (\d+)/g),
+      ].map((match) => Number(match[1])),
+    );
+  assert.ok(
+    GATES.length * SCANNER_TIMEOUT_MS < RUN_TIMEOUT_MS,
+    "the action run must outlast the serial scanner ceiling",
+  );
+  assert.ok(
+    INSTALL_TIMEOUT_MS + RUN_TIMEOUT_MS < BOOTSTRAP_TIMEOUT,
+    "a bootstrap test must outlast the install and action run it drives",
+  );
+  assert.ok(
+    BOOTSTRAP_TIMEOUT < job,
+    "a bootstrap test must report before the job budget expires",
+  );
+});
+
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), "quality action with spaces "));
   const workspace = join(root, "workspace"),
@@ -235,7 +262,7 @@ function identity(repo) {
 
 test(
   "real locked installation excludes hostile npm settings and consumer dependencies",
-  { timeout: 240000 },
+  { timeout: BOOTSTRAP_TIMEOUT },
   async () => {
     const f = fixture(),
       before = identity(f.consumer);
@@ -304,7 +331,7 @@ test(
 
 test(
   "installed failing action saves upload evidence and cleanup precedes finish",
-  { timeout: 240000 },
+  { timeout: BOOTSTRAP_TIMEOUT },
   async () => {
     const f = fixture(),
       before = identity(f.consumer);
@@ -469,7 +496,7 @@ test("real bootstrap failures retain outputs without consumer writes or leftover
 
 test(
   "full bootstrap process installs and cleans up before exposing an unsupported-event verdict",
-  { timeout: 240000 },
+  { timeout: BOOTSTRAP_TIMEOUT },
   () => {
     const f = fixture(),
       before = identity(f.consumer);
@@ -762,7 +789,7 @@ test("a divergent target policy is annotated without changing the outcome", asyn
 for (const warningCount of [1, 23000])
   test(
     `full bootstrap publishes ${warningCount} validated warnings once without buffering child warnings`,
-    { timeout: 240000 },
+    { timeout: BOOTSTRAP_TIMEOUT },
     async () => {
       const f = fixture(),
         before = identity(f.consumer);

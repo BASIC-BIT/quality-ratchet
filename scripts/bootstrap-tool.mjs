@@ -52,6 +52,16 @@ function isolatedEnvironment(directory) {
     npm_config_registry: "https://registry.npmjs.org/",
   };
 }
+// Nested spawn budgets, innermost out: a scanner child gets 180s and the three
+// gates run serially (<=540s), so the action run sits above that; the install
+// plus that run must fit the consumer job's 20 minutes next to checkout and
+// artifact upload; and the bootstrap tests budget both together
+// (test/action.test.mjs), so no inner cap can fire before the test's own
+// timeout. 180s was too tight for the install: a windows-latest runner about a
+// third slower than usual hit ETIMEDOUT in npm ci. Keep the ordering when
+// changing either value.
+export const INSTALL_TIMEOUT_MS = 360_000;
+export const RUN_TIMEOUT_MS = 600_000;
 export async function withInstalledTool({ actionPath, tempRoot }, callback) {
   const expected = toolManifest(actionPath, false);
   const directory = mkdtempSync(join(tempRoot, "quality-tool-"));
@@ -83,7 +93,7 @@ export async function withInstalledTool({ actionPath, tempRoot }, callback) {
       {
         cwd: root,
         env,
-        timeout: 180000,
+        timeout: INSTALL_TIMEOUT_MS,
         maxBuffer: 4 * 1024 * 1024,
         stdio: "pipe",
         windowsHide: true,
@@ -116,7 +126,7 @@ async function bootstrap() {
             QR_TEMP_ROOT: env.TMPDIR,
             QR_GITHUB_TOKEN: process.env.QR_GITHUB_TOKEN,
           },
-          timeout: 900000,
+          timeout: RUN_TIMEOUT_MS,
           maxBuffer: 4 * 1024 * 1024,
           stdio: "pipe",
           windowsHide: true,
