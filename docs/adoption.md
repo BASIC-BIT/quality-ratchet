@@ -1,6 +1,6 @@
-# Adopt 1.1.0 after publication
+# Adopt 1.1.0
 
-Version 1.1.0 is a prepared minor release candidate. It needs final candidate qualification through `Release check` and publication before consumer adoption. See [release notes](releases.md#candidate-identity-and-publication). The [workflow example](../examples/code-quality.yml) and [local checker setup](local-use.md#installation-and-diagnostic-details) currently pin the candidate archive's versioned source `39ff1c1920c188264c5ca0a8d45df4a04afdf723`; once published, replace it with the full immutable v1.1.0 release target in both places. Version 1.0.2 remains the latest [published release](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.2) at this preparation snapshot.
+Version 1.1.0 release commit `a0dfcca184fd83f0a23762f29353c7772c17906f` passed [Release check 41897737237](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/41897737237) and is the latest [published release](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.1.0). The [workflow example](../examples/code-quality.yml) and [local checker setup](local-use.md#installation-and-diagnostic-details) pin that same commit. Verify that the v1.1.0 tag resolves to it before consumer activation. See [release notes](releases.md#candidate-identity-and-publication).
 
 Version 1.1.0 changes hosted comparison behavior, so a 1.0.2 consumer gets more than a pin bump. The scan compares against the merge base instead of the target tip and no longer simulates merging the target tip into the head; hosted evidence becomes `schemaVersion` 2 with `current.baseSha` nullable; a divergent target-branch policy is reported as an advisory warning; and the run ends with a one-line verdict in the log. Read the sections below before changing a gate.
 
@@ -8,7 +8,7 @@ Use Node 24.22.1 or a newer Node 24 release for local checks. The hosted action 
 
 For an existing 1.0.2 consumer, update its action SHA/version comment, local checker checkout SHA and any recorded manifest asset/lock hashes together. Install from the new lockfile with lifecycle scripts disabled and optional dependencies retained. Verify strict quality and diagnostics on the consumer's actual current source, normal hooks, and hosted PR CI before integration. Record the exact accepted consumer head and main result. Do not use a quality exception or reduce coverage to make this pin update pass.
 
-The merged 1.1.0 source passed all four 276-test Ubuntu/Windows CI lanes and the Linux production package smoke on Node 24.22.1 and npm 11.19.1. Final candidate `Release check`, including its `--release` validators, remains a separate publication prerequisite and has not run for this candidate. These shared-tool results do not establish consumer acceptance. The dated rollout and 1.0.1 qualification below remain historical. Follow the preparation and cutover requirements when changing an existing gate.
+Release check passed all four 276-test Ubuntu/Windows lanes, their executed `--release` validators, and the Linux production package smoke at the exact published commit. These shared-tool results do not establish consumer acceptance. The dated rollout and 1.0.1 qualification below remain historical. Follow the preparation and cutover requirements when changing an existing gate.
 
 ## Historical rollout snapshot, October 19, 2026 UTC
 
