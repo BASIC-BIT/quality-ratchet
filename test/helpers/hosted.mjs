@@ -30,15 +30,12 @@ export async function withHostedRepo(callback) {
       transport,
       directory: join(tempRoot, "output"),
       toolVerified: true,
-      githubTransport: async (path) =>
-        path.includes("/pulls/")
-          ? {
-              head: { sha: event.pull_request.head.sha },
-              base: { ref: event.pull_request.base.ref },
-              labels: [],
-              body: "",
-            }
-          : { commit: { sha: git(checkout, "rev-parse", "main") } },
+      githubTransport: async () => ({
+        head: { sha: event.pull_request.head.sha },
+        base: { ref: event.pull_request.base.ref },
+        labels: [],
+        body: "",
+      }),
     };
     try {
       return await callback(input);

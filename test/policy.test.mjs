@@ -13,6 +13,7 @@ before(async () =>
     const scanned = {
       headSha: context.comparison.headSha,
       baseSha: context.comparison.baselineSha,
+      baseTipSha: context.comparison.baselineSha,
       baseRef: "HEAD",
       treeSha: context.comparison.headSha,
       configCommit: report.policy.configCommit,
@@ -96,6 +97,13 @@ test("accepted exception retains findings and current metadata controls pushes",
         .outcome,
       "stale",
     );
+  assert.equal(
+    evaluatePolicy({
+      ...input,
+      scanned: { ...input.scanned, baseTipSha: "c".repeat(40) },
+    }).outcome,
+    "exception",
+  );
 });
 test("missing rationale fails even with clean scanners", async () =>
   withRepo(async (repo) => {

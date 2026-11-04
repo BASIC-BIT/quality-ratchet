@@ -182,9 +182,13 @@ export function decodeScanContext(json) {
  */
 
 /**
- * @typedef {{headSha: string, baseRef: string, baseSha: string, treeSha: string, configCommit: string, policyHash: string}} ScannedRevision
+ * @typedef {{headSha: string, baseRef: string, baseSha: string, baseTipSha: string, treeSha: string, configCommit: string, policyHash: string}} ScannedRevision
  * @typedef {{headSha: string, baseRef: string, baseSha: string, labels: string[], body: string}} CurrentPr
  * @typedef {{exitCode: 0 | 1 | 2, outcome: "clean" | "advisory" | "exception" | "regression" | "invalid-exception" | "stale" | "error", rationale: string | null, message: string}} PolicyResult
+ *
+ * baseSha is the merge base of the PR head and the target branch in both records,
+ * and the comparison baseline. baseTipSha is the target tip observed while scanning;
+ * tip movement alone is not stale. Hosted evidence is schemaVersion 2.
  *
  * Hosted evidence wraps the unchanged QualityReport as quality, with schemaVersion,
  * tool {version,node,scanners,verified}, scanned, current revision/labels, result and

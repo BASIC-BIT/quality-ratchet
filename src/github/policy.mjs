@@ -52,6 +52,7 @@ function validateMetadata(scanned, current, report) {
   validateRevisions(scanned, current);
   if (
     !shaPattern.test(scanned.treeSha) ||
+    !shaPattern.test(scanned.baseTipSha) ||
     scanned.configCommit !== scanned.baseSha ||
     scanned.configCommit !== report.policy.configCommit ||
     scanned.policyHash !== report.policy.active.hash ||
@@ -87,6 +88,8 @@ export function evaluatePolicy({ report, scanned, current, toolVerified }) {
       "Tool verification, preparation or quality evidence failed. Exceptions do not apply.",
     );
   }
+  // baseSha is the compared merge base, not the target tip: unrelated merges
+  // into the target branch move the tip without invalidating this scan.
   if (
     ["headSha", "baseRef", "baseSha"].some(
       (key) => scanned[key] !== current[key],
@@ -95,7 +98,7 @@ export function evaluatePolicy({ report, scanned, current, toolVerified }) {
     return result(
       1,
       "stale",
-      "PR head or target branch changed. Rerun against the current revision.",
+      "PR head, target branch or merge base changed. Rerun against the current revision.",
     );
   const label = current.labels.includes("quality-exception"),
     rationale = extractRationale(current.body);

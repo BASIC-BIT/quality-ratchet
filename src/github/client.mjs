@@ -63,21 +63,15 @@ export async function readCurrentPr({
       !(pr.body === null || typeof pr.body === "string")
     )
       throw new Error();
-    const branch = await transport(
-      `${root}/branches/${encodeURIComponent(pr.base.ref)}`,
-      { token },
-    );
-    if (!shaPattern.test(branch.commit?.sha)) throw new Error();
     return {
       headSha: pr.head.sha,
       baseRef: pr.base.ref,
-      baseSha: branch.commit.sha,
       labels: pr.labels.map((label) => label.name),
       body: pr.body ?? "",
     };
   } catch {
     throw new SetupError(
-      "Unable to read current PR and target branch metadata. Rerun the quality check.",
+      "Unable to read current PR metadata. Rerun the quality check.",
     );
   }
 }

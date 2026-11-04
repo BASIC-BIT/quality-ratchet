@@ -29,8 +29,10 @@ export function writeEvidence({
   const missing = Object.entries({ report, scanned, current, tool })
     .filter(([, value]) => value === null)
     .map(([key]) => key);
+  // Version 2 compares the merge base: scanned.baseSha is that merge base and
+  // scanned.baseTipSha records the target tip observed while scanning.
   const metadata = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     tool,
     scanned,
     current: revision,

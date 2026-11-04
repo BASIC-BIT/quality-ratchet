@@ -42,6 +42,46 @@ const execute = (file, args = [], options = {}) =>
     ...options,
   });
 
+test("finish prints the saved verdict and keeps its exit code", () => {
+  const directory = mkdtempSync(join(tmpdir(), "quality-finish-"));
+  const finish = join(toolRoot, "scripts/finish-action.mjs");
+  const save = (result) =>
+    writeFileSync(
+      join(directory, "quality-evidence.json"),
+      JSON.stringify({ result }),
+    );
+  try {
+    for (const [exitCode, outcome] of [
+      [1, "stale"],
+      [2, "error"],
+    ]) {
+      save({ exitCode, outcome, message: "Rerun\u0000 the\nquality check." });
+      const run = execute(finish, [], {
+        env: { ...process.env, QR_REPORT_DIRECTORY: directory },
+      });
+      assert.equal(run.status, exitCode);
+      assert.match(run.stderr, new RegExp(`outcome: ${outcome}\\b`));
+      assert.match(run.stderr, /Rerun {2}the quality check\./);
+      assert.equal(run.stdout, "");
+    }
+    save({ exitCode: 0, outcome: "clean", message: "No new regressions." });
+    const clean = execute(finish, [], {
+      env: { ...process.env, QR_REPORT_DIRECTORY: directory },
+    });
+    assert.equal(clean.status, 0);
+    assert.match(clean.stdout, /outcome: clean\nNo new regressions\./);
+    assert.equal(clean.stderr, "");
+    save({ exitCode: 1, outcome: "stale", message: 7 });
+    const invalid = execute(finish, [], {
+      env: { ...process.env, QR_REPORT_DIRECTORY: directory },
+    });
+    assert.equal(invalid.status, 2);
+    assert.match(invalid.stderr, /unavailable or invalid/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
 test("action exposes only supported inputs and publishes before saved failure", () => {
   const action = read("action.yml");
   assert.match(action, /inputs:\n  github-token:/);
