@@ -2,7 +2,7 @@
 
 Install the tool in its own checkout pinned to the reviewed release commit. Use Node 24.22.1 or a later Node 24 release and `npm ci --ignore-scripts`. Application dependencies are unnecessary. Keep the tool outside authored application source, or in the hard-excluded `.quality-ratchet-tool` directory.
 
-The 1.1.0 candidate keeps Node 24.22.1 as the action runtime and minimum supported runtime. Final release qualification and publication remain pending. The candidate setup below and the hosted action example both pin its versioned source; after publication, use the full immutable release target consistently in both. Version 1.0.2 remains the latest [published release](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.2). Running an older pinned tool locally on newer Node does not update its hosted action pin.
+Version 1.1.0 keeps Node 24.22.1 as the action runtime and minimum supported runtime. The setup below and the hosted action example both pin published release commit `a0dfcca184fd83f0a23762f29353c7772c17906f`. Version 1.1.0 is the latest [published release](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.1.0); verify that its tag resolves to that commit before adopting it. Running an older pinned tool locally on newer Node does not update its hosted action pin.
 
 ## Commands
 
@@ -49,11 +49,11 @@ The check script runs test, lint, format and schema/example validation. Test dis
 
 ## Installation and diagnostic details
 
-The following candidate setup pins versioned 1.1.0 source `39ff1c1920c188264c5ca0a8d45df4a04afdf723`. It is not a publication claim, and no `Release check` run has qualified this candidate yet. See the [release prerequisites](releases.md#candidate-identity-and-publication) and [acceptance record](acceptance.md). After publication, replace this SHA with the full immutable release target and complete the consumer checks in [adoption](adoption.md). Keep optional dependencies enabled for jscpd's platform executable:
+The following setup pins published and qualified v1.1.0 release commit `a0dfcca184fd83f0a23762f29353c7772c17906f`. [Release check 41897737237](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/41897737237) passed for this exact source. See the [release record](releases.md#candidate-identity-and-publication) and [acceptance record](acceptance.md) for qualification evidence, then complete the consumer checks in [adoption](adoption.md). Keep optional dependencies enabled for jscpd's platform executable:
 
 ```text
 git clone https://github.com/BASIC-BIT/quality-ratchet.git ../quality-ratchet-tool
-git -C ../quality-ratchet-tool checkout --detach 39ff1c1920c188264c5ca0a8d45df4a04afdf723 # v1.1.0
+git -C ../quality-ratchet-tool checkout --detach a0dfcca184fd83f0a23762f29353c7772c17906f # v1.1.0
 npm --prefix ../quality-ratchet-tool ci --ignore-scripts --include=optional
 ```
 
