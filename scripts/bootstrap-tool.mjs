@@ -128,7 +128,7 @@ async function bootstrap() {
         const saved = JSON.parse(
           readFileSync(join(directory, "quality-results.json"), "utf8"),
         );
-        await publishWarnings(saved.quality, saved.current);
+        await publishWarnings(saved.quality, saved.current, saved.scanned);
       },
     );
   } catch {

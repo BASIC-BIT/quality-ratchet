@@ -2,9 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { write, commit, git } from "./helpers/repo.mjs";
+import { write, commit, git, withRepo } from "./helpers/repo.mjs";
 import { git as safeGit } from "../src/git/commands.mjs";
-import { preparePrComparison, verifyPrepared } from "../src/github/prepare.mjs";
+import {
+  preparePrComparison,
+  readTipPolicyHash,
+  verifyPrepared,
+} from "../src/github/prepare.mjs";
+import { loadPolicySelection } from "../src/git/comparison.mjs";
 import { readCurrentPr } from "../src/github/client.mjs";
 test("merge-base baseline preserves source, index and configuration", async () =>
   withHostedRepo(async (input) => {
@@ -253,7 +258,7 @@ test("a target rewind after the scan moves the merge base and is stale", async (
     assert.equal(output.result.outcome, "stale");
     assert.equal(output.result.exitCode, 1);
   }));
-test("a target policy the branch never took blocks instead of passing", async () =>
+test("a target policy the branch never took is reported, not blocked", async () =>
   withHostedRepo(async (input) => {
     const head = branchHead(input, input.event.pull_request.head.sha);
     commitTargetConfig(input, head, tightenedPolicy);
@@ -262,16 +267,20 @@ test("a target policy the branch never took blocks instead of passing", async ()
       output.scanned.policyHash,
       output.scanned.baseTipPolicyHash,
     );
-    assert.equal(output.result.outcome, "policy-divergence");
-    assert.equal(output.result.exitCode, 1);
-    assert.match(output.result.message, /Rebase or merge the target branch/);
+    // Advisory: the summary carries it and the outcome is the scan's own.
+    assert.equal(output.result.outcome, "clean");
+    assert.equal(output.result.exitCode, 0);
+    assert.match(
+      readFileSync(join(input.directory, "summary.md"), "utf8"),
+      /target branch policy differs from the enforced merge-base policy/,
+    );
     assert.equal(
       JSON.parse(readFileSync(output.evidencePath, "utf8")).scanned
         .baseTipPolicyHash,
       output.scanned.baseTipPolicyHash,
     );
   }));
-test("a policy merged into the target during the scan still blocks", async () =>
+test("a policy merged into the target during the scan is still reported", async () =>
   withHostedRepo(async (input) => {
     const { checkout, event } = input;
     const root = event.pull_request.head.sha;
@@ -291,8 +300,12 @@ test("a policy merged into the target during the scan still blocks", async () =>
     );
     // Nothing else moved: the merge base and the head are both unchanged.
     assert.equal(output.current.baseSha, output.scanned.baseSha);
-    assert.equal(output.result.outcome, "policy-divergence");
-    assert.equal(output.result.exitCode, 1);
+    assert.equal(output.result.outcome, "clean");
+    assert.equal(output.result.exitCode, 0);
+    assert.match(
+      readFileSync(join(input.directory, "summary.md"), "utf8"),
+      /target branch policy differs from the enforced merge-base policy/,
+    );
   }));
 test("a target configuration that does not resolve never blocks a run", async () =>
   withHostedRepo(async (input) => {
@@ -319,7 +332,7 @@ test("a target configuration that does not resolve never blocks a run", async ()
     assert.equal(saved.current.baseTipPolicyUnreadable, true);
     assert.equal(saved.current.baseTipSha, tip);
   }));
-test("a divergence the post-scan read cannot see still blocks", async () =>
+test("a divergence the post-scan read cannot see is still reported", async () =>
   withHostedRepo(async (input) => {
     const head = branchHead(input, input.event.pull_request.head.sha);
     const tightened = commitTargetConfig(input, head, tightenedPolicy);
@@ -339,8 +352,53 @@ test("a divergence the post-scan read cannot see still blocks", async () =>
     assert.equal(output.current.baseTipPolicyUnreadable, true);
     // Nothing else moved: the merge base and the head are both unchanged.
     assert.equal(output.current.baseSha, output.scanned.baseSha);
-    assert.equal(output.result.outcome, "policy-divergence");
-    assert.equal(output.result.exitCode, 1);
+    assert.equal(output.result.outcome, "clean");
+    assert.equal(output.result.exitCode, 0);
+    // Both conditions reach the summary: the tip that did not resolve, and the
+    // divergence the scan-time hash still proves.
+    const summary = readFileSync(join(input.directory, "summary.md"), "utf8");
+    assert.match(summary, /so the policy divergence check did not run/);
+    assert.match(
+      summary,
+      /target branch policy differs from the enforced merge-base policy/,
+    );
+  }));
+test("the target-tip policy read cannot be nulled by the head tree", async () =>
+  withRepo(async (repo) => {
+    const baseTree = git(repo, "rev-parse", "HEAD^{tree}");
+    write(repo, "quality-ratchet.json", tightenedPolicy);
+    const tip = commit(repo);
+    // A pull-request head tree is author-controlled, and this one does not parse.
+    write(repo, "quality-ratchet.json", "{\n");
+    const brokenHead = commit(repo);
+    const brokenTree = git(repo, "rev-parse", "HEAD^{tree}");
+    // The hazard: offering that tree as the proposed policy throws, and the
+    // caller records null, which silences the divergence report. Preparation
+    // happens to reject such a head first, so this was unreachable rather than
+    // safe, and the read must not depend on another check's ordering.
+    assert.throws(() =>
+      loadPolicySelection({
+        repo,
+        baselineSha: tip,
+        currentTree: brokenTree,
+      }),
+    );
+    const hash = readTipPolicyHash({ repo, tipSha: tip });
+    assert.notEqual(hash, null);
+    // active.hash is the property that must not move: it is read from the tip
+    // commit whatever tree is offered as the proposed policy.
+    assert.equal(
+      hash,
+      loadPolicySelection({ repo, baselineSha: tip, currentTree: baseTree })
+        .active.hash,
+    );
+    assert.equal(
+      hash,
+      loadPolicySelection({ repo, baselineSha: tip, currentTree: tip }).active
+        .hash,
+    );
+    // An unreadable tip itself still resolves no policy.
+    assert.equal(readTipPolicyHash({ repo, tipSha: brokenHead }), null);
   }));
 test("a target force-pushed to unrelated history is stale, not a read failure", async () =>
   withHostedRepo(async (input) => {

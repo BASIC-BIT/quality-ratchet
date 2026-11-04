@@ -5,6 +5,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { verifyInstalledTool } from "../src/tool-manifest.mjs";
 import { writeEvidence } from "../src/github/evidence.mjs";
 import { renderSummary } from "../src/github/summary.mjs";
+import { policyDiverged } from "../src/github/divergence.mjs";
 import { writeFileSync } from "node:fs";
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 export function output(name, value) {
@@ -48,8 +49,20 @@ function publishUnreadableTip(current) {
     `::warning::The policy divergence check did not run: the target branch configuration did not resolve at ${escapeProperty(String(current.baseTipSha))}. Fix quality-ratchet.json on the target branch.`,
   );
 }
-export async function publishWarnings(report, current) {
+/**
+ * A divergent target policy changes no outcome, so the checks view is the only
+ * place a reviewer sees it without opening the summary. No saved value is
+ * interpolated: both hashes are already in the summary and in evidence.
+ */
+function publishDivergence(scanned, current) {
+  if (!policyDiverged(scanned, current)) return;
+  console.log(
+    "::warning::The target branch policy differs from the enforced merge-base policy, so this run did not measure against the target branch's current policy. Rebase or merge the target branch to adopt it.",
+  );
+}
+export async function publishWarnings(report, current, scanned = null) {
   publishUnreadableTip(current);
+  publishDivergence(scanned, current);
   if (!report) return;
   const { validatePolicyReport } = await import("../src/report.mjs");
   validatePolicyReport(report);

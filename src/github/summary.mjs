@@ -1,3 +1,4 @@
+import { policyDiverged } from "./divergence.mjs";
 function escapeHtml(value) {
   return String(value).replace(
     /[&<>"]/gu,
@@ -31,6 +32,12 @@ export function renderSummary({ report, scanned, current, result }) {
       "Target branch configuration did not resolve at " +
         current.baseTipSha +
         ", so the policy divergence check did not run. Fix quality-ratchet.json on the target branch.",
+    );
+  // Advisory: the enforced policy is the merge-base one and the target branch
+  // has since moved on. No outcome reports it; publication also annotates it.
+  if (policyDiverged(scanned, current))
+    lines.push(
+      "The target branch policy differs from the enforced merge-base policy, so this run did not measure against the target branch's current policy. Rebase or merge the target branch to adopt it. The outcome is unaffected.",
     );
   lines.push(...reportLines(report));
   if (result.rationale) lines.push("Exception rationale:", result.rationale);

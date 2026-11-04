@@ -21,8 +21,8 @@ import { supportsNodeVersion } from "../runtime.mjs";
  * The tip policy is resolved here rather than at preparation time because
  * merging into the target branch moves neither the head nor the merge base: a
  * policy tightening that lands while the scan runs leaves every other check
- * equal, so only this read can see it. An unresolved tip policy is recorded, not
- * blocked, and leaves the verdict to compare the tip policy observed while
+ * equal, so only this read can see it. An unresolved tip policy is recorded and
+ * leaves the divergence report to compare the tip policy observed while
  * scanning.
  *
  * A retarget is already stale from baseRef alone, and the new target may share
@@ -53,7 +53,6 @@ async function readCurrentRevision({
       : readTipPolicyHash({
           repo: prepared.context.comparison.repo,
           tipSha: baseTipSha,
-          treeSha: scanned.treeSha,
         });
   return {
     ...live,

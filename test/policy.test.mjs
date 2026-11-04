@@ -4,6 +4,7 @@ import { withRepo } from "./helpers/repo.mjs";
 import { runContext, regressionSources } from "./helpers/process.mjs";
 import { runQuality } from "../src/runner.mjs";
 import { extractRationale, evaluatePolicy } from "../src/github/policy.mjs";
+import { policyDiverged } from "../src/github/divergence.mjs";
 let input;
 before(async () =>
   withRepo(async (repo) => {
@@ -106,26 +107,28 @@ test("accepted exception retains findings and current metadata controls pushes",
     "exception",
   );
 });
-test("a divergent target policy blocks under its own outcome", () => {
+test("a divergent target policy is detected and changes no verdict", () => {
   const diverged = {
     ...input,
     current: { ...input.current, baseTipPolicyHash: "a".repeat(64) },
   };
+  assert.equal(policyDiverged(diverged.scanned, diverged.current), true);
+  // Advisory: the summary and a workflow warning report it, and the verdict is
+  // whatever the scan measured, here an accepted exception.
   const verdict = evaluatePolicy(diverged);
-  // Distinct from stale: a rerun clears stale and can never clear this.
-  assert.equal(verdict.outcome, "policy-divergence");
-  assert.equal(verdict.exitCode, 1);
-  assert.match(verdict.message, /Rebase or merge the target branch/);
-  // The accepted exception label is evaluated only after this check.
+  assert.equal(verdict.outcome, "exception");
+  assert.equal(verdict.exitCode, 0);
   assert.equal(evaluatePolicy(input).outcome, "exception");
+  // Without the label the regression still blocks on its own merits, and the
+  // divergence neither adds to nor replaces that outcome.
   assert.equal(
     evaluatePolicy({
       ...diverged,
       current: { ...diverged.current, labels: [] },
     }).outcome,
-    "policy-divergence",
+    "regression",
   );
-  // A moved head is reported as stale even while the policies also diverge.
+  // A moved head is still stale while the policies also diverge.
   assert.equal(
     evaluatePolicy({
       ...diverged,
@@ -133,25 +136,34 @@ test("a divergent target policy blocks under its own outcome", () => {
     }).outcome,
     "stale",
   );
-  // The tip sampled before the scan does not decide the verdict; the tip read
-  // after it does, so a policy merged mid-scan cannot pass as clean.
-  assert.equal(
-    evaluatePolicy({
-      ...input,
-      scanned: { ...input.scanned, baseTipPolicyHash: "a".repeat(64) },
-    }).outcome,
-    "exception",
-  );
+  // The tip read after the scan is the one compared, so a policy merged
+  // mid-scan is seen; the tip sampled before it is only the fallback.
+  const midScan = {
+    ...input,
+    scanned: { ...input.scanned, baseTipPolicyHash: "a".repeat(64) },
+  };
+  assert.equal(policyDiverged(midScan.scanned, midScan.current), false);
+  assert.equal(evaluatePolicy(midScan).outcome, "exception");
+  // An absent record cannot be compared: publication and the summary both read
+  // saved evidence that can be missing either side.
+  for (const absent of [
+    [null, input.current],
+    [input.scanned, null],
+    [{}, {}],
+  ])
+    assert.equal(policyDiverged(...absent), false, JSON.stringify(absent));
   for (const key of ["scanned", "current"]) {
     // One unresolved tip leaves the other to compare, and neither differs here.
+    const resolved = {
+      ...input,
+      [key]: { ...input[key], baseTipPolicyHash: null },
+    };
     assert.equal(
-      evaluatePolicy({
-        ...input,
-        [key]: { ...input[key], baseTipPolicyHash: null },
-      }).outcome,
-      "exception",
+      policyDiverged(resolved.scanned, resolved.current),
+      false,
       key,
     );
+    assert.equal(evaluatePolicy(resolved).outcome, "exception", key);
     for (const hash of [undefined, "", "A".repeat(64), "a".repeat(63)])
       assert.equal(
         evaluatePolicy({
@@ -163,7 +175,7 @@ test("a divergent target policy blocks under its own outcome", () => {
       );
   }
 });
-test("a pre-scan divergence the live read cannot see still blocks", () => {
+test("a pre-scan divergence the live read cannot see is still detected", () => {
   const divergent = "a".repeat(64);
   const unreadable = {
     ...input.current,
@@ -172,45 +184,49 @@ test("a pre-scan divergence the live read cannot see still blocks", () => {
   };
   // The target tip held a divergent policy when the scan started and then took
   // a configuration this tool rejects. Only the pre-scan hash can prove it, and
-  // discarding it would report this run clean.
-  const verdict = evaluatePolicy({
+  // discarding it would report nothing at all.
+  const fallback = {
     ...input,
     scanned: { ...input.scanned, baseTipPolicyHash: divergent },
     current: unreadable,
-  });
-  assert.equal(verdict.outcome, "policy-divergence");
-  assert.equal(verdict.exitCode, 1);
+  };
+  assert.equal(policyDiverged(fallback.scanned, fallback.current), true);
+  // The report is advisory, so the verdict is still the scan's own.
+  assert.equal(evaluatePolicy(fallback).outcome, "exception");
+  assert.equal(evaluatePolicy(fallback).exitCode, 0);
   // Only when neither tip resolved is the target policy unknown, and an unknown
-  // policy is not a difference, so the check does not run at all.
-  assert.equal(
-    evaluatePolicy({
-      ...input,
-      scanned: { ...input.scanned, baseTipPolicyHash: null },
-      current: unreadable,
-    }).outcome,
-    "exception",
-  );
+  // policy is not a difference, so nothing is compared at all.
+  const unknown = {
+    ...input,
+    scanned: { ...input.scanned, baseTipPolicyHash: null },
+    current: unreadable,
+  };
+  assert.equal(policyDiverged(unknown.scanned, unknown.current), false);
+  assert.equal(evaluatePolicy(unknown).outcome, "exception");
   // The live hash still decides when it resolves, so a tip repaired to the
   // enforced policy after an unreadable scan-time read is not a divergence.
   assert.equal(
-    evaluatePolicy({
-      ...input,
-      scanned: { ...input.scanned, baseTipPolicyHash: null },
-    }).outcome,
-    "exception",
+    policyDiverged(
+      { ...input.scanned, baseTipPolicyHash: null },
+      input.current,
+    ),
+    false,
   );
   assert.equal(
-    evaluatePolicy({
-      ...input,
-      scanned: { ...input.scanned, baseTipPolicyHash: null },
-      current: { ...input.current, baseTipPolicyHash: divergent },
-    }).outcome,
-    "policy-divergence",
+    policyDiverged(
+      { ...input.scanned, baseTipPolicyHash: null },
+      {
+        ...input.current,
+        baseTipPolicyHash: divergent,
+      },
+    ),
+    true,
   );
 });
 test("a retarget without a resolved merge base is stale, not evidence failure", () => {
   // The third is a target force-pushed to unrelated history under the same
-  // name: the refs arrive, no merge base exists, and rerunning clears it.
+  // name: the refs arrive and no merge base exists. Stale reports the branch
+  // state; a rerun does not clear it, it fails preparation instead.
   for (const change of [
     { baseRef: "other", baseSha: null },
     { baseSha: null },

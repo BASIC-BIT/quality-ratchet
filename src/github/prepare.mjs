@@ -69,17 +69,25 @@ function resolveRevisions(root, scope) {
  * resolve. The tip is the one policy input no pull-request gate validates, so a
  * configuration this tool rejects can reach the target branch. Reading it must
  * never abort a run: the merge base and the head tree both parsed, so the scan
- * is valid, and failing here would block every open pull request including the
- * one that repairs the configuration. A null hash is never a difference by
- * itself; the verdict falls back to the other tip read, and only two null
- * hashes leave divergence unjudgeable.
+ * is valid, and failing here would abandon a completed scan over a condition
+ * only a direct push to the target branch can repair. A null hash is never a
+ * difference by itself; the report falls back to the other tip read, and only
+ * two null hashes leave divergence unjudgeable.
+ *
+ * Only the tip decides this hash. Passing the pull-request head tree as the
+ * proposed policy would make an author-controlled file throw here (invalid
+ * JSON, a symlinked quality-ratchet.json, an unknown gate, a future
+ * schemaVersion), and a null hash silences the divergence report. Preparation
+ * happens to reject such a head first, so that was never reachable, but the
+ * read must not depend on another check's ordering. active.hash is read from
+ * the tip commit either way, so the reported hash is unchanged.
  */
-export function readTipPolicyHash({ repo, tipSha, treeSha }) {
+export function readTipPolicyHash({ repo, tipSha }) {
   try {
     return loadPolicySelection({
       repo,
       baselineSha: tipSha,
-      currentTree: treeSha,
+      currentTree: tipSha,
     }).active.hash;
   } catch {
     // Recorded as an unresolved tip policy; raw errors can carry source text.
@@ -128,13 +136,12 @@ export async function preparePrComparison({
     });
     // The tip policy observed while scanning. Enforcement reads the merge base,
     // so without a tip policy a branch point predating the policy silently
-    // enforces an older one, or the defaults, and the target branch cannot
-    // tighten an open PR at all. The divergence verdict compares the tip
+    // enforces an older one, or the defaults, and nothing reports that the
+    // target branch has moved on. The divergence report compares the tip
     // observed after the scan; this one records what the tip held during it.
     const baseTipPolicyHash = readTipPolicyHash({
       repo: root,
       tipSha: baseTipSha,
-      treeSha,
     });
     const scanned = {
       headSha,
@@ -158,7 +165,7 @@ export async function preparePrComparison({
   } catch {
     if (root) rmSync(root, { recursive: true, force: true });
     throw new SetupError(
-      "PR comparison preparation failed. Rerun after checking the event, fetch, merge base and configuration.",
+      "PR comparison preparation failed. Check the event, fetch, merge base and configuration. A rerun clears a transport failure, but not a target branch rewritten to unrelated history under the same name: that leaves no merge base to compare and must be repaired on the branch.",
     );
   }
 }
@@ -181,10 +188,10 @@ async function delivered(options) {
  * The post-scan target tip and merge base, fetched under separate refs. An
  * absent merge base is reported as `{baseSha: null}`: the refs arrived and the
  * target branch was force-pushed to unrelated history under the same name,
- * which is a permanent branch-state change rather than a flaky read. Calling it
- * a transport failure would tell an operator to rerun, and no rerun can clear
- * it; as an absent baseline it is stale, which rerunning against the current
- * revision does clear.
+ * which is a permanent branch-state change rather than a flaky read, so it is
+ * reported as an absent baseline rather than as a failed post-scan read. No
+ * rerun clears it either way: preparation then finds no merge base and the run
+ * reports `error`, so the branch state is what the report must name.
  */
 function resolveCurrentRevisions(root) {
   try {
