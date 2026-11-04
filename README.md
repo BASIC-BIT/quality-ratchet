@@ -2,11 +2,11 @@
 
 Check new or growing duplication, function complexity and file size against Git history. Each repository owns one JSON policy. Existing debt may remain or shrink.
 
-Version 1.0.2 raises the Node runtime floor and hosted action pin to 24.22.1, rejects older local Node releases, and resolves the floating Node 24 CI lane with `check-latest`. Scanner versions, policy defaults, scopes, thresholds, schema and exception behavior are unchanged. See [release notes](docs/releases.md) for qualification and publication requirements.
+Version 1.1.0 is a prepared minor release candidate. The hosted scan compares the pull-request head against the merge base of that head and the target branch instead of the target tip, so an unrelated merge into the target branch no longer discards a finished verdict, and a target-branch policy the branch has not taken is reported as an advisory warning rather than blocking. Action inputs, action outputs and the `outcome` values are unchanged; hosted evidence moves to `schemaVersion` 2. Scanner versions, policy defaults, scopes, thresholds, the policy JSON schema and exception behavior are unchanged. See [release notes](docs/releases.md) for the exact publication prerequisites.
 
-[Release check 39927791916](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/39927791916) qualified commit `84fa993cf93b9dedd4da19ecbad75bc8712d0874`. All four Ubuntu/Windows lanes passed 259 tests each on Node 24.22.1 and npm 11.19.1, executed release-mode validation, and emitted the expected manifests. Linux production package smoke also passed. The [acceptance record](docs/acceptance.md) separates shared-tool qualification from consumer acceptance.
+Merged source passed all four Ubuntu/Windows CI jobs with 276 tests each on Node 24.22.1 and npm 11.19.1, plus the Linux production package smoke. The [acceptance record](docs/acceptance.md) separates that source evidence from pending release qualification and consumer adoption. Version 1.0.2 remains the latest [published release](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.2) until 1.1.0 is published.
 
-The [workflow example](examples/code-quality.yml) and [local setup](docs/local-use.md#installation-and-diagnostic-details) pin that same qualified commit as v1.0.2. Use the [release page](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.0.2) for authoritative publication status and verify that v1.0.2 resolves to `84fa993cf93b9dedd4da19ecbad75bc8712d0874` before consumer activation. Follow [adoption](docs/adoption.md) before changing consumer pins.
+The [workflow example](examples/code-quality.yml) and [local setup](docs/local-use.md#installation-and-diagnostic-details) pin the versioned 1.1.0 source used by the candidate archive. After qualification and publication, adopt the full immutable release target consistently in both locations. Follow [adoption](docs/adoption.md) before changing consumer pins.
 
 ## Start locally
 
