@@ -193,9 +193,9 @@ export function decodeScanContext(json) {
  * baseTipPolicyHash is policy-divergence: the branch must take the target policy,
  * which no rerun can do. The post-scan tip decides it, because merging into the
  * target moves neither the head nor the merge base. A target tip whose configuration
- * does not resolve has a null baseTipPolicyHash, which never blocks and leaves the
- * divergence check unable to run; the live record reports that as
- * baseTipPolicyUnreadable.
+ * does not resolve has a null baseTipPolicyHash, which never blocks; the live record
+ * reports that as baseTipPolicyUnreadable and the scanned hash is compared instead,
+ * so only two null hashes leave the divergence check unable to run.
  * A retargeted PR is stale from baseRef alone, so its live baseSha and baseTipSha
  * are null. Hosted evidence is schemaVersion 2 and gains fields additively.
  *

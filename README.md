@@ -29,6 +29,8 @@ Hosted runs compare the PR head against the merge base of that head and the targ
 
 Enforcement policy is read from that merge base, not from the PR head tree, so a PR cannot relax its own enforcement; proposed policy edits are validated and displayed. When the policy at the merge base differs from the policy at the target tip, the run is reported as `policy-divergence` and blocks until the branch rebases or merges the target branch, so a target-branch policy change cannot be bypassed by branching before it. A human-authorized `quality-exception` label plus nonempty text under `## Quality exception` accepts blocking regressions across pushes. It cannot accept setup, scanner, configuration, stale-result or policy-divergence failures.
 
+A pull request between two long-lived branches, such as a git-flow `develop` into `main` or a port between release lines, has an old common ancestor as its merge base, so if the target branch carries a different policy the run reports `policy-divergence`. Clearing it requires merging the target branch into the source branch, which adopts the target's configuration. There is no override: the check runs before the label gate and no configuration disables it, so a repository that deliberately maintains different policies on long-lived branches cannot satisfy the check for those pull requests.
+
 ## Develop and release
 
 `npm run check` runs actual test files, self-lint, formatting and schema/example validation. Only deliberately invalid or duplicated scanner fixtures are excluded from the repository's self-policy. Actual tests and tooling remain checked.

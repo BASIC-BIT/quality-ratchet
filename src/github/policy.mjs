@@ -139,16 +139,26 @@ export function evaluatePolicy({ report, scanned, current, toolVerified }) {
 }
 
 /**
- * Divergence is judged against the target tip read after the scan, not the one
- * sampled before it: merging into the target branch moves neither the head nor
- * the merge base, so a policy tightening that lands mid-scan passes every other
- * check here. A tip whose configuration did not resolve has no hash at all, and
- * an unknown target policy is not a difference, so the check does not run
- * instead of reporting one.
+ * The target-tip policy this verdict compares. The tip read after the scan is
+ * preferred over the one sampled before it: merging into the target branch moves
+ * neither the head nor the merge base, so a policy tightening that lands
+ * mid-scan passes every other check here.
+ *
+ * A tip whose configuration does not resolve has no hash, but the pre-scan hash
+ * can still prove a difference the live read cannot see: a target tip that held
+ * a divergent policy when the scan started and then took a configuration this
+ * tool rejects has already been observed to differ, and discarding that would
+ * report the run clean. Only when neither tip resolved is the target policy
+ * genuinely unknown, and an unknown policy is not a difference. An unrelated
+ * merge leaves the pre-scan hash equal to the enforced one, so the fallback
+ * reports nothing there.
  */
-const policyDiverged = (scanned, current) =>
-  current.baseTipPolicyHash !== null &&
-  scanned.policyHash !== current.baseTipPolicyHash;
+const comparedTipPolicyHash = (scanned, current) =>
+  current.baseTipPolicyHash ?? scanned.baseTipPolicyHash;
+const policyDiverged = (scanned, current) => {
+  const tipPolicy = comparedTipPolicyHash(scanned, current);
+  return tipPolicy !== null && scanned.policyHash !== tipPolicy;
+};
 /** Blocking branch-state checks, before any clean, advisory or exception verdict. */
 function branchStateResult(scanned, current) {
   // baseSha is the compared merge base, not the target tip: unrelated merges

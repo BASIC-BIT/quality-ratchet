@@ -24,8 +24,8 @@ export function renderSummary({ report, scanned, current, result }) {
           })
         : "missing"),
   ];
-  // The only place an operator learns that the target branch itself carries a
-  // configuration this tool cannot read. It does not block, so nothing else says so.
+  // The target branch itself carries a configuration this tool cannot read. No
+  // outcome reports it, because it does not block; publication also annotates it.
   if (current?.baseTipPolicyUnreadable)
     lines.push(
       "Target branch configuration did not resolve at " +

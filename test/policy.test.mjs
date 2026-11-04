@@ -143,7 +143,7 @@ test("a divergent target policy blocks under its own outcome", () => {
     "exception",
   );
   for (const key of ["scanned", "current"]) {
-    // An unresolved target configuration is unknown, which is not a difference.
+    // One unresolved tip leaves the other to compare, and neither differs here.
     assert.equal(
       evaluatePolicy({
         ...input,
@@ -162,6 +162,51 @@ test("a divergent target policy blocks under its own outcome", () => {
         key + " " + String(hash),
       );
   }
+});
+test("a pre-scan divergence the live read cannot see still blocks", () => {
+  const divergent = "a".repeat(64);
+  const unreadable = {
+    ...input.current,
+    baseTipPolicyHash: null,
+    baseTipPolicyUnreadable: true,
+  };
+  // The target tip held a divergent policy when the scan started and then took
+  // a configuration this tool rejects. Only the pre-scan hash can prove it, and
+  // discarding it would report this run clean.
+  const verdict = evaluatePolicy({
+    ...input,
+    scanned: { ...input.scanned, baseTipPolicyHash: divergent },
+    current: unreadable,
+  });
+  assert.equal(verdict.outcome, "policy-divergence");
+  assert.equal(verdict.exitCode, 1);
+  // Only when neither tip resolved is the target policy unknown, and an unknown
+  // policy is not a difference, so the check does not run at all.
+  assert.equal(
+    evaluatePolicy({
+      ...input,
+      scanned: { ...input.scanned, baseTipPolicyHash: null },
+      current: unreadable,
+    }).outcome,
+    "exception",
+  );
+  // The live hash still decides when it resolves, so a tip repaired to the
+  // enforced policy after an unreadable scan-time read is not a divergence.
+  assert.equal(
+    evaluatePolicy({
+      ...input,
+      scanned: { ...input.scanned, baseTipPolicyHash: null },
+    }).outcome,
+    "exception",
+  );
+  assert.equal(
+    evaluatePolicy({
+      ...input,
+      scanned: { ...input.scanned, baseTipPolicyHash: null },
+      current: { ...input.current, baseTipPolicyHash: divergent },
+    }).outcome,
+    "policy-divergence",
+  );
 });
 test("a retarget without a resolved merge base is stale, not evidence failure", () => {
   // The third is a target force-pushed to unrelated history under the same

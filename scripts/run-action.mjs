@@ -35,7 +35,21 @@ function escapeProperty(value) {
       "%" + char.charCodeAt(0).toString(16).toUpperCase().padStart(2, "0"),
   );
 }
-export async function publishWarnings(report) {
+/**
+ * A target branch carrying a configuration this tool rejects disables the
+ * divergence check without blocking, so the run reports a passing outcome and
+ * only the job summary says enforcement was reduced. An annotation puts that on
+ * the checks view too, where a reviewer sees it without opening the summary.
+ * Only the saved SHA is interpolated, through the same escape as a file path.
+ */
+function publishUnreadableTip(current) {
+  if (current?.baseTipPolicyUnreadable !== true) return;
+  console.log(
+    `::warning::The policy divergence check did not run: the target branch configuration did not resolve at ${escapeProperty(String(current.baseTipSha))}. Fix quality-ratchet.json on the target branch.`,
+  );
+}
+export async function publishWarnings(report, current) {
+  publishUnreadableTip(current);
   if (!report) return;
   const { validatePolicyReport } = await import("../src/report.mjs");
   validatePolicyReport(report);

@@ -313,6 +313,34 @@ test("a target configuration that does not resolve never blocks a run", async ()
       readFileSync(join(input.directory, "summary.md"), "utf8"),
       /did not resolve at [0-9a-f]{40}, so the policy divergence check did not run/,
     );
+    // The saved record publication reads to annotate the run carries both the
+    // condition and the SHA it names.
+    const saved = JSON.parse(readFileSync(output.reportPath, "utf8"));
+    assert.equal(saved.current.baseTipPolicyUnreadable, true);
+    assert.equal(saved.current.baseTipSha, tip);
+  }));
+test("a divergence the post-scan read cannot see still blocks", async () =>
+  withHostedRepo(async (input) => {
+    const head = branchHead(input, input.event.pull_request.head.sha);
+    const tightened = commitTargetConfig(input, head, tightenedPolicy);
+    const broken = commitTargetConfig(input, head, "{\n");
+    git(input.checkout, "update-ref", "refs/heads/main", tightened);
+    // The target tip diverged before the scan and then took a configuration
+    // this tool rejects, so the post-scan read resolves no policy at all.
+    const { output, moves } = await runWithTargetMove(input, broken, true);
+    assert.equal(moves, 1);
+    assert.equal(output.scanned.baseTipSha, tightened);
+    assert.notEqual(
+      output.scanned.baseTipPolicyHash,
+      output.scanned.policyHash,
+    );
+    assert.equal(output.current.baseTipSha, broken);
+    assert.equal(output.current.baseTipPolicyHash, null);
+    assert.equal(output.current.baseTipPolicyUnreadable, true);
+    // Nothing else moved: the merge base and the head are both unchanged.
+    assert.equal(output.current.baseSha, output.scanned.baseSha);
+    assert.equal(output.result.outcome, "policy-divergence");
+    assert.equal(output.result.exitCode, 1);
   }));
 test("a target force-pushed to unrelated history is stale, not a read failure", async () =>
   withHostedRepo(async (input) => {

@@ -564,16 +564,17 @@ async function warningReport(callback, reports = {}) {
     return callback(report);
   });
 }
-function published(f, report) {
+function published(f, report, current = null) {
   const directory = join(f.root, "publication");
   mkdirSync(directory, { recursive: true });
   writeFileSync(join(directory, "summary.md"), "saved summary\n");
-  const saved = { report, result: { outcome: "clean", exitCode: 0 } };
+  const saved = { report, current, result: { outcome: "clean", exitCode: 0 } };
   const input = join(directory, "input.json");
   writeFileSync(input, JSON.stringify(saved));
   const script = `import { publishWarnings } from ${JSON.stringify(new URL("../scripts/run-action.mjs", import.meta.url).href)};
     import { readFileSync } from "node:fs";
-    await publishWarnings(JSON.parse(readFileSync(process.argv[1])).report);`;
+    const saved = JSON.parse(readFileSync(process.argv[1]));
+    await publishWarnings(saved.report, saved.current);`;
   return execute("--input-type=module", ["-e", script, input, directory]);
 }
 test("publication warns for unchanged oversized tests without changing the clean verdict", async () => {
@@ -639,6 +640,54 @@ test("warning properties escape command delimiters and controls and reject inval
       const invalid = published(f, report);
       assert.notEqual(invalid.status, 0);
       assert.equal(invalid.stdout, "");
+    });
+  } finally {
+    rmSync(f.root, { recursive: true, force: true });
+  }
+});
+const unreadableTip = {
+  baseTipPolicyUnreadable: true,
+  baseTipSha: "b".repeat(40),
+};
+test("an unresolved target configuration is annotated, not only summarized", async () => {
+  const f = fixture();
+  try {
+    await warningReport((report) => {
+      const run = published(f, report, unreadableTip);
+      assert.equal(run.status, 0, run.stderr);
+      // Divergence enforcement is disabled while the outcome still passes, so
+      // the condition must reach the checks view, not only the job summary.
+      assert.match(
+        run.stdout,
+        new RegExp(
+          `^::warning::The policy divergence check did not run: .*${unreadableTip.baseTipSha}\\.`,
+          "m",
+        ),
+      );
+      // The oversized-test annotations still publish alongside it.
+      assert.match(run.stdout, /^::warning file=test\/large.ts,line=1::/m);
+      // It publishes before the report is validated, so an unusable report
+      // cannot swallow it.
+      assert.match(
+        published(f, null, unreadableTip).stdout,
+        /divergence check did not run/,
+      );
+      // A forged SHA cannot start an emitted line with another command.
+      const forged = published(f, null, {
+        baseTipPolicyUnreadable: true,
+        baseTipSha: "x\r\n::error::injected",
+      });
+      assert.equal(forged.stdout.trimEnd().split("\n").length, 1);
+      assert.doesNotMatch(forged.stdout, /::error::/);
+      // A resolved tip, and an absent live record, annotate nothing.
+      for (const current of [
+        { ...unreadableTip, baseTipPolicyUnreadable: false },
+        null,
+      ])
+        assert.doesNotMatch(
+          published(f, report, current).stdout,
+          /divergence check did not run/,
+        );
     });
   } finally {
     rmSync(f.root, { recursive: true, force: true });

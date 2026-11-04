@@ -22,7 +22,8 @@ import { supportsNodeVersion } from "../runtime.mjs";
  * merging into the target branch moves neither the head nor the merge base: a
  * policy tightening that lands while the scan runs leaves every other check
  * equal, so only this read can see it. An unresolved tip policy is recorded, not
- * blocked, and leaves the divergence check unable to run.
+ * blocked, and leaves the verdict to compare the tip policy observed while
+ * scanning.
  *
  * A retarget is already stale from baseRef alone, and the new target may share
  * no history, so its merge base is not resolved at all.

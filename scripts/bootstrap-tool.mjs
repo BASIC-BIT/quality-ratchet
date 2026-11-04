@@ -125,11 +125,10 @@ async function bootstrap() {
         const { publishWarnings } = await import(
           pathToFileURL(join(root, "scripts/run-action.mjs")).href
         );
-        await publishWarnings(
-          JSON.parse(
-            readFileSync(join(directory, "quality-results.json"), "utf8"),
-          ).quality,
+        const saved = JSON.parse(
+          readFileSync(join(directory, "quality-results.json"), "utf8"),
         );
+        await publishWarnings(saved.quality, saved.current);
       },
     );
   } catch {

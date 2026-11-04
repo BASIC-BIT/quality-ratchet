@@ -70,8 +70,9 @@ function resolveRevisions(root, scope) {
  * configuration this tool rejects can reach the target branch. Reading it must
  * never abort a run: the merge base and the head tree both parsed, so the scan
  * is valid, and failing here would block every open pull request including the
- * one that repairs the configuration. Divergence cannot be judged without this
- * hash, so null disables that check instead of reporting a difference.
+ * one that repairs the configuration. A null hash is never a difference by
+ * itself; the verdict falls back to the other tip read, and only two null
+ * hashes leave divergence unjudgeable.
  */
 export function readTipPolicyHash({ repo, tipSha, treeSha }) {
   try {
