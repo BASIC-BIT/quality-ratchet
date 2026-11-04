@@ -6,28 +6,42 @@ import { write, commit, git } from "./helpers/repo.mjs";
 import { git as safeGit } from "../src/git/commands.mjs";
 import { preparePrComparison, verifyPrepared } from "../src/github/prepare.mjs";
 import { readCurrentPr } from "../src/github/client.mjs";
-test("fresh target merge preserves source, index and configuration", async () =>
+test("merge-base baseline preserves source, index and configuration", async () =>
   withHostedRepo(async (input) => {
     const { checkout, event } = input,
-      head = event.pull_request.head.sha;
+      branchPoint = event.pull_request.head.sha;
+    git(checkout, "checkout", "--detach", branchPoint);
+    write(checkout, "src/feature.ts", "export const feature = 1;\n");
+    const head = commit(checkout);
+    git(checkout, "update-ref", "refs/pull/7/head", head);
+    event.pull_request.head.sha = head;
+    git(checkout, "checkout", "-q", "main");
     write(checkout, "src/target.ts", "export const target = 7;\n");
-    const base = commit(checkout);
+    const tip = commit(checkout);
     git(checkout, "checkout", "--detach", head);
     write(checkout, "src/base.ts", "dirty caller\n");
     const config = readFileSync(join(checkout, ".git/config")),
       index = readFileSync(join(checkout, ".git/index"));
     const prepared = await preparePrComparison(input);
     try {
-      assert.equal(prepared.scanned.baseSha, base);
+      assert.equal(prepared.scanned.baseSha, branchPoint);
+      assert.equal(prepared.scanned.baseTipSha, tip);
       assert.equal(prepared.scanned.headSha, head);
       verifyPrepared(prepared);
       assert.equal(
         safeGit(prepared.context.comparison.repo, [
           "cat-file",
           "blob",
+          prepared.scanned.treeSha + ":src/feature.ts",
+        ]),
+        "export const feature = 1;\n",
+      );
+      assert.throws(() =>
+        safeGit(prepared.context.comparison.repo, [
+          "cat-file",
+          "blob",
           prepared.scanned.treeSha + ":src/target.ts",
         ]),
-        "export const target = 7;\n",
       );
       assert.deepEqual(readFileSync(join(checkout, ".git/config")), config);
       assert.deepEqual(readFileSync(join(checkout, ".git/index")), index);
@@ -53,7 +67,7 @@ test("fresh target merge preserves source, index and configuration", async () =>
     assert.deepEqual(auth, {});
     assert.deepEqual(readdirSync(input.tempRoot), []);
   }));
-test("live target branch is read independently of stale PR base SHA", async () => {
+test("current PR metadata is one read and carries no target SHA", async () => {
   const paths = [];
   const current = await readCurrentPr({
     token: "SECRET",
@@ -62,19 +76,19 @@ test("live target branch is read independently of stale PR base SHA", async () =
     number: 7,
     transport: async (path) => {
       paths.push(path);
-      return paths.length === 1
-        ? {
-            head: { sha: "a".repeat(40) },
-            base: { ref: "topic/slash" },
-            labels: [{ name: "quality-exception" }],
-            body: "$(inert)",
-          }
-        : { commit: { sha: "b".repeat(40) } };
+      return {
+        head: { sha: "a".repeat(40) },
+        base: { ref: "topic/slash" },
+        labels: [{ name: "quality-exception" }],
+        body: "$(inert)",
+      };
     },
   });
-  assert.equal(current.baseSha, "b".repeat(40));
+  assert.deepEqual(paths, ["/repos/owner/repo/pulls/7"]);
+  assert.equal(current.baseRef, "topic/slash");
+  assert.equal(current.baseSha, undefined);
   assert.equal(current.body, "$(inert)");
-  assert.equal(paths[1], "/repos/owner/repo/branches/topic%2Fslash");
+  assert.deepEqual(current.labels, ["quality-exception"]);
 });
 
 import { withHostedRepo } from "./helpers/hosted.mjs";
@@ -89,7 +103,7 @@ test("hosted policy reads live metadata and artifacts omit credentials", async (
     assert.equal(JSON.parse(evidence).tool.verified, true);
     assert.deepEqual(readdirSync(input.tempRoot), ["output"]);
   }));
-test("real head race, invalid config and merge conflict clean temporary sources", async () =>
+test("real head race and invalid config clean temporary sources", async () =>
   withHostedRepo(async (input) => {
     const { checkout, event, tempRoot } = input;
     const original = event.pull_request.head.sha;
@@ -105,13 +119,37 @@ test("real head race, invalid config and merge conflict clean temporary sources"
     git(checkout, "update-ref", "refs/pull/7/head", invalid);
     await assert.rejects(preparePrComparison(input), /preparation failed/);
     assert.deepEqual(readdirSync(tempRoot), []);
+    // The same file edited on both sides no longer simulates a merge, so a
+    // conflicting target edit is prepared against the merge base instead.
     git(checkout, "checkout", "--detach", original);
     write(checkout, "src/base.ts", "export const conflict = 3;\n");
     const conflict = commit(checkout);
     event.pull_request.head.sha = conflict;
     git(checkout, "update-ref", "refs/pull/7/head", conflict);
-    await assert.rejects(preparePrComparison(input), /preparation failed/);
+    const prepared = await preparePrComparison(input);
+    try {
+      assert.equal(prepared.scanned.baseSha, original);
+      assert.equal(prepared.scanned.baseTipSha, next);
+      verifyPrepared(prepared);
+    } finally {
+      prepared.cleanup();
+    }
     assert.deepEqual(readdirSync(tempRoot), []);
+  }));
+test("an unresolvable merge base fails and never falls back to the tip", async () =>
+  withHostedRepo(async (input) => {
+    const { checkout, event } = input;
+    git(checkout, "checkout", "-q", "--orphan", "unrelated");
+    write(checkout, "src/orphan.ts", "export const orphan = 1;\n");
+    const orphan = commit(checkout);
+    git(checkout, "update-ref", "refs/pull/7/head", orphan);
+    event.pull_request.head.sha = orphan;
+    await assert.rejects(preparePrComparison(input), /preparation failed/);
+    assert.deepEqual(readdirSync(input.tempRoot), []);
+    const output = await runHosted(input);
+    assert.equal(output.result.outcome, "error");
+    assert.equal(output.result.exitCode, 2);
+    assert.equal(output.scanned, null);
   }));
 test("prepared tree alteration and API errors block with missing evidence", async () =>
   withHostedRepo(async (input) => {
@@ -130,8 +168,10 @@ test("prepared tree alteration and API errors block with missing evidence", asyn
     assert.ok(!readFileSync(output.evidencePath, "utf8").includes("SECRET"));
     assert.deepEqual(readdirSync(input.tempRoot), ["output"]);
   }));
-test("retarget and head and base races are stale after real scans", async () =>
+test("retarget and head races are stale after real scans", async () =>
   withHostedRepo(async (input) => {
+    const { checkout } = input;
+    git(checkout, "branch", "other");
     for (const mutation of [
       { head: { sha: "a".repeat(40) } },
       { base: { ref: "other" } },
@@ -140,20 +180,35 @@ test("retarget and head and base races are stale after real scans", async () =>
         ...input,
         githubTransport: async (path) => ({
           ...(await input.githubTransport(path)),
-          ...(path.includes("/pulls/") ? mutation : {}),
+          ...mutation,
         }),
       });
       assert.equal(output.result.outcome, "stale");
       assert.match(output.result.message, /Rerun/);
     }
+  }));
+test("target branch merges during the scan keep the clean verdict", async () =>
+  withHostedRepo(async (input) => {
+    const { checkout, event } = input;
+    const head = event.pull_request.head.sha;
+    write(checkout, "src/moved.ts", "export const moved = 1;\n");
+    const moved = commit(checkout);
+    git(checkout, "update-ref", "refs/heads/main", head);
+    let interleaved = 0;
     const output = await runHosted({
       ...input,
-      githubTransport: async (path) =>
-        path.includes("/pulls/")
-          ? input.githubTransport(path)
-          : { commit: { sha: "b".repeat(40) } },
+      githubTransport: async (path) => {
+        interleaved++;
+        git(checkout, "update-ref", "refs/heads/main", moved);
+        return input.githubTransport(path);
+      },
     });
-    assert.equal(output.result.outcome, "stale");
+    assert.equal(interleaved, 1);
+    assert.equal(git(checkout, "rev-parse", "main"), moved);
+    assert.equal(output.result.outcome, "clean");
+    assert.equal(output.scanned.baseSha, head);
+    assert.equal(output.scanned.baseTipSha, head);
+    assert.equal(output.current.baseSha, head);
   }));
 test("malicious ref stays inert and consumer filters cannot execute", async () =>
   withHostedRepo(async (input) => {

@@ -2,7 +2,11 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { runQuality } from "../runner.mjs";
 import { validateQualityReport } from "../report.mjs";
-import { preparePrComparison, verifyPrepared } from "./prepare.mjs";
+import {
+  preparePrComparison,
+  readCurrentBaseline,
+  verifyPrepared,
+} from "./prepare.mjs";
 import { eventIdentity, readCurrentPr } from "./client.mjs";
 import { evaluatePolicy } from "./policy.mjs";
 import { writeEvidence, toolMetadata } from "./evidence.mjs";
@@ -48,11 +52,21 @@ export async function runHosted({
     report = await runQuality(prepared.context);
     verifyPrepared(prepared);
     validateQualityReport(report, prepared.context);
-    current = await readCurrentPr({
+    const live = await readCurrentPr({
       ...info,
       token,
       transport: githubTransport,
     });
+    current = {
+      ...live,
+      baseSha: await readCurrentBaseline({
+        prepared,
+        info,
+        baseRef: live.baseRef,
+        token,
+        transport,
+      }),
+    };
     verifyPrepared(prepared);
     result = evaluatePolicy({ report, scanned, current, toolVerified });
   } catch {

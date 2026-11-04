@@ -168,7 +168,7 @@ function comparisonDiff(isolated, before, after) {
   return { ranges, renames };
 }
 
-/** Hosted comparison is against the exact fetched target, never a local merge-base. */
+/** Hosted comparison is against the merge base of the exact fetched refs. */
 export function treeComparison({
   repo,
   baselineSha,

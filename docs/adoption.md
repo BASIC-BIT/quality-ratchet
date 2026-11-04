@@ -26,6 +26,10 @@ Use an ordinary `pull_request` workflow for opened, synchronize, reopened, ready
 
 The example sets PR concurrency cancellation, a job named `Code quality ratchet` and a 20-minute timeout. The action retains artifacts for seven days. Its inputs are only `github-token` and `repository-path`; policy remains in JSON. Outputs are `outcome`, `strict-exit-code` and `report-directory`. Available summary and JSON evidence are uploaded before the saved failure verdict returns.
 
+The action compares the PR head against the merge base of that head and the target branch, not against the target tip. A merge base does not move when unrelated changes merge into the target branch, so a scan stays valid under merge pressure, and only a new head, a retarget or a moved merge base is reported stale. The deliberate cost is that the action no longer simulates merging the current target tip into the head: a regression that appears only once newly merged target code is combined with the branch is not reported until the branch merges or rebases the target branch. Check that combination locally with an in-progress merge, which the local checker compares against its exact target parent.
+
+Target policy is read from that same merge base. A policy change staged on the target branch therefore applies to an open PR after the PR merges or rebases the target branch, and a PR opened from an older branch point is measured against the policy at that point. Hosted evidence is `schemaVersion` 2 and records both revisions: `scanned.baseSha` is the compared merge base, and `scanned.baseTipSha` is the target tip observed while scanning.
+
 The hosted action initially supports GitHub-hosted Ubuntu. Version 1.0.1 passed release qualification and final PR CI on Ubuntu and Windows with Node 24.15.0 and 24.21.0. Each combination ran 255 tests with zero failures or skips, and both workflows passed the Linux production-only package smoke. Post-merge source CI also passed. Version 1.0.0 disposable cross-owner execution remains historical evidence. These shared-tool results do not establish consumer migration acceptance.
 
 ## Exceptions and cutover

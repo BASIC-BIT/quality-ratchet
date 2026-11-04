@@ -25,6 +25,8 @@ Defaults are cyclomatic and cognitive complexity 15, fewer than 1,000 lines for 
 
 Follow [adoption](docs/adoption.md). Stage the intended policy on the target branch first, then use the reviewed full release SHA in a read-only ordinary pull-request job. The action installs its own locked production dependencies without application lifecycle scripts. It requires no application installation or inherited secrets.
 
+Hosted runs compare the PR head against the merge base of that head and the target branch, so unrelated merges into the target branch no longer invalidate a scan. In exchange the action no longer simulates merging the target tip into the head; [adoption](docs/adoption.md#activate-the-action) describes that trade-off and where the merge-base policy is read.
+
 A PR cannot relax its own enforcement policy. The target policy applies to both trees; proposed policy edits are validated and displayed. A human-authorized `quality-exception` label plus nonempty text under `## Quality exception` accepts blocking regressions across pushes. It cannot accept setup, scanner, configuration or stale-result failures.
 
 ## Develop and release
