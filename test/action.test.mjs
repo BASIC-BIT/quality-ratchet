@@ -190,25 +190,58 @@ test("consumer template has seven read-only events and exact-head checkout", () 
   );
 });
 
-test("nested spawn budgets stay ordered under the workflow job timeout", () => {
-  const job =
-    60_000 *
-    Math.min(
-      ...[
-        ...read(".github/workflows/ci.yml").matchAll(/timeout-minutes: (\d+)/g),
-      ].map((match) => Number(match[1])),
-    );
+/**
+ * The milliseconds one named job allows itself. Scoped to that job's own block,
+ * because jobs that never run the suite carry their own unrelated budgets, and
+ * required so a regex that stops matching fails here instead of passing
+ * vacuously.
+ */
+function jobBudget(file, job) {
+  const lines = read(file).split("\n"),
+    start = lines.indexOf(`  ${job}:`);
+  assert.ok(start >= 0, `${file} must declare a ${job} job`);
+  const next = lines.findIndex(
+      (line, index) => index > start && /^ {2}[\w-]+:/.test(line),
+    ),
+    declared = lines
+      .slice(start, next < 0 ? lines.length : next)
+      .flatMap((line) => {
+        const match = /^ {4}timeout-minutes: (\d+)$/.exec(line);
+        return match ? [Number(match[1])] : [];
+      });
+  assert.equal(
+    declared.length,
+    1,
+    `${job} in ${file} must declare exactly one timeout-minutes`,
+  );
+  return 60_000 * declared[0];
+}
+
+test("nested spawn budgets stay ordered under the jobs that run them", () => {
+  const source = read("test/action.test.mjs"),
+    installs = [...source.matchAll(/\{ timeout: BOOTSTRAP_TIMEOUT \}/g)].length;
+  assert.ok(installs >= 1, "the bootstrap tests must take the derived budget");
+  assert.doesNotMatch(
+    source,
+    /\{ timeout: \d/,
+    "a bootstrap test must derive its timeout from the caps it drives",
+  );
   assert.ok(
     GATES.length * SCANNER_TIMEOUT_MS < RUN_TIMEOUT_MS,
     "the action run must outlast the serial scanner ceiling",
   );
+  // A consumer job drives one install and one run; the rest of its budget is
+  // checkout and artifact upload.
   assert.ok(
-    INSTALL_TIMEOUT_MS + RUN_TIMEOUT_MS < BOOTSTRAP_TIMEOUT,
-    "a bootstrap test must outlast the install and action run it drives",
+    INSTALL_TIMEOUT_MS + RUN_TIMEOUT_MS <
+      jobBudget("examples/code-quality.yml", "quality"),
+    "install plus run must report inside the consumer template's budget",
   );
+  // This suite drives one cold install per bootstrap test, serially.
   assert.ok(
-    BOOTSTRAP_TIMEOUT < job,
-    "a bootstrap test must report before the job budget expires",
+    installs * INSTALL_TIMEOUT_MS + RUN_TIMEOUT_MS <
+      jobBudget(".github/workflows/ci.yml", "checks"),
+    "the installs this suite drives must fit the job that runs them",
   );
 });
 

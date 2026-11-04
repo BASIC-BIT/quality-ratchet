@@ -52,16 +52,26 @@ function isolatedEnvironment(directory) {
     npm_config_registry: "https://registry.npmjs.org/",
   };
 }
-// Nested spawn budgets, innermost out: a scanner child gets 180s and the three
-// gates run serially (<=540s), so the action run sits above that; the install
-// plus that run must fit the consumer job's 20 minutes next to checkout and
-// artifact upload; and the bootstrap tests budget both together
-// (test/action.test.mjs), so no inner cap can fire before the test's own
-// timeout. 180s was too tight for the install: a windows-latest runner about a
-// third slower than usual hit ETIMEDOUT in npm ci. Keep the ordering when
-// changing either value.
+// Nested spawn budgets, innermost out; test/action.test.mjs asserts the whole
+// ladder against the jobs that run it, so neither side can be retightened
+// alone.
+//
+// 180s was too tight for the install: a windows-latest runner about a third
+// slower than usual hit ETIMEDOUT in npm ci, so the cap is twice that.
+//
+// The action run clears the serial scanner ceiling, GATES.length *
+// SCANNER_TIMEOUT_MS = 3 * 180s = 540s, plus a 180s preparation budget for the
+// work that surrounds the scan: full-depth fetches of the target branch and the
+// PR head, the repeated verifyPrepared passes that each end in git fsck, the
+// live readCurrentPr read, and the post-scan fetch with its one bounded retry.
+// 540s + 180s = 720s.
+//
+// Install plus run is 1080s, inside the 1200s job the consumer template
+// declares (examples/code-quality.yml), leaving 120s for checkout and artifact
+// upload. That template caps the run: raising it above 780s would need the
+// template's budget raised with it.
 export const INSTALL_TIMEOUT_MS = 360_000;
-export const RUN_TIMEOUT_MS = 600_000;
+export const RUN_TIMEOUT_MS = 720_000;
 export async function withInstalledTool({ actionPath, tempRoot }, callback) {
   const expected = toolManifest(actionPath, false);
   const directory = mkdtempSync(join(tempRoot, "quality-tool-"));
