@@ -23,6 +23,9 @@ export function writeEvidence({
         headSha: current.headSha,
         baseRef: current.baseRef,
         baseSha: current.baseSha,
+        baseTipSha: current.baseTipSha,
+        baseTipPolicyHash: current.baseTipPolicyHash,
+        baseTipPolicyUnreadable: current.baseTipPolicyUnreadable,
         labels: current.labels,
       }
     : null;
@@ -31,6 +34,10 @@ export function writeEvidence({
     .map(([key]) => key);
   // Version 2 compares the merge base: scanned.baseSha is that merge base and
   // scanned.baseTipSha records the target tip observed while scanning.
+  // current.baseTipSha is the tip read after it and current.baseTipPolicyHash
+  // the policy the divergence verdict compared, null with
+  // current.baseTipPolicyUnreadable true when that tip's configuration did not
+  // resolve and the check could not run. Fields are additive within version 2.
   const metadata = {
     schemaVersion: 2,
     tool,

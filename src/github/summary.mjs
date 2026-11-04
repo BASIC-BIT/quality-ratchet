@@ -19,9 +19,19 @@ export function renderSummary({ report, scanned, current, result }) {
             headSha: current.headSha,
             baseRef: current.baseRef,
             baseSha: current.baseSha,
+            baseTipSha: current.baseTipSha,
+            baseTipPolicyHash: current.baseTipPolicyHash,
           })
         : "missing"),
   ];
+  // The only place an operator learns that the target branch itself carries a
+  // configuration this tool cannot read. It does not block, so nothing else says so.
+  if (current?.baseTipPolicyUnreadable)
+    lines.push(
+      "Target branch configuration did not resolve at " +
+        current.baseTipSha +
+        ", so the policy divergence check did not run. Fix quality-ratchet.json on the target branch.",
+    );
   lines.push(...reportLines(report));
   if (result.rationale) lines.push("Exception rationale:", result.rationale);
   let text = lines.join("\n");

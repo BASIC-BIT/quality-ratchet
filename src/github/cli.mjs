@@ -5,6 +5,7 @@ import { validateQualityReport } from "../report.mjs";
 import {
   preparePrComparison,
   readCurrentBaseline,
+  readTipPolicyHash,
   verifyPrepared,
   PostScanTransportError,
 } from "./prepare.mjs";
@@ -13,6 +14,54 @@ import { evaluatePolicy } from "./policy.mjs";
 import { writeEvidence, toolMetadata } from "./evidence.mjs";
 import { renderSummary } from "./summary.mjs";
 import { supportsNodeVersion } from "../runtime.mjs";
+/**
+ * Live pull-request metadata, the post-scan merge base, and the policy at the
+ * target tip as it stands after the scan.
+ *
+ * The tip policy is resolved here rather than at preparation time because
+ * merging into the target branch moves neither the head nor the merge base: a
+ * policy tightening that lands while the scan runs leaves every other check
+ * equal, so only this read can see it. An unresolved tip policy is recorded, not
+ * blocked, and leaves the divergence check unable to run.
+ *
+ * A retarget is already stale from baseRef alone, and the new target may share
+ * no history, so its merge base is not resolved at all.
+ */
+async function readCurrentRevision({
+  prepared,
+  live,
+  scanned,
+  info,
+  token,
+  transport,
+}) {
+  const absent = { baseSha: null, baseTipSha: null };
+  const { baseSha, baseTipSha } =
+    live.baseRef === scanned.baseRef
+      ? await readCurrentBaseline({
+          prepared,
+          info,
+          baseRef: live.baseRef,
+          token,
+          transport,
+        })
+      : absent;
+  const baseTipPolicyHash =
+    baseTipSha === null
+      ? null
+      : readTipPolicyHash({
+          repo: prepared.context.comparison.repo,
+          tipSha: baseTipSha,
+          treeSha: scanned.treeSha,
+        });
+  return {
+    ...live,
+    baseSha,
+    baseTipSha,
+    baseTipPolicyHash,
+    baseTipPolicyUnreadable: baseTipSha !== null && baseTipPolicyHash === null,
+  };
+}
 /** Task 8 calls this installed entrypoint after manifest/dependency verification. */
 export async function runHosted({
   checkout,
@@ -58,21 +107,14 @@ export async function runHosted({
       token,
       transport: githubTransport,
     });
-    // A retarget is already stale from baseRef alone, and the new target may
-    // share no history, so its merge base is not resolved at all.
-    current = {
-      ...live,
-      baseSha:
-        live.baseRef === scanned.baseRef
-          ? await readCurrentBaseline({
-              prepared,
-              info,
-              baseRef: live.baseRef,
-              token,
-              transport,
-            })
-          : null,
-    };
+    current = await readCurrentRevision({
+      prepared,
+      live,
+      scanned,
+      info,
+      token,
+      transport,
+    });
     verifyPrepared(prepared);
     result = evaluatePolicy({ report, scanned, current, toolVerified });
   } catch (error) {

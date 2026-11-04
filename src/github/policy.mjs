@@ -48,10 +48,14 @@ export function extractRationale(body) {
     ? null
     : lines.slice(start, end).join("\n").trim() || null;
 }
+/** A target-tip policy is absent when that tip's configuration did not resolve. */
+const tipPolicyHash = (value) =>
+  value === null || policyHashPattern.test(value);
 /** The enforced policy must be the merge-base policy the report measured. */
-function validPolicyIdentity(scanned, report) {
+function validPolicyIdentity(scanned, current, report) {
   return (
-    policyHashPattern.test(scanned.baseTipPolicyHash) &&
+    tipPolicyHash(scanned.baseTipPolicyHash) &&
+    tipPolicyHash(current.baseTipPolicyHash) &&
     scanned.configCommit === scanned.baseSha &&
     scanned.configCommit === report.policy.configCommit &&
     scanned.policyHash === report.policy.active.hash
@@ -63,7 +67,7 @@ function validateMetadata(scanned, current, report) {
   if (
     !shaPattern.test(scanned.treeSha) ||
     !shaPattern.test(scanned.baseTipSha) ||
-    !validPolicyIdentity(scanned, report) ||
+    !validPolicyIdentity(scanned, current, report) ||
     typeof current.body !== "string" ||
     !Array.isArray(current.labels) ||
     !current.labels.every((label) => typeof label === "string")
@@ -134,6 +138,17 @@ export function evaluatePolicy({ report, scanned, current, toolVerified }) {
       );
 }
 
+/**
+ * Divergence is judged against the target tip read after the scan, not the one
+ * sampled before it: merging into the target branch moves neither the head nor
+ * the merge base, so a policy tightening that lands mid-scan passes every other
+ * check here. A tip whose configuration did not resolve has no hash at all, and
+ * an unknown target policy is not a difference, so the check does not run
+ * instead of reporting one.
+ */
+const policyDiverged = (scanned, current) =>
+  current.baseTipPolicyHash !== null &&
+  scanned.policyHash !== current.baseTipPolicyHash;
 /** Blocking branch-state checks, before any clean, advisory or exception verdict. */
 function branchStateResult(scanned, current) {
   // baseSha is the compared merge base, not the target tip: unrelated merges
@@ -153,7 +168,7 @@ function branchStateResult(scanned, current) {
   // instead of quietly enforcing the policy at the branch point. It is its own
   // outcome because only a rebase or merge clears it: reporting stale invites a
   // rerun loop that can never terminate.
-  if (scanned.policyHash !== scanned.baseTipPolicyHash)
+  if (policyDiverged(scanned, current))
     return result(
       1,
       "policy-divergence",
@@ -168,7 +183,9 @@ function validateRevisions(scanned, current) {
       throw new Error();
   if (!shaPattern.test(scanned.baseSha)) throw new Error();
   // A retarget is stale from baseRef alone and its merge base need not exist, so
-  // the live merge base may be absent. Absent never equals the scanned one.
-  if (current.baseSha !== null && !shaPattern.test(current.baseSha))
-    throw new Error();
+  // the live merge base and target tip may both be absent. Absent never equals
+  // the scanned one.
+  for (const key of ["baseSha", "baseTipSha"])
+    if (current[key] !== null && !shaPattern.test(current[key]))
+      throw new Error();
 }

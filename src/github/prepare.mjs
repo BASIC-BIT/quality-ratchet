@@ -1,4 +1,5 @@
 import { mkdtempSync, rmSync } from "node:fs";
+import { setTimeout as sleep } from "node:timers/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -12,20 +13,11 @@ import { loadPolicySelection, treeComparison } from "../git/comparison.mjs";
 import { eventIdentity, validRef } from "./client.mjs";
 const toolRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 /**
- * Fetches the target tip and the PR head, then resolves their merge base.
- * Preparation and the post-scan staleness read both derive the baseline here,
- * from identical refspecs and the same merge-base command, so they cannot
- * disagree. The merge base is stable while the target branch moves; the target
- * tip is not. An unresolvable merge base fails instead of falling back.
+ * Delivers the target tip and the PR head under the scope's refs.
+ * Preparation and the post-scan staleness read use identical refspecs, so they
+ * cannot disagree. A failure here is transport and may be retried.
  */
-async function fetchRevisions({
-  root,
-  info,
-  baseRef,
-  token,
-  transport,
-  scope,
-}) {
+async function fetchRefs({ root, info, baseRef, token, transport, scope }) {
   if (typeof token !== "string" || !token || /[\r\n\0]/u.test(token))
     throw new Error();
   if (!validRef(baseRef)) throw new Error();
@@ -53,6 +45,14 @@ async function fetchRevisions({
   } finally {
     for (const key of Object.keys(env)) delete env[key];
   }
+}
+/**
+ * Resolves the refs a fetch delivered, from the same merge-base command in both
+ * scopes. The merge base is stable while the target branch moves; the target tip
+ * is not. A failure here is not transport: the objects arrived and their merge
+ * base does not exist, so the target branch itself changed.
+ */
+function resolveRevisions(root, scope) {
   const headSha = resolveCommit(root, `refs/quality/${scope}head`),
     baseTipSha = resolveCommit(root, `refs/quality/${scope}base`);
   return {
@@ -63,6 +63,27 @@ async function fetchRevisions({
       git(root, ["merge-base", baseTipSha, headSha]).trim(),
     ),
   };
+}
+/**
+ * The policy at a target tip, or null when that tip's configuration does not
+ * resolve. The tip is the one policy input no pull-request gate validates, so a
+ * configuration this tool rejects can reach the target branch. Reading it must
+ * never abort a run: the merge base and the head tree both parsed, so the scan
+ * is valid, and failing here would block every open pull request including the
+ * one that repairs the configuration. Divergence cannot be judged without this
+ * hash, so null disables that check instead of reporting a difference.
+ */
+export function readTipPolicyHash({ repo, tipSha, treeSha }) {
+  try {
+    return loadPolicySelection({
+      repo,
+      baselineSha: tipSha,
+      currentTree: treeSha,
+    }).active.hash;
+  } catch {
+    // Recorded as an unresolved tip policy; raw errors can carry source text.
+    return null;
+  }
 }
 /** Transport changes network delivery in fixtures; all preparation remains real Git. */
 export async function preparePrComparison({
@@ -79,7 +100,7 @@ export async function preparePrComparison({
     if (resolveCommit(checkout, "HEAD") !== info.headSha) throw new Error();
     root = mkdtempSync(join(tempRoot, "quality-pr-"));
     git(root, ["init", "-q", "--template="]);
-    const { headSha, baseTipSha, baseSha } = await fetchRevisions({
+    await fetchRefs({
       root,
       info,
       baseRef: info.baseRef,
@@ -87,6 +108,7 @@ export async function preparePrComparison({
       transport,
       scope: "",
     });
+    const { headSha, baseTipSha, baseSha } = resolveRevisions(root, "");
     if (headSha !== info.headSha) throw new Error();
     git(root, ["update-ref", "HEAD", headSha]);
     const treeSha = verifyTree(root, headSha);
@@ -103,15 +125,16 @@ export async function preparePrComparison({
       baselineSha: baseSha,
       currentTree: treeSha,
     });
-    // Enforcement reads the merge base, so the target tip policy is resolved
-    // here as well and the verdict blocks when the two differ. Without it a
-    // branch point predating the policy silently enforces an older one, or the
-    // defaults, and the target branch cannot tighten an open PR at all.
-    const baseTipPolicyHash = loadPolicySelection({
+    // The tip policy observed while scanning. Enforcement reads the merge base,
+    // so without a tip policy a branch point predating the policy silently
+    // enforces an older one, or the defaults, and the target branch cannot
+    // tighten an open PR at all. The divergence verdict compares the tip
+    // observed after the scan; this one records what the tip held during it.
+    const baseTipPolicyHash = readTipPolicyHash({
       repo: root,
-      baselineSha: baseTipSha,
-      currentTree: treeSha,
-    }).active.hash;
+      tipSha: baseTipSha,
+      treeSha,
+    });
     const scanned = {
       headSha,
       baseRef: info.baseRef,
@@ -140,11 +163,41 @@ export async function preparePrComparison({
 }
 /** Distinguishes a flaky post-scan read from missing or contradictory evidence. */
 export class PostScanTransportError extends Error {}
-const attempts = 2;
+const attempts = 2,
+  // Throttling and name resolution, the conditions a retry targets, do not
+  // clear within the time an immediate second attempt takes.
+  retryDelayMs = 1_000;
+async function delivered(options) {
+  try {
+    await fetchRefs(options);
+    return true;
+  } catch {
+    // Transport only; raw Git errors can carry secrets, so none propagates.
+    return false;
+  }
+}
+/**
+ * The post-scan target tip and merge base, fetched under separate refs. An
+ * absent merge base is reported as `{baseSha: null}`: the refs arrived and the
+ * target branch was force-pushed to unrelated history under the same name,
+ * which is a permanent branch-state change rather than a flaky read. Calling it
+ * a transport failure would tell an operator to rerun, and no rerun can clear
+ * it; as an absent baseline it is stale, which rerunning against the current
+ * revision does clear.
+ */
+function resolveCurrentRevisions(root) {
+  try {
+    const { baseSha, baseTipSha } = resolveRevisions(root, "current-");
+    return { baseSha, baseTipSha };
+  } catch {
+    return { baseSha: null, baseTipSha: null };
+  }
+}
 /**
  * Live baseline for the post-scan staleness check, fetched under separate refs.
  * One bounded retry: this fetch runs after the scan, so a transient failure
- * must not discard a completed verdict behind a generic preparation error.
+ * must not discard a completed verdict behind a generic preparation error. Only
+ * delivery is retried.
  */
 export async function readCurrentBaseline({
   prepared,
@@ -153,20 +206,20 @@ export async function readCurrentBaseline({
   token,
   transport = git,
 }) {
+  const root = prepared.context.comparison.repo;
   for (let attempt = 1; attempt <= attempts; attempt++) {
-    try {
-      const { baseSha } = await fetchRevisions({
-        root: prepared.context.comparison.repo,
+    if (
+      await delivered({
+        root,
         info,
         baseRef,
         token,
         transport,
         scope: "current-",
-      });
-      return baseSha;
-    } catch {
-      // Retried below while attempts remain; raw Git errors can carry secrets.
-    }
+      })
+    )
+      return resolveCurrentRevisions(root);
+    if (attempt < attempts) await sleep(retryDelayMs);
   }
   throw new PostScanTransportError();
 }

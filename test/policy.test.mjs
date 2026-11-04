@@ -109,7 +109,7 @@ test("accepted exception retains findings and current metadata controls pushes",
 test("a divergent target policy blocks under its own outcome", () => {
   const diverged = {
     ...input,
-    scanned: { ...input.scanned, baseTipPolicyHash: "a".repeat(64) },
+    current: { ...input.current, baseTipPolicyHash: "a".repeat(64) },
   };
   const verdict = evaluatePolicy(diverged);
   // Distinct from stale: a rerun clears stale and can never clear this.
@@ -121,7 +121,7 @@ test("a divergent target policy blocks under its own outcome", () => {
   assert.equal(
     evaluatePolicy({
       ...diverged,
-      current: { ...input.current, labels: [] },
+      current: { ...diverged.current, labels: [] },
     }).outcome,
     "policy-divergence",
   );
@@ -129,35 +129,64 @@ test("a divergent target policy blocks under its own outcome", () => {
   assert.equal(
     evaluatePolicy({
       ...diverged,
-      current: { ...input.current, headSha: "a".repeat(40) },
+      current: { ...diverged.current, headSha: "a".repeat(40) },
     }).outcome,
     "stale",
   );
-  for (const hash of [undefined, "", "A".repeat(64), "a".repeat(63)])
+  // The tip sampled before the scan does not decide the verdict; the tip read
+  // after it does, so a policy merged mid-scan cannot pass as clean.
+  assert.equal(
+    evaluatePolicy({
+      ...input,
+      scanned: { ...input.scanned, baseTipPolicyHash: "a".repeat(64) },
+    }).outcome,
+    "exception",
+  );
+  for (const key of ["scanned", "current"]) {
+    // An unresolved target configuration is unknown, which is not a difference.
     assert.equal(
       evaluatePolicy({
         ...input,
-        scanned: { ...input.scanned, baseTipPolicyHash: hash },
-      }).exitCode,
-      2,
-      String(hash),
+        [key]: { ...input[key], baseTipPolicyHash: null },
+      }).outcome,
+      "exception",
+      key,
     );
+    for (const hash of [undefined, "", "A".repeat(64), "a".repeat(63)])
+      assert.equal(
+        evaluatePolicy({
+          ...input,
+          [key]: { ...input[key], baseTipPolicyHash: hash },
+        }).exitCode,
+        2,
+        key + " " + String(hash),
+      );
+  }
 });
 test("a retarget without a resolved merge base is stale, not evidence failure", () => {
-  for (const change of [{ baseRef: "other", baseSha: null }, { baseSha: null }])
+  // The third is a target force-pushed to unrelated history under the same
+  // name: the refs arrive, no merge base exists, and rerunning clears it.
+  for (const change of [
+    { baseRef: "other", baseSha: null },
+    { baseSha: null },
+    { baseSha: null, baseTipSha: null },
+  ])
     assert.equal(
       evaluatePolicy({ ...input, current: { ...input.current, ...change } })
         .outcome,
       "stale",
       JSON.stringify(change),
     );
-  for (const baseSha of ["", "zz", undefined])
-    assert.equal(
-      evaluatePolicy({ ...input, current: { ...input.current, baseSha } })
-        .exitCode,
-      2,
-      String(baseSha),
-    );
+  for (const key of ["baseSha", "baseTipSha"])
+    for (const value of ["", "zz", undefined])
+      assert.equal(
+        evaluatePolicy({
+          ...input,
+          current: { ...input.current, [key]: value },
+        }).exitCode,
+        2,
+        key + " " + String(value),
+      );
   assert.equal(
     evaluatePolicy({ ...input, scanned: { ...input.scanned, baseSha: null } })
       .exitCode,

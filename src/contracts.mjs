@@ -182,17 +182,22 @@ export function decodeScanContext(json) {
  */
 
 /**
- * @typedef {{headSha: string, baseRef: string, baseSha: string, baseTipSha: string, treeSha: string, configCommit: string, policyHash: string, baseTipPolicyHash: string}} ScannedRevision
- * @typedef {{headSha: string, baseRef: string, baseSha: string | null, labels: string[], body: string}} CurrentPr
+ * @typedef {{headSha: string, baseRef: string, baseSha: string, baseTipSha: string, treeSha: string, configCommit: string, policyHash: string, baseTipPolicyHash: string | null}} ScannedRevision
+ * @typedef {{headSha: string, baseRef: string, baseSha: string | null, baseTipSha: string | null, baseTipPolicyHash: string | null, baseTipPolicyUnreadable: boolean, labels: string[], body: string}} CurrentPr
  * @typedef {{exitCode: 0 | 1 | 2, outcome: "clean" | "advisory" | "exception" | "regression" | "invalid-exception" | "stale" | "policy-divergence" | "error", rationale: string | null, message: string}} PolicyResult
  *
  * baseSha is the merge base of the PR head and the target branch in both records,
- * and the comparison baseline. baseTipSha is the target tip observed while scanning;
- * tip movement alone is not stale. policyHash is enforced from baseSha, and a
- * differing baseTipPolicyHash is policy-divergence: the branch must take the
- * target policy, which no rerun can do.
- * A retargeted PR is stale from baseRef alone, so its live baseSha is null.
- * Hosted evidence is schemaVersion 2.
+ * and the comparison baseline. baseTipSha is the target tip, observed while scanning
+ * in the scanned record and read after the scan in the live one; tip movement alone
+ * is not stale. policyHash is enforced from baseSha, and a differing live
+ * baseTipPolicyHash is policy-divergence: the branch must take the target policy,
+ * which no rerun can do. The post-scan tip decides it, because merging into the
+ * target moves neither the head nor the merge base. A target tip whose configuration
+ * does not resolve has a null baseTipPolicyHash, which never blocks and leaves the
+ * divergence check unable to run; the live record reports that as
+ * baseTipPolicyUnreadable.
+ * A retargeted PR is stale from baseRef alone, so its live baseSha and baseTipSha
+ * are null. Hosted evidence is schemaVersion 2 and gains fields additively.
  *
  * Hosted evidence wraps the unchanged QualityReport as quality, with schemaVersion,
  * tool {version,node,scanners,verified}, scanned, current revision/labels, result and
