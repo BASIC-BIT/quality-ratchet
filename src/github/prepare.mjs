@@ -103,6 +103,15 @@ export async function preparePrComparison({
       baselineSha: baseSha,
       currentTree: treeSha,
     });
+    // Enforcement reads the merge base, so the target tip policy is resolved
+    // here as well and the verdict blocks when the two differ. Without it a
+    // branch point predating the policy silently enforces an older one, or the
+    // defaults, and the target branch cannot tighten an open PR at all.
+    const baseTipPolicyHash = loadPolicySelection({
+      repo: root,
+      baselineSha: baseTipSha,
+      currentTree: treeSha,
+    }).active.hash;
     const scanned = {
       headSha,
       baseRef: info.baseRef,
@@ -111,6 +120,7 @@ export async function preparePrComparison({
       treeSha,
       configCommit: selection.configCommit,
       policyHash: selection.active.hash,
+      baseTipPolicyHash,
     };
     const prepared = {
       context: { comparison, selection, toolRoot },
@@ -128,7 +138,14 @@ export async function preparePrComparison({
     );
   }
 }
-/** Live baseline for the post-scan staleness check, fetched under separate refs. */
+/** Distinguishes a flaky post-scan read from missing or contradictory evidence. */
+export class PostScanTransportError extends Error {}
+const attempts = 2;
+/**
+ * Live baseline for the post-scan staleness check, fetched under separate refs.
+ * One bounded retry: this fetch runs after the scan, so a transient failure
+ * must not discard a completed verdict behind a generic preparation error.
+ */
 export async function readCurrentBaseline({
   prepared,
   info,
@@ -136,15 +153,22 @@ export async function readCurrentBaseline({
   token,
   transport = git,
 }) {
-  const { baseSha } = await fetchRevisions({
-    root: prepared.context.comparison.repo,
-    info,
-    baseRef,
-    token,
-    transport,
-    scope: "current-",
-  });
-  return baseSha;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      const { baseSha } = await fetchRevisions({
+        root: prepared.context.comparison.repo,
+        info,
+        baseRef,
+        token,
+        transport,
+        scope: "current-",
+      });
+      return baseSha;
+    } catch {
+      // Retried below while attempts remain; raw Git errors can carry secrets.
+    }
+  }
+  throw new PostScanTransportError();
 }
 /** Scanners read raw immutable objects, never a filter-populated working checkout. */
 export function verifyPrepared({ context, scanned }) {

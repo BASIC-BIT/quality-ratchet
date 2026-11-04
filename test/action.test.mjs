@@ -69,8 +69,26 @@ test("finish prints the saved verdict and keeps its exit code", () => {
       env: { ...process.env, QR_REPORT_DIRECTORY: directory },
     });
     assert.equal(clean.status, 0);
-    assert.match(clean.stdout, /outcome: clean\nNo new regressions\./);
+    assert.match(clean.stdout, /outcome: clean - No new regressions\./);
     assert.equal(clean.stderr, "");
+    // The verdict stays on one prefixed line, so a message that looks like a
+    // workflow command can never begin an emitted line.
+    save({ exitCode: 1, outcome: "stale", message: "::error::forged" });
+    const forged = execute(finish, [], {
+      env: { ...process.env, QR_REPORT_DIRECTORY: directory },
+    });
+    assert.equal(forged.status, 1);
+    assert.ok(forged.stderr.includes("::error::forged"));
+    for (const line of forged.stderr.split("\n"))
+      assert.ok(!line.startsWith("::"), line);
+    save({ exitCode: 1, outcome: "stale", message: "x".repeat(600) });
+    const long = execute(finish, [], {
+      env: { ...process.env, QR_REPORT_DIRECTORY: directory },
+    });
+    assert.match(
+      long.stderr,
+      /\[truncated; full text in the evidence artifact]/,
+    );
     save({ exitCode: 1, outcome: "stale", message: 7 });
     const invalid = execute(finish, [], {
       env: { ...process.env, QR_REPORT_DIRECTORY: directory },

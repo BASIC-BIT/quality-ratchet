@@ -187,6 +187,115 @@ test("retarget and head races are stale after real scans", async () =>
       assert.match(output.result.message, /Rerun/);
     }
   }));
+const postScanFetch = (args) =>
+  args.some((arg) => arg.includes("refs/quality/current-"));
+test("a target rewind after the scan moves the merge base and is stale", async () =>
+  withHostedRepo(async (input) => {
+    const { checkout, event } = input;
+    const root = event.pull_request.head.sha;
+    write(checkout, "src/target.ts", "export const target = 1;\n");
+    const tip = commit(checkout);
+    git(checkout, "checkout", "--detach", tip);
+    write(checkout, "src/feature.ts", "export const feature = 1;\n");
+    const head = commit(checkout);
+    git(checkout, "update-ref", "refs/pull/7/head", head);
+    event.pull_request.head.sha = head;
+    let rewinds = 0;
+    const output = await runHosted({
+      ...input,
+      transport(repo, args, options) {
+        // Rewinding the target past the scanned merge base, head untouched.
+        if (postScanFetch(args)) {
+          rewinds++;
+          git(checkout, "update-ref", "refs/heads/main", root);
+        }
+        return input.transport(repo, args, options);
+      },
+    });
+    assert.equal(rewinds, 1);
+    assert.equal(output.scanned.baseSha, tip);
+    assert.equal(output.current.baseSha, root);
+    assert.equal(output.result.outcome, "stale");
+    assert.equal(output.result.exitCode, 1);
+  }));
+test("a target policy the branch never took blocks instead of passing", async () =>
+  withHostedRepo(async (input) => {
+    const { checkout, event } = input;
+    const root = event.pull_request.head.sha;
+    git(checkout, "checkout", "--detach", root);
+    write(checkout, "src/feature.ts", "export const feature = 1;\n");
+    const head = commit(checkout);
+    git(checkout, "update-ref", "refs/pull/7/head", head);
+    event.pull_request.head.sha = head;
+    git(checkout, "checkout", "-q", "main");
+    write(
+      checkout,
+      "quality-ratchet.json",
+      JSON.stringify({
+        schemaVersion: 1,
+        checks: { fileSize: { maxLines: 400 } },
+      }) + "\n",
+    );
+    commit(checkout);
+    git(checkout, "checkout", "--detach", head);
+    const output = await runHosted(input);
+    assert.notEqual(
+      output.scanned.policyHash,
+      output.scanned.baseTipPolicyHash,
+    );
+    assert.equal(output.result.outcome, "stale");
+    assert.equal(output.result.exitCode, 1);
+    assert.match(output.result.message, /Rebase or merge the target branch/);
+    assert.equal(
+      JSON.parse(readFileSync(output.evidencePath, "utf8")).scanned
+        .baseTipPolicyHash,
+      output.scanned.baseTipPolicyHash,
+    );
+  }));
+test("one post-scan baseline retry keeps the verdict and a second failure is distinct", async () =>
+  withHostedRepo(async (input) => {
+    let failures = 0;
+    const flaky = (allowed) => (repo, args, options) => {
+      if (postScanFetch(args) && failures < allowed) {
+        failures++;
+        throw new Error("SECRET transient");
+      }
+      return input.transport(repo, args, options);
+    };
+    const recovered = await runHosted({ ...input, transport: flaky(1) });
+    assert.equal(failures, 1);
+    assert.equal(recovered.result.outcome, "clean");
+    failures = 0;
+    const exhausted = await runHosted({ ...input, transport: flaky(2) });
+    assert.equal(failures, 2);
+    assert.equal(exhausted.result.exitCode, 2);
+    assert.match(exhausted.result.message, /post-scan baseline/);
+    assert.ok(exhausted.report !== null);
+    assert.ok(!readFileSync(exhausted.evidencePath, "utf8").includes("SECRET"));
+  }));
+test("a retarget to unrelated history is stale, not an evidence failure", async () =>
+  withHostedRepo(async (input) => {
+    const { checkout } = input;
+    git(checkout, "checkout", "-q", "--orphan", "unrelated");
+    commit(checkout);
+    git(checkout, "checkout", "-q", "main");
+    let baselineFetches = 0;
+    const output = await runHosted({
+      ...input,
+      transport(repo, args, options) {
+        if (postScanFetch(args)) baselineFetches++;
+        return input.transport(repo, args, options);
+      },
+      githubTransport: async (path) => ({
+        ...(await input.githubTransport(path)),
+        base: { ref: "unrelated" },
+      }),
+    });
+    assert.equal(baselineFetches, 0);
+    assert.equal(output.current.baseSha, null);
+    assert.equal(output.result.outcome, "stale");
+    assert.equal(output.result.exitCode, 1);
+  }));
 test("target branch merges during the scan keep the clean verdict", async () =>
   withHostedRepo(async (input) => {
     const { checkout, event } = input;

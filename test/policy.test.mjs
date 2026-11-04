@@ -18,6 +18,7 @@ before(async () =>
       treeSha: context.comparison.headSha,
       configCommit: report.policy.configCommit,
       policyHash: report.policy.active.hash,
+      baseTipPolicyHash: report.policy.active.hash,
     };
     input = {
       report,
@@ -105,6 +106,55 @@ test("accepted exception retains findings and current metadata controls pushes",
     "exception",
   );
 });
+test("a divergent target policy blocks and no label waives it", () => {
+  const diverged = {
+    ...input,
+    scanned: { ...input.scanned, baseTipPolicyHash: "a".repeat(64) },
+  };
+  const verdict = evaluatePolicy(diverged);
+  assert.equal(verdict.outcome, "stale");
+  assert.equal(verdict.exitCode, 1);
+  assert.match(verdict.message, /Rebase or merge the target branch/);
+  // The accepted exception label is evaluated only after this check.
+  assert.equal(evaluatePolicy(input).outcome, "exception");
+  assert.equal(
+    evaluatePolicy({
+      ...diverged,
+      current: { ...input.current, labels: [] },
+    }).outcome,
+    "stale",
+  );
+  for (const hash of [undefined, "", "A".repeat(64), "a".repeat(63)])
+    assert.equal(
+      evaluatePolicy({
+        ...input,
+        scanned: { ...input.scanned, baseTipPolicyHash: hash },
+      }).exitCode,
+      2,
+      String(hash),
+    );
+});
+test("a retarget without a resolved merge base is stale, not evidence failure", () => {
+  for (const change of [{ baseRef: "other", baseSha: null }, { baseSha: null }])
+    assert.equal(
+      evaluatePolicy({ ...input, current: { ...input.current, ...change } })
+        .outcome,
+      "stale",
+      JSON.stringify(change),
+    );
+  for (const baseSha of ["", "zz", undefined])
+    assert.equal(
+      evaluatePolicy({ ...input, current: { ...input.current, baseSha } })
+        .exitCode,
+      2,
+      String(baseSha),
+    );
+  assert.equal(
+    evaluatePolicy({ ...input, scanned: { ...input.scanned, baseSha: null } })
+      .exitCode,
+    2,
+  );
+});
 test("missing rationale fails even with clean scanners", async () =>
   withRepo(async (repo) => {
     const report = await runQuality(runContext(repo));
@@ -159,6 +209,7 @@ test("all-advisory explicitly has zero blocking coverage", async () =>
       baseSha: report.policy.configCommit,
       configCommit: report.policy.configCommit,
       policyHash: report.policy.active.hash,
+      baseTipPolicyHash: report.policy.active.hash,
     };
     const current = { ...input.current, ...scanned };
     assert.equal(

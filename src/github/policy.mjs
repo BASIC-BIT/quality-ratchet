@@ -1,6 +1,7 @@
 // Rationale parser adapted from Chronote; see docs/provenance.md.
 import { validatePolicyReport } from "../report.mjs";
 import { shaPattern, validRef } from "./client.mjs";
+const policyHashPattern = /^[a-f0-9]{64}$/u;
 function nextFence(line, current) {
   const match = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
   if (!match) return current;
@@ -47,15 +48,22 @@ export function extractRationale(body) {
     ? null
     : lines.slice(start, end).join("\n").trim() || null;
 }
+/** The enforced policy must be the merge-base policy the report measured. */
+function validPolicyIdentity(scanned, report) {
+  return (
+    policyHashPattern.test(scanned.baseTipPolicyHash) &&
+    scanned.configCommit === scanned.baseSha &&
+    scanned.configCommit === report.policy.configCommit &&
+    scanned.policyHash === report.policy.active.hash
+  );
+}
 function validateMetadata(scanned, current, report) {
   if (!scanned || !current) throw new Error();
   validateRevisions(scanned, current);
   if (
     !shaPattern.test(scanned.treeSha) ||
     !shaPattern.test(scanned.baseTipSha) ||
-    scanned.configCommit !== scanned.baseSha ||
-    scanned.configCommit !== report.policy.configCommit ||
-    scanned.policyHash !== report.policy.active.hash ||
+    !validPolicyIdentity(scanned, report) ||
     typeof current.body !== "string" ||
     !Array.isArray(current.labels) ||
     !current.labels.every((label) => typeof label === "string")
@@ -88,18 +96,8 @@ export function evaluatePolicy({ report, scanned, current, toolVerified }) {
       "Tool verification, preparation or quality evidence failed. Exceptions do not apply.",
     );
   }
-  // baseSha is the compared merge base, not the target tip: unrelated merges
-  // into the target branch move the tip without invalidating this scan.
-  if (
-    ["headSha", "baseRef", "baseSha"].some(
-      (key) => scanned[key] !== current[key],
-    )
-  )
-    return result(
-      1,
-      "stale",
-      "PR head, target branch or merge base changed. Rerun against the current revision.",
-    );
+  const stale = staleResult(scanned, current);
+  if (stale) return stale;
   const label = current.labels.includes("quality-exception"),
     rationale = extractRationale(current.body);
   if (label && !rationale)
@@ -136,13 +134,39 @@ export function evaluatePolicy({ report, scanned, current, toolVerified }) {
       );
 }
 
-function validateRevisions(scanned, current) {
-  for (const value of [scanned, current]) {
-    if (
-      !shaPattern.test(value.headSha) ||
-      !shaPattern.test(value.baseSha) ||
-      !validRef(value.baseRef)
+/** Blocking branch-state checks, before any clean, advisory or exception verdict. */
+function staleResult(scanned, current) {
+  // baseSha is the compared merge base, not the target tip: unrelated merges
+  // into the target branch move the tip without invalidating this scan.
+  if (
+    ["headSha", "baseRef", "baseSha"].some(
+      (key) => scanned[key] !== current[key],
     )
+  )
+    return result(
+      1,
+      "stale",
+      "PR head, target branch or merge base changed. Rerun against the current revision.",
+    );
+  // Enforcement reads the merge base, so a target branch whose policy has since
+  // changed cannot apply it to this PR. Blocking keeps the divergence visible
+  // instead of quietly enforcing the policy at the branch point.
+  if (scanned.policyHash !== scanned.baseTipPolicyHash)
+    return result(
+      1,
+      "stale",
+      "The target branch policy differs from the policy at this branch's merge base. Rebase or merge the target branch so its current policy applies.",
+    );
+  return null;
+}
+
+function validateRevisions(scanned, current) {
+  for (const value of [scanned, current])
+    if (!shaPattern.test(value.headSha) || !validRef(value.baseRef))
       throw new Error();
-  }
+  if (!shaPattern.test(scanned.baseSha)) throw new Error();
+  // A retarget is stale from baseRef alone and its merge base need not exist, so
+  // the live merge base may be absent. Absent never equals the scanned one.
+  if (current.baseSha !== null && !shaPattern.test(current.baseSha))
+    throw new Error();
 }

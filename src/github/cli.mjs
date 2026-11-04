@@ -6,6 +6,7 @@ import {
   preparePrComparison,
   readCurrentBaseline,
   verifyPrepared,
+  PostScanTransportError,
 } from "./prepare.mjs";
 import { eventIdentity, readCurrentPr } from "./client.mjs";
 import { evaluatePolicy } from "./policy.mjs";
@@ -57,20 +58,33 @@ export async function runHosted({
       token,
       transport: githubTransport,
     });
+    // A retarget is already stale from baseRef alone, and the new target may
+    // share no history, so its merge base is not resolved at all.
     current = {
       ...live,
-      baseSha: await readCurrentBaseline({
-        prepared,
-        info,
-        baseRef: live.baseRef,
-        token,
-        transport,
-      }),
+      baseSha:
+        live.baseRef === scanned.baseRef
+          ? await readCurrentBaseline({
+              prepared,
+              info,
+              baseRef: live.baseRef,
+              token,
+              transport,
+            })
+          : null,
     };
     verifyPrepared(prepared);
     result = evaluatePolicy({ report, scanned, current, toolVerified });
-  } catch {
+  } catch (error) {
     // Raw Git/API/parser errors can contain authentication or source text.
+    if (error instanceof PostScanTransportError)
+      result = {
+        exitCode: 2,
+        outcome: "error",
+        rationale: null,
+        message:
+          "The scan completed but the post-scan baseline could not be read after a retry. Rerun the quality check.",
+      };
   } finally {
     prepared?.cleanup();
   }
