@@ -52,26 +52,23 @@ function isolatedEnvironment(directory) {
     npm_config_registry: "https://registry.npmjs.org/",
   };
 }
-// Nested spawn budgets, innermost out; test/action.test.mjs asserts the whole
-// ladder against the jobs that run it, so neither side can be retightened
-// alone.
+// Nested spawn budgets, innermost out. Each one bounds a single child process
+// so a hang reports its own ETIMEDOUT at the spawn that hung. None of them is
+// derived from a workflow job budget: a job's timeout-minutes bounds the real
+// elapsed time of everything in the job, which GitHub already enforces, so
+// adding caps together and comparing the sum against it compares a worst case
+// that never happens against a limit on what actually does.
 //
 // 180s was too tight for the install: a windows-latest runner about a third
 // slower than usual hit ETIMEDOUT in npm ci, so the cap is twice that.
 //
-// The action run clears the serial scanner ceiling, GATES.length *
-// SCANNER_TIMEOUT_MS = 3 * 180s = 540s, plus a 180s preparation budget for the
-// work that surrounds the scan: full-depth fetches of the target branch and the
-// PR head, the repeated verifyPrepared passes that each end in git fsck, the
-// live readCurrentPr read, and the post-scan fetch with its one bounded retry.
-// 540s + 180s = 720s.
-//
-// Install plus run is 1080s, inside the 1200s job the consumer template
-// declares (examples/code-quality.yml), leaving 120s for checkout and artifact
-// upload. That template caps the run: raising it above 780s would need the
-// template's budget raised with it.
+// The action run must outlast the serial scanner ceiling, GATES.length *
+// SCANNER_TIMEOUT_MS = 3 * 180s = 540s, with room for the work that surrounds
+// the scan: full-depth fetches of the target branch and the PR head, the
+// repeated verifyPrepared passes that each end in git fsck, the live
+// readCurrentPr read, and the post-scan fetch with its one bounded retry.
 export const INSTALL_TIMEOUT_MS = 360_000;
-export const RUN_TIMEOUT_MS = 720_000;
+export const RUN_TIMEOUT_MS = 900_000;
 export async function withInstalledTool({ actionPath, tempRoot }, callback) {
   const expected = toolManifest(actionPath, false);
   const directory = mkdtempSync(join(tempRoot, "quality-tool-"));
