@@ -10,7 +10,7 @@ The [workflow example](examples/code-quality.yml) currently pins the [1.1.1 sour
 
 ## Start locally
 
-Use Node 24.22.1 or a newer Node 24 release. In a separate tool checkout:
+Use Node 24.22.1 or a newer Node 24 release. Version 1.1.1 also requires Git 2.11 or newer for `git diff --output`. In a separate tool checkout:
 
 ```sh
 npm ci --ignore-scripts

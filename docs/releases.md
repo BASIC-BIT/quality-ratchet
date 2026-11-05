@@ -4,7 +4,7 @@ Image-heavy changes can exceed Git's 64 MiB captured-output buffer before source
 
 Temporary disk usage grows with the patch. Scratch files are removed after successful preparation and Git failures. Regression coverage includes a 66 MiB newline-free binary change alongside real source edits, hostile attributes and rename metadata.
 
-Initial hosted CI and release qualification passed, but review found a file-header boundary bug. That candidate is superseded. The corrected source needs fresh CI, review and release qualification. The updated workflow example is a qualification candidate, not an activation instruction. Use the [release page](https://github.com/BASIC-BIT/quality-ratchet/releases/latest) to verify publication, its qualified source and immutable tag. The candidate record below describes preparation and does not itself establish publication.
+Initial hosted CI and release qualification passed, but review found a file-header boundary bug. That candidate is superseded. Corrected candidate `394f47ae323e18291ba5a3136e2e28c0e5b035fb` passed fresh source CI, review and [release qualification](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/42024972930). Publication remains separate. The updated workflow example is a qualification candidate, not an activation instruction. Use the [release page](https://github.com/BASIC-BIT/quality-ratchet/releases/latest) to verify publication, its qualified source and immutable tag. The candidate record below describes preparation and does not itself establish publication.
 
 Integrate this PR with a merge commit, preserving the source candidate referenced by the example in main history. Do not squash or rebase it.
 
@@ -139,4 +139,7 @@ The v1.0.0 runtime asset hash was `01aca099cfa27459b5a6c25d39f386aecd68a0e9dcbe2
 - Package and lockfile version: 1.1.1.
 - Initial focused Git/EOL/preparation tests: 85 passed. After the boundary correction, all 32 direct Git tests passed, including every header-prefix split.
 - Initial qualification: [run 42022694904](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/42022694904) passed at ad8a94e3e57d6c8ac8abcaa8e366222d0f6767ec. Review subsequently found a boundary-attribution bug; this run does not qualify the corrected source.
-- Corrected-source qualification and publication: pending.
+- Corrected release candidate: `394f47ae323e18291ba5a3136e2e28c0e5b035fb`. [Release check 42024972930](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/42024972930) checked out this exact commit in every job. All four Ubuntu/Windows minimum/floating Node lanes passed 279 tests each with zero failures or skips and executed release-mode validation. Linux production package smoke passed. The non-PR quality job skipped by design.
+- Runtime asset hash: `e49934199e649c5b073f828fe24221cf88d421f5f64ae640e5811820678e2406`; lock hash: `d41139dbc3c598ae00d1f409472370923f8a1ccd9899c048238acddc3181dfe3`.
+- The source anchor is an ancestor of the qualified candidate, with identical runtime assets, action and package/lock files. Later documentation corrections do not change the qualified release source. Integrate with a merge commit, then verify both are reachable from main before tagging the qualified candidate.
+- Publication: verify the [release page](https://github.com/BASIC-BIT/quality-ratchet/releases/latest) and immutable tag. This preparation record does not claim publication or consumer acceptance.
