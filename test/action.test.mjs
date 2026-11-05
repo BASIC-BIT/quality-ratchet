@@ -21,6 +21,8 @@ import { spawnSync } from "node:child_process";
 import {
   withInstalledTool,
   repositoryPath,
+  INSTALL_TIMEOUT_MS,
+  RUN_TIMEOUT_MS,
 } from "../scripts/bootstrap-tool.mjs";
 import {
   assetFiles,
@@ -30,11 +32,14 @@ import {
 import { git, commit, write, toolRoot, withRepo } from "./helpers/repo.mjs";
 
 import { runContext } from "./helpers/process.mjs";
-import { runQuality } from "../src/runner.mjs";
-import { validatePolicyReport } from "../src/report.mjs";
+import { runQuality, SCANNER_TIMEOUT_MS } from "../src/runner.mjs";
+import { validatePolicyReport, GATES } from "../src/report.mjs";
 import { summarizeTestSources } from "../src/reports/test-size.mjs";
 
 const read = (name) => readFileSync(join(toolRoot, name), "utf8");
+// Outlasts the longest chain a bootstrap test drives, install then action run,
+// so the bounded spawn reports first and this net only catches a real hang.
+const BOOTSTRAP_TIMEOUT = INSTALL_TIMEOUT_MS + RUN_TIMEOUT_MS + 60_000;
 const execute = (file, args = [], options = {}) =>
   spawnSync(process.execPath, [file, ...args], {
     encoding: "utf8",
@@ -185,6 +190,44 @@ test("consumer template has seven read-only events and exact-head checkout", () 
   );
 });
 
+/**
+ * The milliseconds one named job allows itself. Scoped to that job's own block,
+ * because jobs that never run the suite carry their own unrelated budgets, and
+ * required so a regex that stops matching fails here instead of passing
+ * vacuously.
+ */
+function jobBudget(file, job) {
+  const lines = read(file).split("\n"),
+    start = lines.indexOf(`  ${job}:`);
+  assert.ok(start >= 0, `${file} must declare a ${job} job`);
+  const next = lines.findIndex(
+      (line, index) => index > start && /^ {2}[\w-]+:/.test(line),
+    ),
+    declared = lines
+      .slice(start, next < 0 ? lines.length : next)
+      .flatMap((line) => {
+        const match = /^ {4}timeout-minutes: (\d+)$/.exec(line);
+        return match ? [Number(match[1])] : [];
+      });
+  assert.equal(
+    declared.length,
+    1,
+    `${job} in ${file} must declare exactly one timeout-minutes`,
+  );
+  return 60_000 * declared[0];
+}
+
+test("nested spawn budgets stay ordered under the job that runs them", () => {
+  assert.ok(
+    GATES.length * SCANNER_TIMEOUT_MS < RUN_TIMEOUT_MS,
+    "the action run must outlast the serial scanner ceiling",
+  );
+  assert.ok(
+    BOOTSTRAP_TIMEOUT < jobBudget(".github/workflows/ci.yml", "checks"),
+    "no bootstrap test's net may exceed the job that runs it",
+  );
+});
+
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), "quality action with spaces "));
   const workspace = join(root, "workspace"),
@@ -235,7 +278,7 @@ function identity(repo) {
 
 test(
   "real locked installation excludes hostile npm settings and consumer dependencies",
-  { timeout: 240000 },
+  { timeout: BOOTSTRAP_TIMEOUT },
   async () => {
     const f = fixture(),
       before = identity(f.consumer);
@@ -304,7 +347,7 @@ test(
 
 test(
   "installed failing action saves upload evidence and cleanup precedes finish",
-  { timeout: 240000 },
+  { timeout: BOOTSTRAP_TIMEOUT },
   async () => {
     const f = fixture(),
       before = identity(f.consumer);
@@ -469,7 +512,7 @@ test("real bootstrap failures retain outputs without consumer writes or leftover
 
 test(
   "full bootstrap process installs and cleans up before exposing an unsupported-event verdict",
-  { timeout: 240000 },
+  { timeout: BOOTSTRAP_TIMEOUT },
   () => {
     const f = fixture(),
       before = identity(f.consumer);
@@ -762,7 +805,7 @@ test("a divergent target policy is annotated without changing the outcome", asyn
 for (const warningCount of [1, 23000])
   test(
     `full bootstrap publishes ${warningCount} validated warnings once without buffering child warnings`,
-    { timeout: 240000 },
+    { timeout: BOOTSTRAP_TIMEOUT },
     async () => {
       const f = fixture(),
         before = identity(f.consumer);

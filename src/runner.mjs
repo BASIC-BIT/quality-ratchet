@@ -15,10 +15,13 @@ import {
 import { collectTestSourceInventory } from "./reports/test-size.mjs";
 import { summarizeTestDebt } from "./reports/test-debt.mjs";
 const installedRoot = dirname(dirname(fileURLToPath(import.meta.url)));
+// Ceiling for one scanner child. GATES run serially, so the action run that
+// drives them must stay above GATES.length * SCANNER_TIMEOUT_MS.
+export const SCANNER_TIMEOUT_MS = 180_000;
 export function runNode(
   entrypoint,
   input,
-  { timeout = 180_000, maxBuffer = 64 * 1024 * 1024 } = {},
+  { timeout = SCANNER_TIMEOUT_MS, maxBuffer = 64 * 1024 * 1024 } = {},
 ) {
   return spawnSync(process.execPath, [entrypoint], {
     input,

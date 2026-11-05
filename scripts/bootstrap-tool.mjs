@@ -52,6 +52,23 @@ function isolatedEnvironment(directory) {
     npm_config_registry: "https://registry.npmjs.org/",
   };
 }
+// Nested spawn budgets, innermost out. Each one bounds a single child process
+// so a hang reports its own ETIMEDOUT at the spawn that hung. None of them is
+// derived from a workflow job budget: a job's timeout-minutes bounds the real
+// elapsed time of everything in the job, which GitHub already enforces, so
+// adding caps together and comparing the sum against it compares a worst case
+// that never happens against a limit on what actually does.
+//
+// 180s was too tight for the install: a windows-latest runner about a third
+// slower than usual hit ETIMEDOUT in npm ci, so the cap is twice that.
+//
+// The action run must outlast the serial scanner ceiling, GATES.length *
+// SCANNER_TIMEOUT_MS = 3 * 180s = 540s, with room for the work that surrounds
+// the scan: full-depth fetches of the target branch and the PR head, the
+// repeated verifyPrepared passes that each end in git fsck, the live
+// readCurrentPr read, and the post-scan fetch with its one bounded retry.
+export const INSTALL_TIMEOUT_MS = 360_000;
+export const RUN_TIMEOUT_MS = 900_000;
 export async function withInstalledTool({ actionPath, tempRoot }, callback) {
   const expected = toolManifest(actionPath, false);
   const directory = mkdtempSync(join(tempRoot, "quality-tool-"));
@@ -83,7 +100,7 @@ export async function withInstalledTool({ actionPath, tempRoot }, callback) {
       {
         cwd: root,
         env,
-        timeout: 180000,
+        timeout: INSTALL_TIMEOUT_MS,
         maxBuffer: 4 * 1024 * 1024,
         stdio: "pipe",
         windowsHide: true,
@@ -116,7 +133,7 @@ async function bootstrap() {
             QR_TEMP_ROOT: env.TMPDIR,
             QR_GITHUB_TOKEN: process.env.QR_GITHUB_TOKEN,
           },
-          timeout: 900000,
+          timeout: RUN_TIMEOUT_MS,
           maxBuffer: 4 * 1024 * 1024,
           stdio: "pipe",
           windowsHide: true,

@@ -33,7 +33,14 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         node: ["24.22.1", "24"]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    # Only this job runs the suite. Five of its tests drive a cold npm ci and
+    # three of those also drive a full action run, each under the per-spawn caps
+    # in scripts/bootstrap-tool.mjs. This bounds the leg's real elapsed time,
+    # not the sum of those caps, which no run reaches. It stays above the
+    # longest single bounded chain, INSTALL_TIMEOUT_MS + RUN_TIMEOUT_MS, so a
+    # hung spawn reports its own ETIMEDOUT rather than the job being cancelled
+    # with no attribution; test/action.test.mjs asserts that ordering.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
