@@ -1,3 +1,13 @@
+## 1.1.1 candidate
+
+Image-heavy changes can exceed Git's 64 MiB captured-output buffer before source scanning starts. This candidate writes the forced-text patch to tool-owned temporary storage, then reads file and hunk headers in bounded chunks. It preserves source ranges, renames, consumer-attribute protections, scanner versions and policy thresholds.
+
+Temporary disk usage grows with the patch. Scratch files are removed after successful preparation and Git failures. Regression coverage includes a 66 MiB newline-free binary change alongside real source edits, hostile attributes and rename metadata.
+
+Source review and focused tests passed. Hosted CI and release qualification are pending. Version 1.1.0 remains the latest published release; the updated workflow example is a qualification candidate, not an activation instruction.
+
+[Candidate identity](#111-candidate-evidence) is recorded below. Publication and consumer adoption remain separate actions.
+
 # Release 1.1.0
 
 Version 1.1.0 contains the hosted merge-base comparison merged in [PR #8](https://github.com/BASIC-BIT/quality-ratchet/pull/8) and the advisory policy-divergence report merged in [PR #9](https://github.com/BASIC-BIT/quality-ratchet/pull/9). Both change hosted behavior, so this is a minor release rather than a patch. It keeps the 1.0.2 Node `>=24.22.1 <25` floor and 24.22.1 action pin, and the 1.0.1 LF/CRLF and JSX corrections with their documented limits.
@@ -119,3 +129,10 @@ Version 1.0.0 introduced schema 1, the shared CLI and ordinary pull-request acti
 Its qualified source was `9d713408d8c12eb9ced26fe45b4a99e1df5505ff`. All 47 trusted assets plus action.yml matched that release target. Ubuntu and Windows passed 223 tests on Node 24.15.0 and 24.21.0; production-only Linux smoke, own-PR/cross-owner action checks and authorized exception transitions passed. Exact [historical runs](acceptance.md#initial-release-qualification-october-18-2026) remain attributed to that source. They are not patch qualification.
 
 The v1.0.0 runtime asset hash was `01aca099cfa27459b5a6c25d39f386aecd68a0e9dcbe21f0e93041c7da7a8168` and lock hash was `f7401eb223be14df24b406248c918248074476d6be0bb6372fe8bb6b496e9953`. It included literal-backslash path rejection and bounded parent warning publication, but retained the local LF/CRLF defect corrected in 1.0.1.
+
+## 1.1.1 candidate evidence
+
+- Source candidate: 4e96b38f2fdd5e1f45a34139a914d25256c2b4d4.
+- Package and lockfile version: 1.1.1.
+- Focused Git/EOL/preparation tests: 85 passed; final direct Git tests: 31 passed.
+- Hosted qualification and publication: pending.

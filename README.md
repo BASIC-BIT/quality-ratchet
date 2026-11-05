@@ -6,7 +6,7 @@ Version 1.1.0 is the latest published release. The hosted scan compares the pull
 
 [Release check 41897737237](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/41897737237) qualified commit `a0dfcca184fd83f0a23762f29353c7772c17906f`. All four Ubuntu/Windows lanes resolved it and passed 276 tests each with zero failures or skips, executed release-mode validation, and emitted the expected manifests. Linux production package smoke also passed. Version 1.1.0 is [published](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.1.0) at that commit. The [acceptance record](docs/acceptance.md) separates shared-tool qualification from consumer acceptance.
 
-The [workflow example](examples/code-quality.yml) and [local setup](docs/local-use.md#installation-and-diagnostic-details) pin that same published commit as v1.1.0. Verify that the v1.1.0 tag resolves to `a0dfcca184fd83f0a23762f29353c7772c17906f` before consumer activation. Follow [adoption](docs/adoption.md) before changing consumer pins.
+The [workflow example](examples/code-quality.yml) currently pins the [1.1.1 source candidate](docs/releases.md#111-candidate) for qualification. The [local setup](docs/local-use.md#installation-and-diagnostic-details) retains published v1.1.0. Qualify and publish the candidate, then verify its tag before consumer activation. Follow [adoption](docs/adoption.md) before changing consumer pins.
 
 ## Start locally
 
