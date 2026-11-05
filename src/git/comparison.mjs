@@ -145,7 +145,7 @@ function* readDiffHeaders(path) {
   const append = (part) => {
     if (discard) return;
     line += part;
-    if (line.length < 10 || isHeader()) return;
+    if (line.length < "diff --git ".length || isHeader()) return;
     discard = true;
     line = "";
   };

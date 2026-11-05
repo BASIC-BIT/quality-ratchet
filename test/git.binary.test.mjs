@@ -65,3 +65,58 @@ test("diff preparation removes its scratch output after Git fails", () =>
     );
     assert.deepEqual(diffScratch(), beforeScratch);
   }));
+
+test("file headers retain their own ranges at every chunk split", () =>
+  withRepo((repo) => {
+    write(repo, "src/a.ts", "export const a = 1;\n");
+    write(repo, "src/b.ts", "export const b = 1;\n");
+    const baselineSha = commit(repo);
+    write(repo, "src/a.ts", "//\nexport const a = 2;\n");
+    write(repo, "src/b.ts", "export const b = 2;\n");
+    const initialOffset = secondHeaderOffset(repo, baselineSha, commit(repo));
+    for (let split = 1; split <= "diff --git ".length; split++) {
+      const padding = 64 * 1024 - split - initialOffset;
+      write(
+        repo,
+        "src/a.ts",
+        `//${"x".repeat(padding)}\nexport const a = 2;\n`,
+      );
+      const headSha = commit(repo);
+      assert.equal(
+        secondHeaderOffset(repo, baselineSha, headSha),
+        64 * 1024 - split,
+      );
+      const { ranges } = treeComparison({
+        repo,
+        baselineSha,
+        headSha,
+        baseRef: "main",
+        treeSha: git(repo, "rev-parse", "HEAD^{tree}"),
+      });
+      assert.deepEqual(
+        [...ranges],
+        [
+          ["src/a.ts", [[1, 2]]],
+          ["src/b.ts", [[1, 1]]],
+        ],
+        `file-header split at byte ${split}`,
+      );
+    }
+  }));
+
+function secondHeaderOffset(repo, before, after) {
+  const patch = git(
+    repo,
+    "diff",
+    "--no-ext-diff",
+    "--no-textconv",
+    "--text",
+    "--unified=0",
+    before,
+    after,
+    "--",
+  );
+  const header = patch.indexOf("diff --git a/src/b.ts b/src/b.ts");
+  assert.ok(header >= 0, "the real Git patch must contain the second file");
+  return Buffer.byteLength(patch.slice(0, header));
+}

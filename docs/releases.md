@@ -4,7 +4,9 @@ Image-heavy changes can exceed Git's 64 MiB captured-output buffer before source
 
 Temporary disk usage grows with the patch. Scratch files are removed after successful preparation and Git failures. Regression coverage includes a 66 MiB newline-free binary change alongside real source edits, hostile attributes and rename metadata.
 
-Source review and focused tests passed. Hosted CI and release qualification are pending. Version 1.1.0 remains the latest published release; the updated workflow example is a qualification candidate, not an activation instruction.
+Initial hosted CI and release qualification passed, but review found a file-header boundary bug. That candidate is superseded. The corrected source needs fresh CI, review and release qualification. The updated workflow example is a qualification candidate, not an activation instruction. Use the [release page](https://github.com/BASIC-BIT/quality-ratchet/releases/latest) to verify publication, its qualified source and immutable tag. The candidate record below describes preparation and does not itself establish publication.
+
+Integrate this PR with a merge commit, preserving the source candidate referenced by the example in main history. Do not squash or rebase it.
 
 [Candidate identity](#111-candidate-evidence) is recorded below. Publication and consumer adoption remain separate actions.
 
@@ -24,9 +26,9 @@ R's immutable archive pins versioned source `39ff1c1920c188264c5ca0a8d45df4a04af
 
 R reached `main` through merge commit `330f27a270c772e585dfc278ec2d197c8f2a5b57`, which preserves the identity anchor in `main`'s history as integration required: both the workflow example and the local setup referenced that anchor by full SHA, and a squash or rebase integration would have left those pins addressing a commit outside `main`'s history without reporting any error. R's tree differs from the anchor's `d192c08bde8fb9600d3c5b9efdfa340445330eb4` because R adds documentation only; the runtime assets are identical.
 
-Version 1.1.0 is [published](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.1.0) at R, release ID 434372332, published at `2026-11-04T19:45:14Z`, neither draft nor prerelease, and now the latest release. Immutable tag `v1.1.0` resolves to R; verify that before adopting this version. This repository's tags are exactly v1.0.0, v1.0.1, v1.0.2 and v1.1.0: no existing release tag moved, and no mutable major-version tag exists.
+Version 1.1.0 is [published](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.1.0) at R, release ID 434372332, published at `2026-11-04T19:45:14Z`, neither draft nor prerelease, and the latest release at publication. Immutable tag `v1.1.0` resolves to R; verify that before adopting this version. This repository's tags are exactly v1.0.0, v1.0.1, v1.0.2 and v1.1.0: no existing release tag moved, and no mutable major-version tag exists.
 
-Current examples and [local setup](local-use.md#installation-and-diagnostic-details) pin R as v1.1.0; later documentation commits do not alter R, its archive or its runtime assets. Consumers must adopt that same full SHA explicitly in both their hosted action and local checker; release publication alone does not update either. Shared-tool qualification and publication do not establish consumer acceptance. The 1.0.2 and earlier evidence below remains historical and applies only to its recorded source. Consumer rollout status remains in its dated record rather than being inferred from shared-tool CI.
+The workflow example now carries the unpublished 1.1.1 candidate; [local setup](local-use.md#installation-and-diagnostic-details) still pins R as v1.1.0; later documentation commits do not alter R, its archive or its runtime assets. Consumers must adopt that same full SHA explicitly in both their hosted action and local checker; release publication alone does not update either. Shared-tool qualification and publication do not establish consumer acceptance. The 1.0.2 and earlier evidence below remains historical and applies only to its recorded source. Consumer rollout status remains in its dated record rather than being inferred from shared-tool CI.
 
 ## Merge-base comparison and staleness
 
@@ -135,4 +137,5 @@ The v1.0.0 runtime asset hash was `01aca099cfa27459b5a6c25d39f386aecd68a0e9dcbe2
 - Source candidate: 4e96b38f2fdd5e1f45a34139a914d25256c2b4d4.
 - Package and lockfile version: 1.1.1.
 - Focused Git/EOL/preparation tests: 85 passed; final direct Git tests: 31 passed.
-- Hosted qualification and publication: pending.
+- Initial qualification: [run 42022694904](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/42022694904) passed at ad8a94e3e57d6c8ac8abcaa8e366222d0f6767ec. Review subsequently found a boundary-attribution bug; this run does not qualify the corrected source.
+- Corrected-source qualification and publication: pending.
