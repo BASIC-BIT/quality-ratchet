@@ -92,7 +92,7 @@ export function parseUnifiedDiff(out) {
   let file = null,
     inHunk = false,
     prev = "";
-  for (const line of out.split("\n")) {
+  for (const line of typeof out === "string" ? out.split("\n") : out) {
     if (line.startsWith("diff --git ")) {
       inHunk = false;
       file = null;

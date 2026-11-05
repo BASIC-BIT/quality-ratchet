@@ -1,4 +1,14 @@
-import { mkdirSync, readFileSync } from "node:fs";
+import {
+  mkdirSync,
+  readFileSync,
+  mkdtempSync,
+  rmSync,
+  openSync,
+  readSync,
+  closeSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { StringDecoder } from "node:string_decoder";
 import { join } from "node:path";
 import {
   git,
@@ -119,6 +129,52 @@ export function loadPolicySelection({ repo, baselineSha, currentTree = null }) {
   return { active, proposed, configCommit, changed: diff.length !== 0, diff };
 }
 
+// Keep forced-text hunks without buffering binary bodies or trusting consumer attributes.
+function* readDiffHeaders(path) {
+  const file = openSync(path, "r"),
+    buffer = Buffer.alloc(64 * 1024),
+    decoder = new StringDecoder("utf8");
+  let line = "",
+    discard = false,
+    inHunk = false,
+    size;
+  const isHeader = () =>
+    line.startsWith("diff --git ") ||
+    line.startsWith("@@ ") ||
+    (!inHunk && (line.startsWith("--- ") || line.startsWith("+++ ")));
+  const append = (part) => {
+    if (discard) return;
+    line += part;
+    if (line.length < "diff --git ".length || isHeader()) return;
+    discard = true;
+    line = "";
+  };
+  const finishLine = () => {
+    const header = !discard && isHeader() ? line : null;
+    if (header?.startsWith("diff --git ")) inHunk = false;
+    if (header?.startsWith("@@ ")) inHunk = true;
+    line = "";
+    discard = false;
+    return header;
+  };
+  try {
+    do {
+      size = readSync(file, buffer);
+      const parts = (
+        size ? decoder.write(buffer.subarray(0, size)) : decoder.end()
+      ).split("\n");
+      for (const [index, part] of parts.entries()) {
+        append(part);
+        if (index === parts.length - 1 && size !== 0) continue;
+        const header = finishLine();
+        if (header !== null) yield header;
+      }
+    } while (size !== 0);
+  } finally {
+    closeSync(file);
+  }
+}
+
 function comparisonDiff(isolated, before, after) {
   const options = [
     "--no-ext-diff",
@@ -129,17 +185,24 @@ function comparisonDiff(isolated, before, after) {
     "--src-prefix=a/",
     "--dst-prefix=b/",
   ];
-  const ranges = parseUnifiedDiff(
+  const directory = mkdtempSync(join(tmpdir(), `quality-diff-${process.pid}-`));
+  let ranges;
+  try {
+    const path = join(directory, "changes.diff");
     git(isolated, [
       "diff",
       ...options,
       "--unified=0",
       "--diff-filter=d",
+      `--output=${path}`,
       before,
       after,
       "--",
-    ]),
-  );
+    ]);
+    ranges = parseUnifiedDiff(readDiffHeaders(path));
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
   const status = git(isolated, [
     "diff",
     ...options,

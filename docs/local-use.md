@@ -1,8 +1,8 @@
 # Local use
 
-Install the tool in its own checkout pinned to the reviewed release commit. Use Node 24.22.1 or a later Node 24 release and `npm ci --ignore-scripts`. Application dependencies are unnecessary. Keep the tool outside authored application source, or in the hard-excluded `.quality-ratchet-tool` directory.
+Install the tool in its own checkout pinned to the reviewed release commit. Use Node 24.22.1 or a later Node 24 release and `npm ci --ignore-scripts`. Version 1.1.1 requires Git 2.11 or newer for `git diff --output`. Application dependencies are unnecessary. Keep the tool outside authored application source, or in the hard-excluded `.quality-ratchet-tool` directory.
 
-Version 1.1.0 keeps Node 24.22.1 as the action runtime and minimum supported runtime. The setup below and the hosted action example both pin published release commit `a0dfcca184fd83f0a23762f29353c7772c17906f`. Version 1.1.0 is the latest [published release](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.1.0); verify that its tag resolves to that commit before adopting it. Running an older pinned tool locally on newer Node does not update its hosted action pin.
+Version 1.1.0 keeps Node 24.22.1 as the action runtime and minimum supported runtime. The setup below pins published release commit `a0dfcca184fd83f0a23762f29353c7772c17906f`. Version 1.1.0 is a [published release](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.1.0); verify that its tag resolves to that commit before adopting it. Running an older pinned tool locally on newer Node does not update its hosted action pin.
 
 ## Commands
 
@@ -58,6 +58,8 @@ npm --prefix ../quality-ratchet-tool ci --ignore-scripts --include=optional
 ```
 
 An omitted strict-check base uses the local `origin/HEAD` symbolic reference. Missing history or an unavailable default requires an explicit base and otherwise exits 2. Repeated or unsupported flags also exit 2. The tool does not change Git configuration.
+
+Forced-text comparison patches use tool-owned temporary disk proportional to changed content, including binary assets. Keep enough temporary space for the patch; source scanning remains bounded independently.
 
 Enabled report failures, missing or contradictory scanner output, signals, timeouts and output overflow are operational errors. Child scanners have a 180-second ceiling and a 64 MiB output limit. Text output bounds finding and hotspot lists; JSON retains complete findings and inventory.
 

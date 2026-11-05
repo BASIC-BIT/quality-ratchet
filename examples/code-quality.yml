@@ -1,4 +1,4 @@
-# Published and qualified v1.1.0. Each consumer must complete its own activation checks.
+# v1.1.1 candidate for qualification only. Publish and verify its tag before activation.
 # See docs/releases.md and docs/adoption.md before enabling enforcement.
 name: Code quality
 on:
@@ -30,7 +30,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - uses: BASIC-BIT/quality-ratchet@a0dfcca184fd83f0a23762f29353c7772c17906f # v1.1.0
+      - uses: BASIC-BIT/quality-ratchet@ecd923b730aae0857733a38e25589ca70699bc39 # v1.1.1
         with:
           github-token: ${{ github.token }}
           repository-path: ${{ github.workspace }}

@@ -1,3 +1,15 @@
+## 1.1.1 candidate
+
+Image-heavy changes can exceed Git's 64 MiB captured-output buffer before source scanning starts. This candidate writes the forced-text patch to tool-owned temporary storage, then reads file and hunk headers in bounded chunks. It preserves source ranges, renames, consumer-attribute protections, scanner versions and policy thresholds.
+
+Temporary disk usage grows with the patch. Scratch files are removed after successful preparation and Git failures. Regression coverage includes a 66 MiB newline-free binary change alongside real source edits, hostile attributes and rename metadata.
+
+Initial hosted CI and release qualification passed, but review found a file-header boundary bug. That candidate is superseded. Corrected candidate `394f47ae323e18291ba5a3136e2e28c0e5b035fb` passed fresh source CI, review and [release qualification](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/42024972930). Publication remains separate. The updated workflow example is a qualification candidate, not an activation instruction. Use the [release page](https://github.com/BASIC-BIT/quality-ratchet/releases/latest) to verify publication, its qualified source and immutable tag. The candidate record below describes preparation and does not itself establish publication.
+
+Integrate this PR with a merge commit, preserving the source candidate referenced by the example in main history. Do not squash or rebase it.
+
+[Candidate identity](#111-candidate-evidence) is recorded below. Publication and consumer adoption remain separate actions.
+
 # Release 1.1.0
 
 Version 1.1.0 contains the hosted merge-base comparison merged in [PR #8](https://github.com/BASIC-BIT/quality-ratchet/pull/8) and the advisory policy-divergence report merged in [PR #9](https://github.com/BASIC-BIT/quality-ratchet/pull/9). Both change hosted behavior, so this is a minor release rather than a patch. It keeps the 1.0.2 Node `>=24.22.1 <25` floor and 24.22.1 action pin, and the 1.0.1 LF/CRLF and JSX corrections with their documented limits.
@@ -14,9 +26,9 @@ R's immutable archive pins versioned source `39ff1c1920c188264c5ca0a8d45df4a04af
 
 R reached `main` through merge commit `330f27a270c772e585dfc278ec2d197c8f2a5b57`, which preserves the identity anchor in `main`'s history as integration required: both the workflow example and the local setup referenced that anchor by full SHA, and a squash or rebase integration would have left those pins addressing a commit outside `main`'s history without reporting any error. R's tree differs from the anchor's `d192c08bde8fb9600d3c5b9efdfa340445330eb4` because R adds documentation only; the runtime assets are identical.
 
-Version 1.1.0 is [published](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.1.0) at R, release ID 434372332, published at `2026-11-04T19:45:14Z`, neither draft nor prerelease, and now the latest release. Immutable tag `v1.1.0` resolves to R; verify that before adopting this version. This repository's tags are exactly v1.0.0, v1.0.1, v1.0.2 and v1.1.0: no existing release tag moved, and no mutable major-version tag exists.
+Version 1.1.0 is [published](https://github.com/BASIC-BIT/quality-ratchet/releases/tag/v1.1.0) at R, release ID 434372332, published at `2026-11-04T19:45:14Z`, neither draft nor prerelease, and the latest release at publication. Immutable tag `v1.1.0` resolves to R; verify that before adopting this version. This repository's tags are exactly v1.0.0, v1.0.1, v1.0.2 and v1.1.0: no existing release tag moved, and no mutable major-version tag exists.
 
-Current examples and [local setup](local-use.md#installation-and-diagnostic-details) pin R as v1.1.0; later documentation commits do not alter R, its archive or its runtime assets. Consumers must adopt that same full SHA explicitly in both their hosted action and local checker; release publication alone does not update either. Shared-tool qualification and publication do not establish consumer acceptance. The 1.0.2 and earlier evidence below remains historical and applies only to its recorded source. Consumer rollout status remains in its dated record rather than being inferred from shared-tool CI.
+The workflow example now carries the unpublished 1.1.1 candidate; [local setup](local-use.md#installation-and-diagnostic-details) still pins R as v1.1.0; later documentation commits do not alter R, its archive or its runtime assets. Consumers must adopt that same full SHA explicitly in both their hosted action and local checker; release publication alone does not update either. Shared-tool qualification and publication do not establish consumer acceptance. The 1.0.2 and earlier evidence below remains historical and applies only to its recorded source. Consumer rollout status remains in its dated record rather than being inferred from shared-tool CI.
 
 ## Merge-base comparison and staleness
 
@@ -119,3 +131,15 @@ Version 1.0.0 introduced schema 1, the shared CLI and ordinary pull-request acti
 Its qualified source was `9d713408d8c12eb9ced26fe45b4a99e1df5505ff`. All 47 trusted assets plus action.yml matched that release target. Ubuntu and Windows passed 223 tests on Node 24.15.0 and 24.21.0; production-only Linux smoke, own-PR/cross-owner action checks and authorized exception transitions passed. Exact [historical runs](acceptance.md#initial-release-qualification-october-18-2026) remain attributed to that source. They are not patch qualification.
 
 The v1.0.0 runtime asset hash was `01aca099cfa27459b5a6c25d39f386aecd68a0e9dcbe21f0e93041c7da7a8168` and lock hash was `f7401eb223be14df24b406248c918248074476d6be0bb6372fe8bb6b496e9953`. It included literal-backslash path rejection and bounded parent warning publication, but retained the local LF/CRLF defect corrected in 1.0.1.
+
+## 1.1.1 candidate evidence
+
+- Corrected source anchor: ecd923b730aae0857733a38e25589ca70699bc39.
+- The release qualification target is the integrated candidate containing this anchor and its updated example pin. The anchor supplies identical runtime assets, but is not itself the qualification target.
+- Package and lockfile version: 1.1.1.
+- Initial focused Git/EOL/preparation tests: 85 passed. After the boundary correction, all 32 direct Git tests passed, including every header-prefix split.
+- Initial qualification: [run 42022694904](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/42022694904) passed at ad8a94e3e57d6c8ac8abcaa8e366222d0f6767ec. Review subsequently found a boundary-attribution bug; this run does not qualify the corrected source.
+- Corrected release candidate: `394f47ae323e18291ba5a3136e2e28c0e5b035fb`. [Release check 42024972930](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/42024972930) checked out this exact commit in every job. All four Ubuntu/Windows minimum/floating Node lanes passed 279 tests each with zero failures or skips and executed release-mode validation. Linux production package smoke passed. The non-PR quality job skipped by design.
+- Runtime asset hash: `e49934199e649c5b073f828fe24221cf88d421f5f64ae640e5811820678e2406`; lock hash: `d41139dbc3c598ae00d1f409472370923f8a1ccd9899c048238acddc3181dfe3`.
+- The source anchor is an ancestor of the qualified candidate, with identical runtime assets, action and package/lock files. Later documentation corrections do not change the qualified release source. Integrate with a merge commit, then verify both are reachable from main before tagging the qualified candidate.
+- Publication: verify the [release page](https://github.com/BASIC-BIT/quality-ratchet/releases/latest) and immutable tag. This preparation record does not claim publication or consumer acceptance.
