@@ -30,7 +30,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - uses: BASIC-BIT/quality-ratchet@4e96b38f2fdd5e1f45a34139a914d25256c2b4d4 # v1.1.1
+      - uses: BASIC-BIT/quality-ratchet@ecd923b730aae0857733a38e25589ca70699bc39 # v1.1.1
         with:
           github-token: ${{ github.token }}
           repository-path: ${{ github.workspace }}

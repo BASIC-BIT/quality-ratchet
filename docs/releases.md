@@ -134,8 +134,9 @@ The v1.0.0 runtime asset hash was `01aca099cfa27459b5a6c25d39f386aecd68a0e9dcbe2
 
 ## 1.1.1 candidate evidence
 
-- Source candidate: 4e96b38f2fdd5e1f45a34139a914d25256c2b4d4.
+- Corrected source anchor: ecd923b730aae0857733a38e25589ca70699bc39.
+- The release qualification target is the integrated candidate containing this anchor and its updated example pin. The anchor supplies identical runtime assets, but is not itself the qualification target.
 - Package and lockfile version: 1.1.1.
-- Focused Git/EOL/preparation tests: 85 passed; final direct Git tests: 31 passed.
+- Initial focused Git/EOL/preparation tests: 85 passed. After the boundary correction, all 32 direct Git tests passed, including every header-prefix split.
 - Initial qualification: [run 42022694904](https://github.com/BASIC-BIT/quality-ratchet/actions/runs/42022694904) passed at ad8a94e3e57d6c8ac8abcaa8e366222d0f6767ec. Review subsequently found a boundary-attribution bug; this run does not qualify the corrected source.
 - Corrected-source qualification and publication: pending.
