@@ -23,6 +23,7 @@ import {
 } from "../config/resolve.mjs";
 import { workingEolProvenance, canonicalGitEol } from "./eol.mjs";
 import { reportSourceSelected } from "../reports/scope.mjs";
+import { readGitBlobs } from "./blobs.mjs";
 const gates = ["duplication", "complexity", "file-size"];
 function selected(policy, path, repo, tree = null) {
   return (
@@ -57,12 +58,18 @@ function copyTree(comparison, tree, destination, policy) {
       selected(policy, renamedDestination, comparison.repo, comparison.treeSha);
     if (!selected(policy, path, comparison.repo, tree) && !renamedBaseline)
       continue;
-    const bytes = tree
-      ? git(comparison.repo, ["cat-file", "blob", entries.get(path).hash], {
-          encoding: null,
-        })
-      : readFileSync(join(comparison.repo, path));
     paths.push(path);
+  }
+  const blobs = tree
+    ? readGitBlobs(
+        comparison.repo,
+        paths.map((path) => entries.get(path).hash),
+      )
+    : null;
+  for (const path of paths) {
+    const bytes = tree
+      ? blobs.next().value
+      : readFileSync(join(comparison.repo, path));
     mkdirSync(dirname(join(destination, path)), { recursive: true });
     writeFileSync(join(destination, path), bytes);
   }
